@@ -1186,6 +1186,35 @@ AM_CONDITIONAL(HAVE_SYSTEMD, test "x$with_systemdsystemunitdir" != "x")
 AC_SUBST(systemdsystemunitdir,[$with_systemdsystemunitdir])
 
 #------------------------------------------------------------------------------
+# Skip SDO dictionary during slave scan
+#------------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to skip SDO dictionary during slave scan])
+
+AC_ARG_ENABLE([skip-sdo-dict],
+    AS_HELP_STRING([--enable-skip-sdo-dict],
+                   [Enable skip SDO dictionary (default: no)]),
+    [
+        case "${enableval}" in
+            yes) skipsdodict=1
+                ;;
+            no) skipsdodict=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-skip-sdo-dict])
+                ;;
+        esac
+    ],
+    [skipsdodict=0]
+)
+
+if test "x${skipsdodict}" = "x1"; then
+    AC_DEFINE([EC_SKIP_SDO_DICT], [1], [Skip SDO dictionary during slave scan])
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+#------------------------------------------------------------------------------
 
 AC_CONFIG_FILES([
         Doxyfile
