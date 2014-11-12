@@ -49,6 +49,7 @@ ethercat_SOURCES = \
 	CommandFoeRead.cpp \
 	CommandFoeWrite.cpp \
 	CommandGraph.cpp \
+	CommandIp.cpp \
 	CommandMaster.cpp \
 	CommandPdos.cpp \
 	CommandRegRead.cpp \
@@ -92,6 +93,7 @@ noinst_HEADERS = \
 	CommandFoeRead.h \
 	CommandFoeWrite.h \
 	CommandGraph.h \
+	CommandIp.h \
 	CommandMaster.h \
 	CommandPdos.h \
 	CommandRegRead.h \
