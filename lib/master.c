@@ -564,7 +564,7 @@ int ecrt_master_activate(ec_master_t *master)
     master->process_data_size = io.process_data_size;
 
     if (master->process_data_size) {
-#ifdef USE_RTDM
+#if defined(USE_RTDM) || defined(USE_RTDM_XENOMAI_V3)
         /* memory-mapping was already done in kernel. The user-space addess is
          * provided in the ioctl data.
          */
