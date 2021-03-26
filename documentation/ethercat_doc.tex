@@ -1835,11 +1835,11 @@ slave and bringing it to a certain application-layer state.
 \begin{description}
 
 \item[INIT] The state change FSM is used to bring the slave to the INIT state.
+  If INIT is the requested state, the state machine is finished.
 
 \item[FMMU Clearing] To avoid that the slave reacts on any process data, the
 FMMU configuration are cleared. If the slave does not support FMMUs, this
-state is skipped. If INIT is the requested state, the state machine is
-finished.
+state is skipped.
 
 \item[Mailbox Sync Manager Configuration] If the slaves support mailbox
 communication, the mailbox sync managers are configured. Otherwise this state
