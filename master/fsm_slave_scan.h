@@ -62,6 +62,7 @@ struct ec_fsm_slave_scan
     unsigned int retries; /**< Retries on datagram timeout. */
     unsigned int scan_retries; /**< Retries on scan read error. */
     unsigned long scan_jiffies_start; /**< scan retry start timestamp. */
+    uint8_t eeprom_loaded_retry; /**< rechecking EEPROM loaded */
 
     void (*state)(ec_fsm_slave_scan_t *); /**< State function. */
     uint16_t sii_offset; /**< SII offset in words. */

@@ -50,6 +50,15 @@
  */
 #define SCAN_RETRY_TIME 100
 
+/** EEPROM load timeout [ms].
+ *
+ * Used to calculate timeouts bsed on the jiffies counter.
+ *
+ * \attention Must be more than 10 to avoid problems on kernels that run with
+ * a timer interupt frequency of 100 Hz.
+ */
+#define EEPROM_LOAD_TIMEOUT 500
+
 /*****************************************************************************/
 
 void ec_fsm_slave_scan_state_start(ec_fsm_slave_scan_t *);
@@ -336,16 +345,13 @@ void ec_fsm_slave_scan_state_base(
     slave->base_dc_supported = (octet >> 2) & 0x01;
     slave->base_dc_range = ((octet >> 3) & 0x01) ? EC_DC_64 : EC_DC_32;
 
-    if (slave->base_dc_supported) {
-        // read DC capabilities
-        ec_datagram_fprd(datagram, slave->station_address, 0x0910,
-                slave->base_dc_range == EC_DC_64 ? 8 : 4);
-        ec_datagram_zero(datagram);
-        fsm->retries = EC_FSM_RETRIES;
-        fsm->state = ec_fsm_slave_scan_state_dc_cap;
-    } else {
-        ec_fsm_slave_scan_enter_datalink(fsm);
-    }
+    // dc registers are not available for reading until the 
+    // EEPROM has finished reading, so read the datalink information
+    // first, checking the PDI operation/EEPROM loaded status
+    // before continuing
+    fsm->scan_jiffies_start = jiffies;
+    fsm->eeprom_loaded_retry = 0;
+    ec_fsm_slave_scan_enter_datalink(fsm, datagram);
 }
 
 /*****************************************************************************/
@@ -429,7 +435,11 @@ void ec_fsm_slave_scan_state_dc_times(
         slave->ports[i].receive_time = EC_READ_U32(datagram->data + 4 * i);
     }
 
-    ec_fsm_slave_scan_enter_datalink(fsm);
+#ifdef EC_SII_ASSIGN
+    ec_fsm_slave_scan_enter_assign_sii(fsm);
+#else
+    ec_fsm_slave_scan_enter_sii_size(fsm);
+#endif
 }
 
 /*****************************************************************************/
@@ -527,6 +537,29 @@ void ec_fsm_slave_scan_state_datalink(
         ec_datagram_print_wc_error(datagram);
         return;
     }
+    
+    // check that the PDI operation/EEPROM loaded bit is set
+    if ((EC_READ_U8(fsm->datagram->data) & 0x01) == 0) {
+        unsigned long diff_ms = (fsm->datagram->jiffies_received -
+                fsm->scan_jiffies_start) * 1000 / HZ;
+      
+        if (fsm->eeprom_loaded_retry == 0) {
+            fsm->eeprom_loaded_retry = 1;
+            EC_SLAVE_WARN(slave, "EEPROM not yet loaded.  Retrying...\n");
+        }
+        
+        if (diff_ms < EEPROM_LOAD_TIMEOUT) {
+            fsm->retries = EC_FSM_RETRIES;
+            ec_datagram_repeat(datagram, fsm->datagram);
+        } else {
+            EC_SLAVE_ERR(fsm->slave, 
+                    "Timeout waiting for EEPROM to load.\n");
+            fsm->state = ec_fsm_slave_scan_state_error;
+        }
+        return;
+    } else if (fsm->eeprom_loaded_retry) {
+        EC_SLAVE_INFO(slave, "EEPROM loaded, continuing.\n");
+    }
 
     dl_status = EC_READ_U16(datagram->data);
     for (i = 0; i < EC_MAX_PORTS; i++) {
@@ -538,11 +571,21 @@ void ec_fsm_slave_scan_state_datalink(
             dl_status & (1 << (9 + i * 2)) ? 1 : 0;
     }
 
+    if (slave->base_dc_supported) {
+        // read DC capabilities
+        ec_datagram_fprd(datagram, slave->station_address, 0x0910,
+                slave->base_dc_range == EC_DC_64 ? 8 : 4);
+        ec_datagram_zero(datagram);
+        fsm->retries = EC_FSM_RETRIES;
+        fsm->state = ec_fsm_slave_scan_state_dc_cap;
+    } else {
+
 #ifdef EC_SII_ASSIGN
-    ec_fsm_slave_scan_enter_assign_sii(fsm);
+        ec_fsm_slave_scan_enter_assign_sii(fsm);
 #else
-    ec_fsm_slave_scan_enter_sii_size(fsm);
+        ec_fsm_slave_scan_enter_sii_size(fsm);
 #endif
+    }
 }
 
 /*****************************************************************************/
