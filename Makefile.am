@@ -30,15 +30,17 @@
 ACLOCAL_AMFLAGS = -I m4
 
 AM_DISTCHECK_CONFIGURE_FLAGS = \
-  --with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
+	--disable-8139too \
+	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
 SUBDIRS = \
 	include \
 	script
 
 if ENABLE_KERNEL
-SUBDIRS += devices
-SUBDIRS += master
+SUBDIRS += \
+	devices \
+	master
 endif
 
 if BUILD_TOOL
@@ -46,26 +48,16 @@ SUBDIRS += tool
 endif
 
 if ENABLE_USERLIB
-SUBDIRS += lib
+# userspace examples depend on lib/
+SUBDIRS += \
+	lib \
+	examples
 endif
 
 if ENABLE_TTY
 SUBDIRS += tty
 endif
 
-# userspace example depends on lib/
-SUBDIRS += examples
-
-DIST_SUBDIRS = \
-	devices \
-	examples \
-	include \
-	lib \
-	m4 \
-	master \
-	script \
-	tool \
-	tty
 
 noinst_HEADERS = \
 	globals.h
