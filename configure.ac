@@ -1144,7 +1144,6 @@ AC_CONFIG_FILES([
         include/Makefile
         lib/Makefile
         lib/libethercat.pc
-        m4/Makefile
         master/Kbuild
         master/Makefile
         script/Makefile
