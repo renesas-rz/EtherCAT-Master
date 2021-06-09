@@ -28,24 +28,22 @@
 #----------------------------------------------------------------------------
 
 
-find_library(
-    Ethercat_LIBRARY
-    NAMES ethercat
+find_library(EtherCAT_LIBRARY
+    NAMES EtherCAT
     PATHS %libdir%
 )
 
-find_path(Ethercat_INCLUDE_DIR
-  NAMES ecrt.h
-  PATHS %includedir%
+find_path(EtherCAT_INCLUDE_DIR
+    NAMES ecrt.h
+    PATHS %includedir%
 )
 
-mark_as_advanced(Ethercat_LIBRARY Ethercat_INCLUDE_DIR)
+mark_as_advanced(EtherCAT_LIBRARY EtherCAT_INCLUDE_DIR)
 
-if(NOT TARGET Ethercat::Ethercat)
-  add_library(EtherLab::Ethercat SHARED IMPORTED)
-  set_target_properties(
-    EtherLab::Ethercat
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${Ethercat_INCLUDE_DIR}"
-      IMPORTED_LOCATION ${Ethercat_LIBRARY})
+if(NOT TARGET EtherLab::EtherCAT)
+    add_library(EtherLab::EtherCAT SHARED IMPORTED)
+    set_target_properties(EtherLab::EtherCAT PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${EtherCAT_INCLUDE_DIR}"
+        IMPORTED_LOCATION "${EtherCAT_LIBRARY}"
+    )
 endif()

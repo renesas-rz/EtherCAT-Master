@@ -77,7 +77,7 @@ pkgconfig_DATA = libethercat.pc
 
 cmakedir = $(libdir)/cmake
 
-cmake_DATA = EthercatConfig.cmake
+cmake_DATA = EtherCATConfig.cmake
 
 #------------------------------------------------------------------------------
 
@@ -105,5 +105,5 @@ endif
 
 # we need to replace the variables manually, because autotools does not expand them.
 
-EthercatConfig.cmake: $(srcdir)/EthercatConfig.cmake.in Makefile
+EtherCATConfig.cmake: $(srcdir)/EtherCATConfig.cmake.in Makefile
 	$(SED) -e 's,%libdir%,$(libdir),' -e 's,%includedir%,$(includedir),' $< > $@
