@@ -26,6 +26,7 @@
 #  industrial property and similar rights of Beckhoff Automation GmbH.
 #
 #------------------------------------------------------------------------------
+include $(top_srcdir)/Makefile.kbuild
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -66,13 +67,6 @@ EXTRA_DIST = \
 	FEATURES \
 	README.EoE \
 	ethercat.spec
-
-modules:
-	$(MAKE) -C "$(LINUX_SOURCE_DIR)" M="@abs_srcdir@" modules
-
-modules_install:
-	$(MAKE) -C "$(LINUX_SOURCE_DIR)" M="@abs_srcdir@" \
-		INSTALL_MOD_DIR="$(INSTALL_MOD_DIR)" modules_install
 
 mydist:
 	git -C $(srcdir) log > ChangeLog
