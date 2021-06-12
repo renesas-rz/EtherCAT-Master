@@ -74,7 +74,7 @@ mydist:
 		$(MAKE) dist-bzip2 distdir=$(PACKAGE)-$(VERSION)-$${REV}
 
 dist-hook:
-	if which git >/dev/null 2>&1; then \
+	-if which git >/dev/null 2>&1; then \
 		git -C $(srcdir) describe 2>/dev/null >$(distdir)/revision; \
 	fi
 
