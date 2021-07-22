@@ -1149,8 +1149,6 @@ AC_CONFIG_FILES([
         master/Kbuild
         master/Makefile
         script/Makefile
-        script/ethercat.service
-        script/ethercatctl
         script/init.d/Makefile
         script/init.d/ethercat
         script/sysconfig/Makefile
