@@ -42,6 +42,7 @@
 #include "globals.h"
 #include "master.h"
 #include "voe_handler.h"
+#include "flag.h"
 
 #include "slave_config.h"
 
@@ -89,6 +90,7 @@ void ec_slave_config_init(
     INIT_LIST_HEAD(&sc->reg_requests);
     INIT_LIST_HEAD(&sc->voe_handlers);
     INIT_LIST_HEAD(&sc->soe_configs);
+    INIT_LIST_HEAD(&sc->flags);
 
     ec_coe_emerg_ring_init(&sc->emerg_ring, sc);
 }
@@ -108,6 +110,7 @@ void ec_slave_config_clear(
     ec_voe_handler_t *voe, *next_voe;
     ec_reg_request_t *reg, *next_reg;
     ec_soe_request_t *soe, *next_soe;
+    ec_flag_t *flag, *next_flag;
 
     ec_slave_config_detach(sc);
 
@@ -148,6 +151,13 @@ void ec_slave_config_clear(
         list_del(&soe->list);
         ec_soe_request_clear(soe);
         kfree(soe);
+    }
+
+    // free all flags
+    list_for_each_entry_safe(flag, next_flag, &sc->flags, list) {
+        list_del(&flag->list);
+        ec_flag_clear(flag);
+        kfree(flag);
     }
 
     ec_coe_emerg_ring_clear(&sc->emerg_ring);
@@ -453,6 +463,50 @@ const ec_soe_request_t *ec_slave_config_get_idn_by_pos_const(
 
 /*****************************************************************************/
 
+/** Get the number of feature flags.
+ *
+ * \return Number of feature flags.
+ */
+unsigned int ec_slave_config_flag_count(
+        const ec_slave_config_t *sc /**< Slave configuration. */
+        )
+{
+    const ec_flag_t *flag;
+    unsigned int count = 0;
+
+    list_for_each_entry(flag, &sc->flags, list) {
+        count++;
+    }
+
+    return count;
+}
+
+/*****************************************************************************/
+
+/** Finds a flag via its position in the list.
+ *
+ * Const version.
+ *
+ * \return Search result, or NULL.
+ */
+const ec_flag_t *ec_slave_config_get_flag_by_pos_const(
+        const ec_slave_config_t *sc, /**< Slave configuration. */
+        unsigned int pos /**< Position in the list. */
+        )
+{
+    const ec_flag_t *flag;
+
+    list_for_each_entry(flag, &sc->flags, list) {
+        if (pos--)
+            continue;
+        return flag;
+    }
+
+    return NULL;
+}
+
+/*****************************************************************************/
+
 /** Finds a CoE handler via its position in the list.
  *
  * \return Search result, or NULL.
@@ -512,6 +566,29 @@ ec_voe_handler_t *ec_slave_config_find_voe_handler(
         if (pos--)
             continue;
         return voe;
+    }
+
+    return NULL;
+}
+
+/*****************************************************************************/
+
+/** Finds a flag.
+ *
+ * \return Search result, or NULL.
+ */
+ec_flag_t *ec_slave_config_find_flag(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        const char *key /**< Flag key. */
+        )
+{
+    if (sc) {
+        ec_flag_t *flag;
+        list_for_each_entry(flag, &sc->flags, list) {
+            if (!strcmp(flag->key, key)) {
+                return flag;
+            }
+        }
     }
 
     return NULL;
@@ -1238,6 +1315,42 @@ int ecrt_slave_config_idn(ec_slave_config_t *sc, uint8_t drive_no,
 
 /*****************************************************************************/
 
+int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
+        int32_t value)
+{
+    ec_flag_t *flag;
+
+    EC_CONFIG_DBG(sc, 1, "%s(sc = 0x%p, key = %s, value = %i)\n",
+            __func__, sc, key, value);
+
+
+    flag = ec_slave_config_find_flag(sc, key);
+    if (flag) {
+        flag->value = value; // overwrite value
+    }
+    else { // new flag
+        int ret;
+
+        if (!(flag = (ec_flag_t *) kmalloc(sizeof(ec_flag_t), GFP_KERNEL))) {
+            EC_CONFIG_ERR(sc, "Failed to allocate memory for flag!\n");
+            return -ENOMEM;
+        }
+
+        ret = ec_flag_init(flag, key, value);
+        if (ret) {
+            kfree(flag);
+            return ret;
+        }
+
+        down(&sc->master->master_sem);
+        list_add_tail(&flag->list, &sc->flags);
+        up(&sc->master->master_sem);
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+
 /** \cond */
 
 EXPORT_SYMBOL(ecrt_slave_config_sync_manager);
@@ -1264,6 +1377,7 @@ EXPORT_SYMBOL(ecrt_slave_config_create_voe_handler);
 EXPORT_SYMBOL(ecrt_slave_config_create_reg_request);
 EXPORT_SYMBOL(ecrt_slave_config_state);
 EXPORT_SYMBOL(ecrt_slave_config_idn);
+EXPORT_SYMBOL(ecrt_slave_config_flag);
 
 /** \endcond */
 

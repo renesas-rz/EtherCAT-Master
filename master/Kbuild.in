@@ -40,6 +40,7 @@ ec_master-objs := \
 	datagram_pair.o \
 	device.o \
 	domain.o \
+	flag.o \
 	fmmu_config.o \
 	foe_request.o \
 	fsm_change.o \
