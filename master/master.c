@@ -42,6 +42,7 @@
 #include <linux/device.h>
 #include <linux/version.h>
 #include <linux/hrtimer.h>
+#include <linux/kthread.h>
 
 #include "globals.h"
 #include "slave.h"
@@ -144,7 +145,8 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
         const uint8_t *backup_mac, /**< MAC address of backup device */
         dev_t device_number, /**< Character device number. */
         struct class *class, /**< Device class. */
-        unsigned int debug_level /**< Debug level (module parameter). */
+        unsigned int debug_level, /**< Debug level (module parameter). */
+        unsigned int run_on_cpu /**< bind created kernel threads to a cpu */
         )
 {
     int ret;
@@ -222,6 +224,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     master->fsm_exec_count = 0U;
 
     master->debug_level = debug_level;
+    master->run_on_cpu = run_on_cpu;
     master->stats.timeouts = 0;
     master->stats.corrupted = 0;
     master->stats.unmatched = 0;
@@ -581,7 +584,7 @@ int ec_master_thread_start(
         )
 {
     EC_MASTER_INFO(master, "Starting %s thread.\n", name);
-    master->thread = kthread_run(thread_func, master, name);
+    master->thread = kthread_create(thread_func, master, name);
     if (IS_ERR(master->thread)) {
         int err = (int) PTR_ERR(master->thread);
         EC_MASTER_ERR(master, "Failed to start master thread (error %i)!\n",
@@ -589,6 +592,12 @@ int ec_master_thread_start(
         master->thread = NULL;
         return err;
     }
+    if (0xffffffff != master->run_on_cpu) {
+        EC_MASTER_INFO(master, " binding thread to cpu %u\n",master->run_on_cpu);
+        kthread_bind(master->thread,master->run_on_cpu);
+    }
+    /* Ignoring return value of wake_up_process */
+    (void) wake_up_process(master->thread);
 
     return 0;
 }

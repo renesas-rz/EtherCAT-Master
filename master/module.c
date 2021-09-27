@@ -59,6 +59,7 @@ static unsigned int master_count; /**< Number of masters. */
 static char *backup_devices[MAX_MASTERS]; /**< Backup devices parameter. */
 static unsigned int backup_count; /**< Number of backup devices. */
 static unsigned int debug_level;  /**< Debug level parameter. */
+static unsigned int run_on_cpu = 0xffffffff; /**< Bind created kernel threads to a cpu. Default do not bind*/
 
 static ec_master_t *masters; /**< Array of masters. */
 static struct semaphore master_sem; /**< Master semaphore. */
@@ -85,6 +86,8 @@ module_param_array(backup_devices, charp, &backup_count, S_IRUGO);
 MODULE_PARM_DESC(backup_devices, "MAC addresses of backup devices");
 module_param_named(debug_level, debug_level, uint, S_IRUGO);
 MODULE_PARM_DESC(debug_level, "Debug level");
+module_param_named(run_on_cpu, run_on_cpu, uint, S_IRUGO);
+MODULE_PARM_DESC(run_on_cpu, "Bind kthreads to a specific cpu");
 
 /** \endcond */
 
@@ -150,7 +153,7 @@ int __init ec_init_module(void)
 
     for (i = 0; i < master_count; i++) {
         ret = ec_master_init(&masters[i], i, macs[i][0], macs[i][1],
-                    device_number, class, debug_level);
+                    device_number, class, debug_level, run_on_cpu);
         if (ret)
             goto out_free_masters;
     }
