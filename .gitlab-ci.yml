@@ -10,6 +10,21 @@ build:
         - make -j8 all modules
         - make DISTCHECK_CONFIGURE_FLAGS="--with-linux-dir=/usr/src/linux-obj/$(uname -i)/default" distcheck
 
+pages:
+    stage: deploy
+    rules:
+        - if: $CI_COMMIT_BRANCH == "stable-1.5"
+    script:
+        - ./bootstrap
+        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
+        - doxygen
+        - mkdir public
+        - echo "/ethercat /ethercat/v1 301" > public/_redirects
+        - mv doxygen-output/html/ public/v1/
+    artifacts:
+        paths:
+            - public/
+ 
 # from 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml', but on all branches
 workflow:
     rules:
