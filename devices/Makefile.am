@@ -32,7 +32,8 @@ SUBDIRS = \
 	ccat \
 	e1000 \
 	e1000e \
-	igb
+	igb \
+	realtek
 
 # using HEADERS to enable tags target
 noinst_HEADERS = \

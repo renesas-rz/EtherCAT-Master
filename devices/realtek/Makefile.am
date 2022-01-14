@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  $Id$
+#  $Id: Makefile.am,v 792892ab4806 2014/10/28 15:54:59 fp $
 #
 #  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -25,68 +25,9 @@
 #  EtherCAT technology and brand is only permitted in compliance with the
 #  industrial property and similar rights of Beckhoff Automation GmbH.
 #
-#  ---
-#
-#  vim: syntax=make
-#
 #------------------------------------------------------------------------------
+include $(top_srcdir)/Makefile.kbuild
 
-REV := $(shell if test -s $(src)/../revision; then \
-		cat $(src)/../revision; \
-	else \
-		git -C $(src)/.. describe 2>/dev/null || echo "unknown"; \
-	fi)
-
-ifeq (@ENABLE_GENERIC@,1)
-	EC_GENERIC_OBJ := generic.o
-	obj-m += ec_generic.o
-	ec_generic-objs := $(EC_GENERIC_OBJ)
-	CFLAGS_$(EC_GENERIC_OBJ) = -DREV=$(REV)
-endif
-
-ifeq (1,1)
-	obj-m += realtek/
-else
-	ifeq (@ENABLE_8139TOO@,1)
-		EC_8139TOO_OBJ := 8139too-@KERNEL_8139TOO@-ethercat.o
-		obj-m += ec_8139too.o
-		ec_8139too-objs := $(EC_8139TOO_OBJ)
-		CFLAGS_$(EC_8139TOO_OBJ) = -DREV=$(REV)
-	endif
-	
-	ifeq (@ENABLE_R8169@,1)
-		EC_R8169_OBJ := r8169-@KERNEL_R8169@-ethercat.o
-		obj-m += ec_r8169.o
-		ec_r8169-objs := $(EC_R8169_OBJ)
-		CFLAGS_$(EC_R8169_OBJ) = -DREV=$(REV)
-	endif
-endif
-
-ifeq (@ENABLE_CCAT@,1)
-	obj-m += ccat/
-endif
-
-ifeq (@ENABLE_E100@,1)
-	EC_E100_OBJ := e100-@KERNEL_E100@-ethercat.o
-	obj-m += ec_e100.o
-	ec_e100-objs := $(EC_E100_OBJ)
-	CFLAGS_$(EC_E100_OBJ) = -DREV=$(REV)
-endif
-
-ifeq (@ENABLE_E1000@,1)
-	obj-m += e1000/
-endif
-
-ifeq (@ENABLE_E1000E@,1)
-	obj-m += e1000e/
-endif
-
-ifeq (@ENABLE_IGB@,1)
-	obj-m += igb/
-endif
-
-KBUILD_EXTRA_SYMBOLS := \
-	@abs_top_builddir@/$(LINUX_SYMVERS) \
-	@abs_top_builddir@/master/$(LINUX_SYMVERS)
+EXTRA_DIST = 
 
 #------------------------------------------------------------------------------

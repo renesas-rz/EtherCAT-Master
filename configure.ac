@@ -235,7 +235,7 @@ AC_ARG_WITH([8139too-kernel],
 if test "x${enable8139too}" = "x1"; then
     AC_MSG_CHECKING([for kernel for 8139too driver])
 
-    kernels=`ls -1 ${srcdir}/devices/ | grep -oE "^8139too-.*-" | cut -d "-" -f 2 | uniq`
+    kernels=`ls -1 ${srcdir}/devices/realtek | grep -oE "^8139too-.*-" | cut -d "-" -f 2 | uniq`
     found=0
     for k in $kernels; do
         if test "$kernel8139too" = "$k"; then
@@ -523,7 +523,7 @@ AC_ARG_WITH([r8169-kernel],
 if test "x${enable_r8169}" = "x1"; then
     AC_MSG_CHECKING([for kernel for r8169 driver])
 
-    kernels=`ls -1 ${srcdir}/devices/ | grep -oE "^r8169-.*-" | cut -d "-" -f 2 | uniq`
+    kernels=`ls -1 ${srcdir}/devices/realtek/ | grep -oE "^r8169_main-.*-" | cut -d "-" -f 2 | uniq`
     found=0
     for k in $kernels; do
         if test "$kernel_r8169" = "$k"; then
@@ -1196,6 +1196,8 @@ AC_CONFIG_FILES([
         devices/e1000e/Makefile
         devices/igb/Kbuild
         devices/igb/Makefile
+        devices/realtek/Kbuild
+        devices/realtek/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile
