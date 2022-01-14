@@ -1314,8 +1314,6 @@ static void rtl_irq_disable(struct rtl8169_private *tp)
 
 static void rtl_irq_enable(struct rtl8169_private *tp)
 {
-	if (tp->ecdev) BUG();
-
 	if (rtl_is_8125(tp))
 		RTL_W32(tp, IntrMask_8125, tp->irq_mask);
 	else
@@ -2161,8 +2159,6 @@ u16 rtl8168h_2_get_adc_bias_ioffset(struct rtl8169_private *tp)
 
 static void rtl_schedule_task(struct rtl8169_private *tp, enum rtl_flag flag)
 {
-	if (tp->ecdev) BUG();
-
 	set_bit(flag, tp->wk.flags);
 	schedule_work(&tp->wk.work);
 }
@@ -4660,8 +4656,6 @@ static irqreturn_t rtl8169_interrupt(int irq, void *dev_instance)
 	struct rtl8169_private *tp = dev_instance;
 	u32 status = rtl_get_events(tp);
 
-	if (tp->ecdev) BUG();
-
 	if ((status & 0xffff) == 0xffff || !(status & tp->irq_mask))
 		return IRQ_NONE;
 
@@ -4691,8 +4685,6 @@ static void rtl_task(struct work_struct *work)
 {
 	struct rtl8169_private *tp =
 		container_of(work, struct rtl8169_private, wk.work);
-
-	if (tp->ecdev) dev_info(tp_to_dev(tp), "%s BUG !!!!!!\n", __func__);
 
 	rtnl_lock();
 
@@ -4728,8 +4720,6 @@ static void r8169_phylink_handler(struct net_device *ndev)
 {
 	struct rtl8169_private *tp = netdev_priv(ndev);
 
-	if (tp->ecdev) BUG();
-
 	if (netif_carrier_ok(ndev)) {
 		rtl_link_chg_patch(tp);
 		pm_request_resume(&tp->pci_dev->dev);
@@ -4746,8 +4736,6 @@ static int r8169_phy_connect(struct rtl8169_private *tp)
 	struct phy_device *phydev = tp->phydev;
 	phy_interface_t phy_mode;
 	int ret;
-
-	if (tp->ecdev) BUG();
 
 	phy_mode = tp->supports_gmii ? PHY_INTERFACE_MODE_GMII :
 		   PHY_INTERFACE_MODE_MII;
@@ -4833,8 +4821,6 @@ static int rtl8169_close(struct net_device *dev)
 static void rtl8169_netpoll(struct net_device *dev)
 {
 	struct rtl8169_private *tp = netdev_priv(dev);
-
-	if (tp->ecdev) BUG();
 
 	rtl8169_interrupt(pci_irq_vector(tp->pci_dev, 0), tp);
 }
