@@ -488,11 +488,11 @@ static ATTRIBUTES int ec_ioctl_domain(
         return -EFAULT;
     }
 
-    if (ec_lock_down_interruptible(&master->master_sem))
+    if (ec_lock_down_interruptible(&master->domains_lock))
         return -EINTR;
 
     if (!(domain = ec_master_find_domain_const(master, data.index))) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         EC_MASTER_ERR(master, "Domain %u does not exist!\n", data.index);
         return -EINVAL;
     }
@@ -506,7 +506,7 @@ static ATTRIBUTES int ec_ioctl_domain(
     data.expected_working_counter = domain->expected_working_counter;
     data.fmmu_count = ec_domain_fmmu_count(domain);
 
-    ec_lock_up(&master->master_sem);
+    ec_lock_up(&master->domains_lock);
 
     if (copy_to_user((void __user *) arg, &data, sizeof(data)))
         return -EFAULT;
@@ -533,18 +533,18 @@ static ATTRIBUTES int ec_ioctl_domain_fmmu(
         return -EFAULT;
     }
 
-    if (ec_lock_down_interruptible(&master->master_sem))
+    if (ec_lock_down_interruptible(&master->domains_lock))
         return -EINTR;
 
     if (!(domain = ec_master_find_domain_const(master, data.domain_index))) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         EC_MASTER_ERR(master, "Domain %u does not exist!\n",
                 data.domain_index);
         return -EINVAL;
     }
 
     if (!(fmmu = ec_domain_find_fmmu(domain, data.fmmu_index))) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         EC_MASTER_ERR(master, "Domain %u has less than %u"
                 " fmmu configurations.\n",
                 data.domain_index, data.fmmu_index + 1);
@@ -558,7 +558,7 @@ static ATTRIBUTES int ec_ioctl_domain_fmmu(
     data.logical_address = fmmu->domain->logical_base_address + fmmu->logical_domain_offset;
     data.data_size = fmmu->data_size;
 
-    ec_lock_up(&master->master_sem);
+    ec_lock_up(&master->domains_lock);
 
     if (copy_to_user((void __user *) arg, &data, sizeof(data)))
         return -EFAULT;
@@ -584,18 +584,18 @@ static ATTRIBUTES int ec_ioctl_domain_data(
         return -EFAULT;
     }
 
-    if (ec_lock_down_interruptible(&master->master_sem))
+    if (ec_lock_down_interruptible(&master->domains_lock))
         return -EINTR;
 
     if (!(domain = ec_master_find_domain_const(master, data.domain_index))) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         EC_MASTER_ERR(master, "Domain %u does not exist!\n",
                 data.domain_index);
         return -EINVAL;
     }
 
     if (domain->data_size != data.data_size) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         EC_MASTER_ERR(master, "Data size mismatch %u/%zu!\n",
                 data.data_size, domain->data_size);
         return -EFAULT;
@@ -603,11 +603,11 @@ static ATTRIBUTES int ec_ioctl_domain_data(
 
     if (copy_to_user((void __user *) data.target, domain->data,
                 domain->data_size)) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         return -EFAULT;
     }
 
-    ec_lock_up(&master->master_sem);
+    ec_lock_up(&master->domains_lock);
     return 0;
 }
 
@@ -1875,14 +1875,12 @@ static ATTRIBUTES int ec_ioctl_setup_domain_memory(
 
         ctx->process_data_size = 0;
 
-        if (ec_lock_down_interruptible(&master->master_sem))
+        if (ec_lock_down_interruptible(&master->domains_lock))
             return -EINTR;
 
         list_for_each_entry(domain, &master->domains, list) {
             ctx->process_data_size += ecrt_domain_size(domain);
         }
-
-        ec_lock_up(&master->master_sem);
 
         if (ctx->process_data_size) {
             ctx->process_data = vmalloc(ctx->process_data_size);
@@ -1901,6 +1899,8 @@ static ATTRIBUTES int ec_ioctl_setup_domain_memory(
                 offset += ecrt_domain_size(domain);
             }
 
+            ec_lock_up(&master->domains_lock);
+
 #ifdef EC_IOCTL_RTDM
             /* RTDM uses a different approach for memory-mapping, which has to be
              * initiated by the kernel.
@@ -1912,6 +1912,8 @@ static ATTRIBUTES int ec_ioctl_setup_domain_memory(
                 return ret;
             }
 #endif
+        } else {
+            ec_lock_up(&master->domains_lock);
         }
 
         io.process_data_size = ctx->process_data_size;
@@ -1959,14 +1961,12 @@ static ATTRIBUTES int ec_ioctl_activate(
 
         ctx->process_data_size = 0;
 
-        if (ec_lock_down_interruptible(&master->master_sem))
+        if (ec_lock_down_interruptible(&master->domains_lock))
             return -EINTR;
 
         list_for_each_entry(domain, &master->domains, list) {
             ctx->process_data_size += ecrt_domain_size(domain);
         }
-
-        ec_lock_up(&master->master_sem);
 
         if (ctx->process_data_size) {
             ctx->process_data = vmalloc(ctx->process_data_size);
@@ -1997,6 +1997,8 @@ static ATTRIBUTES int ec_ioctl_activate(
             }
 #endif
         }
+
+        ec_lock_up(&master->domains_lock);
 
         io.process_data_size = ctx->process_data_size;
     }
@@ -2112,7 +2114,7 @@ static ATTRIBUTES int ec_ioctl_send(
 
     /* Locking added as send is likely to be used by more than
         one application tasks */
-    if (ec_ioctl_lock_down_interruptible(&master->master_sem))
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
         return -EINTR;
 
     if (master->send_cb != NULL) {
@@ -2121,7 +2123,7 @@ static ATTRIBUTES int ec_ioctl_send(
     } else
         sent_bytes = ecrt_master_send(master);
 
-    ec_ioctl_lock_up(&master->master_sem);
+    ec_ioctl_lock_up(&master->io_sem);
 
     if (copy_to_user((void __user *) arg, &sent_bytes, sizeof(sent_bytes))) {
         return -EFAULT;
@@ -2148,7 +2150,7 @@ static ATTRIBUTES int ec_ioctl_receive(
 
     /* Locking added as receive is likely to be used by more than
        one application tasks */
-    if (ec_ioctl_lock_down_interruptible(&master->master_sem))
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
         return -EINTR;
 
     if (master->receive_cb != NULL)
@@ -2156,7 +2158,8 @@ static ATTRIBUTES int ec_ioctl_receive(
     else
         ecrt_master_receive(master);
 
-    ec_ioctl_lock_up(&master->master_sem);
+    ec_ioctl_lock_up(&master->io_sem);
+
     return 0;
 }
 
@@ -2255,7 +2258,10 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
         return -EPERM;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
+        return -EINTR;
     ecrt_master_sync_reference_clock(master);
+    ec_ioctl_lock_up(&master->io_sem);
     return 0;
 }
 
@@ -2280,7 +2286,10 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
         return -EFAULT;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
+        return -EINTR;
     ecrt_master_sync_reference_clock_to(master, time);
+    ec_ioctl_lock_up(&master->io_sem);
     return 0;
 }
 
@@ -2300,7 +2309,10 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
         return -EPERM;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
+        return -EINTR;
     ecrt_master_sync_slave_clocks(master);
+    ec_ioctl_lock_up(&master->io_sem);
     return 0;
 }
 
@@ -2351,7 +2363,10 @@ static ATTRIBUTES int ec_ioctl_64bit_ref_clock_time_queue(
         return -EPERM;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
+        return -EINTR;
     ecrt_master_64bit_reference_clock_time_queue(master);
+    ec_ioctl_lock_up(&master->io_sem);
     return 0;
 }
 
@@ -2402,7 +2417,10 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
         return -EPERM;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
+        return -EINTR;
     ecrt_master_sync_monitor_queue(master);
+    ec_ioctl_lock_up(&master->io_sem);
     return 0;
 }
 
@@ -2759,12 +2777,24 @@ static ATTRIBUTES int ec_ioctl_sc_reg_pdo_entry(
         return -ENOENT;
     }
 
+    ec_lock_up(&master->master_sem);
+
+    if (ec_lock_down_interruptible(&master->domains_lock))
+        return -EINTR;
     if (!(domain = ec_master_find_domain(master, data.domain_index))) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         return -ENOENT;
     }
+    ec_lock_up(&master->domains_lock);
 
-    ec_lock_up(&master->master_sem); /** \todo sc or domain could be invalidated */
+    /** \todo sc or domain could be invalidated */
+
+    /* FIXME: As ecrt_slave_config_reg_pdo_entry() calls
+     * ec_slave_config_prepare_fmmu() which locks master_sem we must release
+     * domains_lock, as it would break lock ordering, and thus cause
+     * deadlocks.  Unfortunately, this leaves a race condition, as the domain
+     * could be cleared/deleted while ecrt_slave_config_reg_pdo_entry() is
+     * called. So the above todo statement still holds :( */
 
     ret = ecrt_slave_config_reg_pdo_entry(sc, data.entry_index,
             data.entry_subindex, domain, &data.bit_position);
@@ -2808,13 +2838,24 @@ static ATTRIBUTES int ec_ioctl_sc_reg_pdo_pos(
         ec_lock_up(&master->master_sem);
         return -ENOENT;
     }
+    ec_lock_up(&master->master_sem);
 
+    if (ec_lock_down_interruptible(&master->domains_lock))
+        return -EINTR;
     if (!(domain = ec_master_find_domain(master, io.domain_index))) {
-        ec_lock_up(&master->master_sem);
+        ec_lock_up(&master->domains_lock);
         return -ENOENT;
     }
+    ec_lock_up(&master->domains_lock);
 
-    ec_lock_up(&master->master_sem); /** \todo sc or domain could be invalidated */
+    /** \todo sc or domain could be invalidated */
+
+    /* FIXME: As ecrt_slave_config_reg_pdo_entry_pos() calls
+     * ec_slave_config_prepare_fmmu() which locks master_sem we must release
+     * domains_lock, as it would break lock ordering, and thus cause
+     * deadlocks.  Unfortunately, this leaves a race condition, as the domain
+     * could be cleared/deleted while ecrt_slave_config_reg_pdo_entry() is
+     * called. So the above todo statement still holds :( */
 
     ret = ecrt_slave_config_reg_pdo_entry_pos(sc, io.sync_index,
             io.pdo_pos, io.entry_pos, domain, &io.bit_position);
@@ -3405,19 +3446,19 @@ static ATTRIBUTES int ec_ioctl_domain_size(
         return -EPERM;
     }
 
-    if (ec_lock_down_interruptible(&master->master_sem)) {
+    if (ec_lock_down_interruptible(&master->domains_lock)) {
         return -EINTR;
     }
 
     list_for_each_entry(domain, &master->domains, list) {
         if (domain->index == (unsigned long) arg) {
             size_t size = ecrt_domain_size(domain);
-            ec_lock_up(&master->master_sem);
+            ec_lock_up(&master->domains_lock);
             return size;
         }
     }
 
-    ec_lock_up(&master->master_sem);
+    ec_lock_up(&master->domains_lock);
     return -ENOENT;
 }
 
@@ -3439,19 +3480,19 @@ static ATTRIBUTES int ec_ioctl_domain_offset(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (ec_lock_down_interruptible(&master->master_sem)) {
+    if (ec_lock_down_interruptible(&master->domains_lock)) {
         return -EINTR;
     }
 
     list_for_each_entry(domain, &master->domains, list) {
         if (domain->index == (unsigned long) arg) {
-            ec_lock_up(&master->master_sem);
+            ec_lock_up(&master->domains_lock);
             return offset;
         }
         offset += ecrt_domain_size(domain);
     }
 
-    ec_lock_up(&master->master_sem);
+    ec_lock_up(&master->domains_lock);
     return -ENOENT;
 }
 
@@ -3474,17 +3515,17 @@ static ATTRIBUTES int ec_ioctl_domain_process(
 
     /* Locking added as domain processing is likely to be used by more than
        one application tasks */
-    if (ec_ioctl_lock_down_interruptible(&master->master_sem)) {
+    if (ec_ioctl_lock_down_interruptible(&master->domains_lock)) {
         return -EINTR;
     }
 
     if (!(domain = ec_master_find_domain(master, (unsigned long) arg))) {
-        ec_ioctl_lock_up(&master->master_sem);
+        ec_ioctl_lock_up(&master->domains_lock);
         return -ENOENT;
     }
 
     ecrt_domain_process(domain);
-    ec_ioctl_lock_up(&master->master_sem);
+    ec_ioctl_lock_up(&master->domains_lock);
     return 0;
 }
 
@@ -3507,17 +3548,21 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
 
     /* Locking added as domain queing is likely to be used by more than
        one application tasks */
-    if (ec_ioctl_lock_down_interruptible(&master->master_sem))
+    if (ec_ioctl_lock_down_interruptible(&master->domains_lock))
         return -EINTR;
-
     if (!(domain = ec_master_find_domain(master, (unsigned long) arg))) {
-        ec_ioctl_lock_up(&master->master_sem);
+        ec_ioctl_lock_up(&master->domains_lock);
         return -ENOENT;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem)) {
+        ec_ioctl_lock_up(&master->domains_lock);
+        return -EINTR;
+    }
     ecrt_domain_queue(domain);
+    ec_ioctl_lock_up(&master->io_sem);
 
-    ec_ioctl_lock_up(&master->master_sem);
+    ec_ioctl_lock_up(&master->domains_lock);
 
     return 0;
 }
@@ -3545,14 +3590,17 @@ static ATTRIBUTES int ec_ioctl_domain_state(
         return -EFAULT;
     }
 
-    /* no locking of master_sem needed, because domain will not be deleted in
-     * the meantime. */
+    if (ec_ioctl_lock_down_interruptible(&master->domains_lock))
+        return -EINTR;
 
     if (!(domain = ec_master_find_domain_const(master, data.domain_index))) {
+        ec_ioctl_lock_up(&master->domains_lock);
         return -ENOENT;
     }
 
     ecrt_domain_state(domain, &state);
+
+    ec_ioctl_lock_up(&master->domains_lock);
 
     if (copy_to_user((void __user *) data.state, &state, sizeof(state)))
         return -EFAULT;
@@ -4236,7 +4284,10 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
         return -ENOENT;
     }
 
+    if (ec_ioctl_lock_down_interruptible(&master->io_sem))
+        return -EINTR;
     data.state = ecrt_voe_handler_execute(voe);
+    ec_ioctl_lock_up(&master->io_sem);
     if (data.state == EC_REQUEST_SUCCESS && voe->dir == EC_DIR_INPUT)
         data.size = ecrt_voe_handler_data_size(voe);
     else

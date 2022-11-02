@@ -43,6 +43,7 @@
 #include "datagram.h"
 #include "master.h"
 #include "fmmu_config.h"
+#include "locks.h"
 
 /*****************************************************************************/
 
@@ -65,6 +66,8 @@ struct ec_domain
                                      process data. */
     struct list_head datagram_pairs; /**< Datagrams pairs (main/backup) for
                                        process data exchange. */
+    ec_lock_t datagram_pairs_lock; /**< Semaphore protecting the
+				      datagram_pairs. */
     uint16_t working_counter[EC_MAX_NUM_DEVICES]; /**< Last working counter
                                                 values. */
     uint16_t expected_working_counter; /**< Expected working counter. */

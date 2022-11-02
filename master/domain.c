@@ -76,6 +76,7 @@ void ec_domain_init(
     domain->data_origin = EC_ORIG_INTERNAL;
     domain->logical_base_address = 0x00000000;
     INIT_LIST_HEAD(&domain->datagram_pairs);
+    ec_lock_init(&domain->datagram_pairs_lock);
     for (dev_idx = EC_DEVICE_MAIN; dev_idx < ec_master_num_devices(master);
             dev_idx++) {
         domain->working_counter[dev_idx] = 0x0000;
@@ -98,12 +99,15 @@ void ec_domain_clear(ec_domain_t *domain /**< EtherCAT domain */)
 {
     ec_datagram_pair_t *datagram_pair, *next_pair;
 
+    // lockdep_assert_held(&domain->master->domains_lock);
+    ec_lock_down(&domain->datagram_pairs_lock);
     // dequeue and free datagrams
     list_for_each_entry_safe(datagram_pair, next_pair,
             &domain->datagram_pairs, list) {
         ec_datagram_pair_clear(datagram_pair);
         kfree(datagram_pair);
     }
+    ec_lock_up(&domain->datagram_pairs_lock);
 
     ec_domain_clear_data(domain);
 }
@@ -116,6 +120,7 @@ void ec_domain_clear_data(
         ec_domain_t *domain /**< EtherCAT domain. */
         )
 {
+    // lockdep_assert_held(&domain->master->domains_lock);
     if (domain->data_origin == EC_ORIG_INTERNAL && domain->data) {
         kfree(domain->data);
     }
@@ -216,7 +221,9 @@ int ec_domain_add_datagram_pair(
             datagram_pair->expected_working_counter);
 
 
+    ec_lock_down(&domain->datagram_pairs_lock);
     list_add_tail(&datagram_pair->list, &domain->datagram_pairs);
+    ec_lock_up(&domain->datagram_pairs_lock);
     return 0;
 }
 
@@ -389,6 +396,7 @@ int ec_domain_finish(
             domain->logical_base_address, domain->data_size,
             domain->expected_working_counter);
 
+    ec_lock_down(&domain->datagram_pairs_lock);
     list_for_each_entry(datagram_pair, &domain->datagram_pairs, list) {
         const ec_datagram_t *datagram =
             &datagram_pair->datagrams[EC_DEVICE_MAIN];
@@ -397,6 +405,7 @@ int ec_domain_finish(
                 EC_READ_U32(datagram->address), datagram->data_size,
                 ec_datagram_type_string(datagram), datagram);
     }
+    ec_lock_up(&domain->datagram_pairs_lock);
 
     return 0;
 }
@@ -512,14 +521,11 @@ void ecrt_domain_external_memory(ec_domain_t *domain, uint8_t *mem)
     EC_MASTER_DBG(domain->master, 1, "ecrt_domain_external_memory("
             "domain = 0x%p, mem = 0x%p)\n", domain, mem);
 
-    ec_lock_down(&domain->master->master_sem);
-
+    // lockdep_assert_held(&domain->master->domains_lock);
     ec_domain_clear_data(domain);
 
     domain->data = mem;
     domain->data_origin = EC_ORIG_EXTERNAL;
-
-    ec_lock_up(&domain->master->master_sem);
 }
 
 /*****************************************************************************/
@@ -551,6 +557,7 @@ void ecrt_domain_process(ec_domain_t *domain)
     EC_MASTER_DBG(domain->master, 1, "domain %u process\n", domain->index);
 #endif
 
+    ec_lock_down(&domain->datagram_pairs_lock);
     list_for_each_entry(pair, &domain->datagram_pairs, list) {
 #if EC_MAX_NUM_DEVICES > 1
         datagram_pair_wc = ec_datagram_pair_process(pair, wc_sum);
@@ -638,6 +645,7 @@ void ecrt_domain_process(ec_domain_t *domain)
         }
 #endif // EC_MAX_NUM_DEVICES > 1
     }
+    ec_lock_up(&domain->datagram_pairs_lock);
 
 #if EC_MAX_NUM_DEVICES > 1
     redundant_wc = 0;
@@ -726,6 +734,7 @@ void ecrt_domain_queue(ec_domain_t *domain)
     ec_datagram_pair_t *datagram_pair;
     ec_device_index_t dev_idx;
 
+    ec_lock_down(&domain->datagram_pairs_lock);
     list_for_each_entry(datagram_pair, &domain->datagram_pairs, list) {
 
 #if EC_MAX_NUM_DEVICES > 1
@@ -747,6 +756,7 @@ void ecrt_domain_queue(ec_domain_t *domain)
                     &datagram_pair->datagrams[dev_idx]);
         }
     }
+    ec_lock_up(&domain->datagram_pairs_lock);
 }
 
 /*****************************************************************************/

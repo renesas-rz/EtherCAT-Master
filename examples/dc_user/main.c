@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2007-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2007-2022  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -93,7 +91,7 @@ static unsigned int blink = 0;
 static unsigned int sync_ref_counter = 0;
 const struct timespec cycletime = {0, PERIOD_NS};
 
-/*****************************************************************************/
+/****************************************************************************/
 
 struct timespec timespec_add(struct timespec time1, struct timespec time2)
 {
@@ -110,7 +108,7 @@ struct timespec timespec_add(struct timespec time1, struct timespec time2)
     return result;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_domain1_state(void)
 {
@@ -126,7 +124,7 @@ void check_domain1_state(void)
     domain1_state = ds;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_master_state(void)
 {

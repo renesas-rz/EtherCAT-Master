@@ -229,6 +229,7 @@ struct ec_master {
     /* Configuration applied by the application. */
     struct list_head configs; /**< List of slave configurations. */
     struct list_head domains; /**< List of domains. */
+    ec_lock_t domains_lock; /**< Lock for access to domains list. */
 
     u64 app_time; /**< Time of the last ecrt_master_sync() call. */
     u64 dc_ref_time; /**< Common reference timestamp for DC start times. */
@@ -260,6 +261,7 @@ struct ec_master {
 
     struct list_head datagram_queue; /**< Datagram queue. */
     uint8_t datagram_index; /**< Current datagram index. */
+    ec_lock_t io_sem; /**< Semaphore protecting the datagram_queue. */
 
     struct list_head ext_datagram_queue; /**< Queue for non-application
                                            datagrams. */
@@ -289,8 +291,6 @@ struct ec_master {
     struct task_struct *eoe_thread; /**< EoE thread. */
     struct list_head eoe_handlers; /**< Ethernet over EtherCAT handlers. */
 #endif
-
-    ec_lock_t io_sem; /**< Semaphore used in \a IDLE phase. */
 
     void (*send_cb)(void *); /**< Current send datagrams callback. */
     void (*receive_cb)(void *); /**< Current receive datagrams callback. */
