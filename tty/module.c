@@ -657,8 +657,13 @@ static int ec_tty_ioctl(struct tty_struct *tty,
 
 /*****************************************************************************/
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+static void ec_tty_set_termios(struct tty_struct *tty,
+        const struct ktermios *old_termios)
+#else
 static void ec_tty_set_termios(struct tty_struct *tty,
         struct ktermios *old_termios)
+#endif
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
     int ret;
