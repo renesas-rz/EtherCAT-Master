@@ -45,6 +45,10 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+#include <linux/termios_internal.h>
+#endif
+
 #include "../master/globals.h"
 #include "../include/ectty.h"
 
