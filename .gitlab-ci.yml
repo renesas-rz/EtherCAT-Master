@@ -1,5 +1,5 @@
 image:
-    registry.gitlab.com/etherlab.org/build-container-factory/leap-15.2:linux-syms
+    registry.gitlab.com/etherlab.org/build-container-factory/leap-15.3:linux-syms
 
 build:
     stage: build
@@ -9,6 +9,22 @@ build:
         - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
         - make -j8 all modules
         - make DISTCHECK_CONFIGURE_FLAGS="--with-linux-dir=/usr/src/linux-obj/$(uname -i)/default" distcheck
+
+# Build ethercat tool subcommand help output for documentation
+commands:
+    stage: build
+    script:
+        - ./bootstrap
+        - ./configure --disable-kernel --disable-userlib
+        - make -j8 all
+        - mkdir documentation/external
+        - make -C documentation ext
+    artifacts:
+        paths:
+            - script/init.d/ethercat
+            - script/ethercat.service
+            - tool/ethercat
+            - documentation/external/
 
 test cmake:
     stage: test
@@ -23,20 +39,38 @@ test cmake:
         - make
         - ldd userexample
 
-pages:
+# This job is collected by the EtherLab Documentation project.
+# It must be named 'doxygen' and must produce an artifact with a 'html'
+# directory dyrectly containing the doxygen index HTML.
+doxygen:
     stage: deploy
-    rules:
-        - if: $CI_COMMIT_BRANCH == "stable-1.5"
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
     script:
         - ./bootstrap
         - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
         - doxygen
-        - mkdir public
-        - echo "/ethercat /ethercat/v1 301" > public/_redirects
-        - mv doxygen-output/html/ public/v1/
+        - mv doxygen-output/html/ html/
     artifacts:
         paths:
-            - public/
+            - html/
+
+# This job is collected by the EtherLab Documentation project.
+# It must be named 'pdf' and must produce a 'pdf' directory as an artifact.
+# All PDF files in this directory will be collected.
+pdf:
+    stage: deploy
+    image: registry.gitlab.com/etherlab.org/build-container-factory/leap-15.3:texlive
+    script:
+        - cd documentation
+        - make
+        - make index
+        - make
+        - mkdir ../pdf
+        - mv *.pdf ../pdf
+    artifacts:
+        paths:
+            - pdf/
 
 # from 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml', but on all branches
 workflow:
