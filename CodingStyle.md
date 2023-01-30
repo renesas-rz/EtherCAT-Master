@@ -1,5 +1,3 @@
-$Id$
-
 vim: spelllang=en tw=78
 
 This is a short introduction to the coding style that shall be used. The below
@@ -7,11 +5,11 @@ rules are applicable for all C source files, except the Ethernet drivers, for
 which the Linux Kernel coding style shall be used to minimize the
 differences).
 
-1) Line length
+# Line length
 
 - Lines shall not exceed 78 characters.
 
-2) Whitespace
+# Whitespace
 
 - Indentation shall be done using 4 space characters
 
@@ -20,36 +18,39 @@ differences).
 - After commas, colons and semicolons, a single space shall be
   placed (if not followed by a line break).
 
-- Binary operators (=, ==, ~=, |, ||, etc.) shall be enclosed by 2 spaces
-  (except . and ->).
+- Binary operators (`=`, `==`, `~=`, `|`, `||`, etc.) shall be enclosed by 2 spaces
+  (except `.` and `->`).
 
-3) Placing braces
+# Placing braces
 
 - Braces shall be placed in the following way (K&R style):
 
-    if (...) {
-        ...
-    } else if (...) {
-        ...
-    } else {
-        ...
-    }
+```c
+if (...) {
+    ...
+} else if (...) {
+    ...
+} else {
+    ...
+}
 
-    int function(...)
-    {
-        ...
-    }
+int function(...)
+{
+    ...
+}
+```
 
-4) Defines and Macros
+# Defines and Macros
 
 - Defines and macros shall be named in CAPITAL letters. If a macro contains
   multiple statements, they should be enclosed by a 'do {} while (0)' loop.
   Macro parameters shall also be capital letters and shall be enclosed py
   parantheses if necessary.
 
-    #define MACRO(A, B) \
-        do { \
-            if ((A) == 1) { \
-                statement(B); \
+```c
+#define MACRO(A, B) \
+    do { \
+        if ((A) == 1) { \
+            statement(B); \
         } while (0)
-
+```

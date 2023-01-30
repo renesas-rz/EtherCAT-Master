@@ -6,11 +6,11 @@ vim: set spelllang=en spell tw=78
 
 The complete build and installation procedure is described in the respective
 section of the
-[https://gitlab.com/etherlab.org/ethercat/-/jobs/artifacts/stable-1.5/raw/pdf/ethercat_doc.pdf?job=pdf](documentation).
+[documentation](https://gitlab.com/etherlab.org/ethercat/-/jobs/artifacts/stable-1.5/raw/pdf/ethercat_doc.pdf?job=pdf).
 
 ---
 
-For the impatient, the procedure mainly consists of calling:
+For the impatient: The procedure mainly consists of calling
 
 ```bash
 ./bootstrap # to create the configure script, if downloaded from the repo
@@ -21,28 +21,39 @@ make all modules
 
 ... and as root:
 
-# make modules_install install
-# depmod
+```bash
+make modules_install install
+depmod
+```
 
 ... and then customizing the appropriate configuration file:
 
-# vi /etc/ethercat.conf      # For systemd based distro
-# vi /etc/sysconfig/ethercat # For init.d based distro
+```bash
+vi /etc/ethercat.conf      # For systemd based distro
+vi /etc/sysconfig/ethercat # For init.d based distro
+```
 
 Make sure, that the 'udev' package is installed, to automatically create the
 EtherCAT character devices. The character devices will be created with mode
 0660 and group root by default. If you want to give normal users reading
 access, create a udev rule like this:
 
-# echo KERNEL==\"EtherCAT[0-9]*\", MODE=\"0664\" > /etc/udev/rules.d/99-EtherCAT.rules
+```bash
+echo KERNEL==\"EtherCAT[0-9]*\", MODE=\"0664\" > /etc/udev/rules.d/99-EtherCAT.rules
+```
 
 Now you can start the EtherCAT master:
 
-# systemctl start ethercat   # For systemd based distro
-# /etc/init.d/ethercat start # For init.d based distro
+```bash
+systemctl start ethercat   # For systemd based distro
+/etc/init.d/ethercat start # For init.d based distro
+```
 
-Have a look at the examples/ subdirectory for some application examples.
+Have a look at the [examples subdirectory](examples/) for some application
+examples.
+
+---
 
 Have fun!
 
--------------------------------------------------------------------------------
+---
