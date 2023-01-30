@@ -1,8 +1,6 @@
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #
-#  $Id$
-#
-#  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT Master.
 #
@@ -25,7 +23,8 @@
 #  EtherCAT technology and brand is only permitted in compliance with the
 #  industrial property and similar rights of Beckhoff Automation GmbH.
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
 include $(top_srcdir)/Makefile.kbuild
 
 ACLOCAL_AMFLAGS = -I m4
@@ -59,13 +58,15 @@ if ENABLE_TTY
 SUBDIRS += tty
 endif
 
-
 noinst_HEADERS = \
 	globals.h
 
 EXTRA_DIST = \
-	FEATURES \
+	CodingStyle.md \
+	FEATURES.md \
+	INSTALL.md \
 	README.EoE \
+	README.md \
 	ethercat.spec
 
 mydist:
@@ -109,4 +110,4 @@ doc:
 cleandoc:
 	@rm -rf doxygen-output
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
