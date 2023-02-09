@@ -25,7 +25,7 @@
 
 _ethercat_completions()
 {
-    local ethercat_commands="alias confic crc cstruct data debug domains download eoe foe_read foe_write graph master pdos reg_read reg_write rescan sdos sii_read sii_write slaves soe_read soe_write states upload version xml"
+    local ethercat_commands="alias config crc cstruct data debug domains download eoe foe_read foe_write graph master pdos reg_read reg_write rescan sdos sii_read sii_write slaves soe_read soe_write states upload version xml"
     local options="--help --force --quiet --verbose --master "
     if [ "$COMP_CWORD" -eq 1 ] ; then
         COMPREPLY=($(compgen -W "$ethercat_commands --help" -- "${COMP_WORDS[1]}"))
