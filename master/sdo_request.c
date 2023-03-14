@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -61,10 +59,12 @@ void ec_sdo_request_init(
     req->data = NULL;
     req->mem_size = 0;
     req->data_size = 0;
-    req->dir = EC_DIR_INVALID;
     req->issue_timeout = 0; // no timeout
     req->response_timeout = EC_SDO_REQUEST_RESPONSE_TIMEOUT;
+    req->dir = EC_DIR_INVALID;
     req->state = EC_INT_REQUEST_INIT;
+    req->jiffies_start = 0U;
+    req->jiffies_sent = 0U;
     req->errno = 0;
     req->abort_code = 0x00000000;
 }
