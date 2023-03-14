@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -64,8 +62,10 @@ void ec_soe_request_init(
     req->data = NULL;
     req->mem_size = 0;
     req->data_size = 0;
+    req->issue_timeout = 0; // no timeout
     req->dir = EC_DIR_INVALID;
     req->state = EC_INT_REQUEST_INIT;
+    req->jiffies_start = 0U;
     req->jiffies_sent = 0U;
     req->error_code = 0x0000;
 }
@@ -236,6 +236,7 @@ void ec_soe_request_read(
     req->dir = EC_DIR_INPUT;
     req->state = EC_INT_REQUEST_QUEUED;
     req->error_code = 0x0000;
+    req->jiffies_start = jiffies;
 }
 
 /*****************************************************************************/
@@ -249,6 +250,86 @@ void ec_soe_request_write(
     req->dir = EC_DIR_OUTPUT;
     req->state = EC_INT_REQUEST_QUEUED;
     req->error_code = 0x0000;
+    req->jiffies_start = jiffies;
 }
+
+/*****************************************************************************/
+
+/** Checks, if the timeout was exceeded.
+ *
+ * \return non-zero if the timeout was exceeded, else zero.
+ */
+int ec_soe_request_timed_out(const ec_soe_request_t *req /**< SDO request. */)
+{
+    return req->issue_timeout
+        && jiffies - req->jiffies_start > HZ * req->issue_timeout / 1000;
+}
+
+/*****************************************************************************
+ * Application interface.
+ ****************************************************************************/
+
+void ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
+        uint16_t idn)
+{
+    req->drive_no = drive_no;
+    req->idn = idn;
+}
+
+/*****************************************************************************/
+
+void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
+{
+    req->issue_timeout = timeout;
+}
+
+/*****************************************************************************/
+
+uint8_t *ecrt_soe_request_data(ec_soe_request_t *req)
+{
+    return req->data;
+}
+
+/*****************************************************************************/
+
+size_t ecrt_soe_request_data_size(const ec_soe_request_t *req)
+{
+    return req->data_size;
+}
+
+/*****************************************************************************/
+
+ec_request_state_t ecrt_soe_request_state(ec_soe_request_t *req)
+{
+   return ec_request_state_translation_table[req->state];
+}
+
+/*****************************************************************************/
+
+void ecrt_soe_request_read(ec_soe_request_t *req)
+{
+    ec_soe_request_read(req);
+}
+
+/*****************************************************************************/
+
+void ecrt_soe_request_write(ec_soe_request_t *req)
+{
+    ec_soe_request_write(req);
+}
+
+/*****************************************************************************/
+
+/** \cond */
+
+EXPORT_SYMBOL(ecrt_soe_request_idn);
+EXPORT_SYMBOL(ecrt_soe_request_timeout);
+EXPORT_SYMBOL(ecrt_soe_request_data);
+EXPORT_SYMBOL(ecrt_soe_request_data_size);
+EXPORT_SYMBOL(ecrt_soe_request_state);
+EXPORT_SYMBOL(ecrt_soe_request_read);
+EXPORT_SYMBOL(ecrt_soe_request_write);
+
+/** \endcond */
 
 /*****************************************************************************/
