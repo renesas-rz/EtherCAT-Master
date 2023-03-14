@@ -535,6 +535,28 @@ ec_sdo_request_t *ec_slave_config_find_sdo_request(
 
 /*****************************************************************************/
 
+/** Finds a SoE request via its position in the list.
+ *
+ * \return Search result, or NULL.
+ */
+ec_soe_request_t *ec_slave_config_find_soe_request(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        unsigned int pos /**< Position in the list. */
+        )
+{
+    ec_soe_request_t *req;
+
+    list_for_each_entry(req, &sc->soe_requests, list) {
+        if (pos--)
+            continue;
+        return req;
+    }
+
+    return NULL;
+}
+
+/*****************************************************************************/
+
 /** Finds a register handler via its position in the list.
  *
  * \return Search result, or NULL.

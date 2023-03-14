@@ -172,6 +172,8 @@ const ec_flag_t *ec_slave_config_get_flag_by_pos_const(
         const ec_slave_config_t *, unsigned int);
 ec_sdo_request_t *ec_slave_config_find_sdo_request(ec_slave_config_t *,
         unsigned int);
+ec_soe_request_t *ec_slave_config_find_soe_request(ec_slave_config_t *,
+        unsigned int);
 ec_reg_request_t *ec_slave_config_find_reg_request(ec_slave_config_t *,
         unsigned int);
 ec_voe_handler_t *ec_slave_config_find_voe_handler(ec_slave_config_t *,
