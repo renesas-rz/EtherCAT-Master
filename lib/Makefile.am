@@ -1,8 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  $Id$
-#
-#  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT master userspace library.
 #
@@ -39,6 +37,7 @@ libethercat_la_SOURCES = \
 	reg_request.c \
 	sdo_request.c \
 	slave_config.c \
+	soe_request.c \
 	voe_handler.c
 
 noinst_HEADERS = \
@@ -48,6 +47,7 @@ noinst_HEADERS = \
 	reg_request.h \
 	sdo_request.h \
 	slave_config.h \
+	soe_request.h \
 	voe_handler.h
 
 libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir)
@@ -70,8 +70,10 @@ libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir)
 # 1:0.0
 # 	ecrt_master_sync_reference_clock_to() added.
 # 2:0:1
+#   SoE requests added
+# 3:0:2
 #
-libethercat_la_LDFLAGS = -version-info 2:0:1
+libethercat_la_LDFLAGS = -version-info 3:0:2
 
 pkgconfig_DATA = libethercat.pc
 
