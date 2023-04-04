@@ -38,3 +38,13 @@ EXTRA_DIST = \
     r8169_main-5.10-orig.c \
     r8169_phy_config-5.10-ethercat.c \
     r8169_phy_config-5.10-orig.c \
+    r8169-5.15-ethercat.h \
+    r8169-5.15-orig.h \
+    r8169_firmware-5.15-ethercat.c \
+    r8169_firmware-5.15-ethercat.h \
+    r8169_firmware-5.15-orig.c \
+    r8169_firmware-5.15-orig.h \
+    r8169_main-5.15-ethercat.c \
+    r8169_main-5.15-orig.c \
+    r8169_phy_config-5.15-ethercat.c \
+    r8169_phy_config-5.15-orig.c

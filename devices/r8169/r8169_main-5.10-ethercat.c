@@ -30,8 +30,10 @@
 #include <linux/ipv6.h>
 #include <net/ip6_checksum.h>
 
-#include "r8169.h"
-#include "r8169_firmware.h"
+#include "r8169-5.10-ethercat.h"
+#include "r8169_firmware-5.10-ethercat.h"
+
+#include "../ecdev.h"
 
 #define MODULENAME "r8169"
 
@@ -174,8 +176,6 @@ static const struct pci_device_id rtl8169_pci_tbl[] = {
 	{ PCI_VDEVICE(REALTEK,	0x3000) },
 	{}
 };
-
-MODULE_DEVICE_TABLE(pci, rtl8169_pci_tbl);
 
 enum rtl_registers {
 	MAC0		= 0,	/* Ethernet hardware address. */
@@ -630,12 +630,15 @@ struct rtl8169_private {
 	struct rtl_fw *rtl_fw;
 
 	u32 ocp_base;
+
+	ec_device_t *ecdev;
+	unsigned long ec_watchdog_jiffies;
 };
 
 typedef void (*rtl_generic_fct)(struct rtl8169_private *tp);
 
 MODULE_AUTHOR("Realtek and the Linux r8169 crew <netdev@vger.kernel.org>");
-MODULE_DESCRIPTION("RealTek RTL-8169 Gigabit Ethernet driver");
+MODULE_DESCRIPTION("RealTek RTL-8169 Gigabit Ethernet driver (EtherCAT enabled)");
 MODULE_SOFTDEP("pre: realtek");
 MODULE_LICENSE("GPL");
 MODULE_FIRMWARE(FIRMWARE_8168D_1);
@@ -1305,6 +1308,8 @@ static void rtl_irq_disable(struct rtl8169_private *tp)
 
 static void rtl_irq_enable(struct rtl8169_private *tp)
 {
+	if (tp->ecdev)
+		return;
 	if (rtl_is_8125(tp))
 		RTL_W32(tp, IntrMask_8125, tp->irq_mask);
 	else
@@ -2151,7 +2156,8 @@ u16 rtl8168h_2_get_adc_bias_ioffset(struct rtl8169_private *tp)
 static void rtl_schedule_task(struct rtl8169_private *tp, enum rtl_flag flag)
 {
 	set_bit(flag, tp->wk.flags);
-	schedule_work(&tp->wk.work);
+	if (!tp->ecdev)
+		schedule_work(&tp->wk.work);
 }
 
 static void rtl8169_init_phy(struct rtl8169_private *tp)
@@ -3962,7 +3968,7 @@ static void rtl8169_tx_clear_range(struct rtl8169_private *tp, u32 start,
 			struct sk_buff *skb = tx_skb->skb;
 
 			rtl8169_unmap_tx_skb(tp, entry);
-			if (skb)
+			if (skb && !tp->ecdev)
 				dev_consume_skb_any(skb);
 		}
 	}
@@ -3976,7 +3982,8 @@ static void rtl8169_tx_clear(struct rtl8169_private *tp)
 
 static void rtl8169_cleanup(struct rtl8169_private *tp, bool going_down)
 {
-	napi_disable(&tp->napi);
+	if (!tp->ecdev)
+		napi_disable(&tp->napi);
 
 	/* Give a racing hard_start_xmit a few cycles to complete. */
 	synchronize_net();
@@ -4019,14 +4026,16 @@ static void rtl_reset_work(struct rtl8169_private *tp)
 {
 	int i;
 
-	netif_stop_queue(tp->dev);
+	if (!tp->ecdev)
+		netif_stop_queue(tp->dev);
 
 	rtl8169_cleanup(tp, false);
 
 	for (i = 0; i < NUM_RX_DESC; i++)
 		rtl8169_mark_to_asic(tp->RxDescArray + i);
 
-	napi_enable(&tp->napi);
+	if (!tp->ecdev)
+		napi_enable(&tp->napi);
 	rtl_hw_start(tp);
 }
 
@@ -4316,7 +4325,10 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	/* Force memory writes to complete before releasing descriptor */
 	dma_wmb();
 
-	door_bell = __netdev_sent_queue(dev, skb->len, netdev_xmit_more());
+	if (!tp->ecdev)
+		door_bell = __netdev_sent_queue(dev, skb->len, netdev_xmit_more());
+	else
+		door_bell = 0;
 
 	txd_first->opts1 |= cpu_to_le32(DescOwn | FirstFrag);
 
@@ -4326,7 +4338,7 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	tp->cur_tx += frags + 1;
 
 	stop_queue = !rtl_tx_slots_avail(tp, MAX_SKB_FRAGS);
-	if (unlikely(stop_queue)) {
+	if (unlikely(stop_queue) && !tp->ecdev) {
 		/* Avoid wrongly optimistic queue wake-up: rtl_tx thread must
 		 * not miss a ring update when it notices a stopped queue.
 		 */
@@ -4338,7 +4350,7 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	if (door_bell)
 		rtl8169_doorbell(tp);
 
-	if (unlikely(stop_queue)) {
+	if (unlikely(stop_queue) && !tp->ecdev) {
 		/* Sync with rtl_tx:
 		 * - publish queue status and cur_tx ring index (write barrier)
 		 * - refresh dirty_tx ring index (read barrier).
@@ -4356,12 +4368,14 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 err_dma_1:
 	rtl8169_unmap_tx_skb(tp, entry);
 err_dma_0:
-	dev_kfree_skb_any(skb);
+	if (!tp->ecdev)
+		dev_kfree_skb_any(skb);
 	dev->stats.tx_dropped++;
 	return NETDEV_TX_OK;
 
 err_stop_0:
-	netif_stop_queue(dev);
+	if (!tp->ecdev)
+		netif_stop_queue(dev);
 	dev->stats.tx_dropped++;
 	return NETDEV_TX_BUSY;
 }
@@ -4481,13 +4495,16 @@ static void rtl_tx(struct net_device *dev, struct rtl8169_private *tp,
 		if (skb) {
 			pkts_compl++;
 			bytes_compl += skb->len;
-			napi_consume_skb(skb, budget);
+			if (!tp->ecdev)
+				napi_consume_skb(skb, budget);
 		}
 		dirty_tx++;
 	}
 
 	if (tp->dirty_tx != dirty_tx) {
-		netdev_completed_queue(dev, pkts_compl, bytes_compl);
+		if (!tp->ecdev) {
+			netdev_completed_queue(dev, pkts_compl, bytes_compl);
+		}
 
 		rtl_inc_priv_stats(&tp->tx_stats, pkts_compl, bytes_compl);
 
@@ -4500,7 +4517,7 @@ static void rtl_tx(struct net_device *dev, struct rtl8169_private *tp,
 		 * ring status.
 		 */
 		smp_mb();
-		if (netif_queue_stopped(dev) &&
+		if (!tp->ecdev && netif_queue_stopped(dev) &&
 		    rtl_tx_slots_avail(tp, MAX_SKB_FRAGS)) {
 			netif_wake_queue(dev);
 		}
@@ -4585,10 +4602,14 @@ static int rtl_rx(struct net_device *dev, struct rtl8169_private *tp, u32 budget
 			goto release_descriptor;
 		}
 
-		skb = napi_alloc_skb(&tp->napi, pkt_size);
-		if (unlikely(!skb)) {
-			dev->stats.rx_dropped++;
-			goto release_descriptor;
+		if (!tp->ecdev) {
+			skb = napi_alloc_skb(&tp->napi, pkt_size);
+			if (unlikely(!skb)) {
+				dev->stats.rx_dropped++;
+				goto release_descriptor;
+			}
+		} else {
+			skb = NULL;
 		}
 
 		addr = le64_to_cpu(desc->addr);
@@ -4596,21 +4617,32 @@ static int rtl_rx(struct net_device *dev, struct rtl8169_private *tp, u32 budget
 
 		dma_sync_single_for_cpu(d, addr, pkt_size, DMA_FROM_DEVICE);
 		prefetch(rx_buf);
-		skb_copy_to_linear_data(skb, rx_buf, pkt_size);
-		skb->tail += pkt_size;
-		skb->len = pkt_size;
+		if (tp->ecdev) {
+			ecdev_receive(tp->ecdev, rx_buf, pkt_size);
+
+			// No need to detect link status as
+			// long as frames are received: Reset watchdog.
+			tp->ec_watchdog_jiffies = jiffies;
+
+		} else {
+			skb_copy_to_linear_data(skb, rx_buf, pkt_size);
+			skb->tail += pkt_size;
+			skb->len = pkt_size;
+		}
 		dma_sync_single_for_device(d, addr, pkt_size, DMA_FROM_DEVICE);
 
-		rtl8169_rx_csum(skb, status);
-		skb->protocol = eth_type_trans(skb, dev);
+		if (!tp->ecdev) {
+			rtl8169_rx_csum(skb, status);
+			skb->protocol = eth_type_trans(skb, dev);
 
-		rtl8169_rx_vlan_tag(desc, skb);
+			rtl8169_rx_vlan_tag(desc, skb);
 
-		if (skb->pkt_type == PACKET_MULTICAST)
-			dev->stats.multicast++;
+			if (skb->pkt_type == PACKET_MULTICAST)
+				dev->stats.multicast++;
 
-		napi_gro_receive(&tp->napi, skb);
+			napi_gro_receive(&tp->napi, skb);
 
+		}
 		rtl_inc_priv_stats(&tp->rx_stats, 1, pkt_size);
 release_descriptor:
 		rtl8169_mark_to_asic(desc);
@@ -4766,7 +4798,8 @@ static int rtl8169_close(struct net_device *dev)
 
 	cancel_work_sync(&tp->wk.work);
 
-	free_irq(pci_irq_vector(pdev, 0), tp);
+	if (!tp->ecdev)
+		free_irq(pci_irq_vector(pdev, 0), tp);
 
 	phy_disconnect(tp->phydev);
 
@@ -4819,10 +4852,12 @@ static int rtl_open(struct net_device *dev)
 
 	rtl_request_firmware(tp);
 
-	retval = request_irq(pci_irq_vector(pdev, 0), rtl8169_interrupt,
-			     IRQF_SHARED, dev->name, tp);
-	if (retval < 0)
-		goto err_release_fw_2;
+	if (!tp->ecdev) {
+		retval = request_irq(pci_irq_vector(pdev, 0), rtl8169_interrupt,
+					IRQF_SHARED, dev->name, tp);
+		if (retval < 0)
+			goto err_release_fw_2;
+	}
 
 	retval = r8169_phy_connect(tp);
 	if (retval)
@@ -4830,7 +4865,8 @@ static int rtl_open(struct net_device *dev)
 
 	rtl8169_up(tp);
 	rtl8169_init_counter_offsets(tp);
-	netif_start_queue(dev);
+	if (!tp->ecdev)
+		netif_start_queue(dev);
 
 	pm_runtime_put_sync(&pdev->dev);
 out:
@@ -4916,6 +4952,9 @@ static int rtl8169_net_resume(struct rtl8169_private *tp)
 static int __maybe_unused rtl8169_suspend(struct device *device)
 {
 	struct rtl8169_private *tp = dev_get_drvdata(device);
+	if (tp->ecdev) {
+		return -EBUSY;
+	}
 
 	rtnl_lock();
 	rtl8169_net_suspend(tp);
@@ -4929,6 +4968,9 @@ static int __maybe_unused rtl8169_suspend(struct device *device)
 static int __maybe_unused rtl8169_resume(struct device *device)
 {
 	struct rtl8169_private *tp = dev_get_drvdata(device);
+	if (tp->ecdev) {
+		return -EBUSY;
+	}
 
 	if (!device_may_wakeup(tp_to_dev(tp)))
 		clk_prepare_enable(tp->clk);
@@ -4943,6 +4985,9 @@ static int __maybe_unused rtl8169_resume(struct device *device)
 static int rtl8169_runtime_suspend(struct device *device)
 {
 	struct rtl8169_private *tp = dev_get_drvdata(device);
+	if (tp->ecdev) {
+		return -EBUSY;
+	}
 
 	if (!tp->TxDescArray) {
 		netif_device_detach(tp->dev);
@@ -5030,7 +5075,12 @@ static void rtl_remove_one(struct pci_dev *pdev)
 	if (pci_dev_run_wake(pdev))
 		pm_runtime_get_noresume(&pdev->dev);
 
-	unregister_netdev(tp->dev);
+	if (tp->ecdev) {
+		ecdev_close(tp->ecdev);
+		ecdev_withdraw(tp->ecdev);
+	} else {
+		unregister_netdev(tp->dev);
+	}
 
 	if (r8168_check_dash(tp))
 		rtl8168_driver_stop(tp);
@@ -5317,6 +5367,32 @@ done:
 	rtl_rar_set(tp, mac_addr);
 }
 
+static void ec_poll(struct net_device *dev)
+{
+	struct rtl8169_private *tp = netdev_priv(dev);
+	u16 status = rtl_get_events(tp);
+
+
+	if ((status & 0xffff) == 0xffff || !(status & tp->irq_mask))
+		return;
+
+	rtl_tx(dev, tp, 100);
+
+	rtl_rx(dev, tp, 100);
+
+	if (status & LinkChg)
+		phy_mac_interrupt(tp->phydev);
+
+	if (jiffies - tp->ec_watchdog_jiffies >= 2 * HZ) {
+		void __iomem *ioaddr = tp->mmio_addr;
+		ecdev_set_link(tp->ecdev, netif_carrier_ok(dev));
+		tp->ec_watchdog_jiffies = jiffies;
+	}
+
+	rtl_ack_events(tp, status);
+}
+
+
 static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct rtl8169_private *tp;
@@ -5481,12 +5557,17 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	if (rc)
 		return rc;
 
+	tp->ecdev = ecdev_offer(dev, ec_poll, THIS_MODULE);
+	tp->ec_watchdog_jiffies = jiffies;
+
 	/* chip gets powered up in rtl_open() */
 	rtl_pll_power_down(tp);
 
-	rc = register_netdev(dev);
-	if (rc)
-		return rc;
+	if (!tp->ecdev) {
+		rc = register_netdev(dev);
+		if (rc)
+			return rc;
+	}
 
 	netdev_info(dev, "%s, %pM, XID %03x, IRQ %d\n",
 		    rtl_chip_infos[chipset].name, dev->dev_addr, xid,
@@ -5504,6 +5585,14 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	if (pci_dev_run_wake(pdev))
 		pm_runtime_put_sync(&pdev->dev);
+
+	if (tp->ecdev) {
+		rc = ecdev_open(tp->ecdev);
+		if (rc) {
+			ecdev_withdraw(tp->ecdev);
+			return rc;
+		}
+	}
 
 	return 0;
 }

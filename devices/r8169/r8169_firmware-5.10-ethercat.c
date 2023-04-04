@@ -11,7 +11,7 @@
 #include <linux/delay.h>
 #include <linux/firmware.h>
 
-#include "r8169_firmware.h"
+#include "r8169_firmware-5.10-ethercat.h"
 
 enum rtl_fw_opcode {
 	PHY_READ		= 0x0,
