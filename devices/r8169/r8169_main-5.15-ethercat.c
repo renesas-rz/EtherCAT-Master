@@ -31,8 +31,8 @@
 #include <asm/unaligned.h>
 #include <net/ip6_checksum.h>
 
-#include "r8169-5.10-ethercat.h"
-#include "r8169_firmware-5.10-ethercat.h"
+#include "r8169-5.15-ethercat.h"
+#include "r8169_firmware-5.15-ethercat.h"
 
 
 #include "../ecdev.h"
