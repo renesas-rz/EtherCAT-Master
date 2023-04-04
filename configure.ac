@@ -578,6 +578,25 @@ AC_SUBST(KERNEL_IGC,[$kerneligc])
 # r8169 driver
 #------------------------------------------------------------------------------
 
+AC_ARG_ENABLE([r8169x],
+    AS_HELP_STRING([--enable-r8169x],
+                   [Enable r8169 driver (kernel > 4.0)]),
+    [
+        case "${enableval}" in
+            yes) enable_r8169x=1
+                ;;
+            no) enable_r8169x=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-r8169x])
+                ;;
+        esac
+    ],
+    [enable_r8169x=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_R8169X, test "x$enable_r8169x" = "x1")
+AC_SUBST(ENABLE_R8169X,[$enable_r8169x])
+
 AC_ARG_ENABLE([r8169],
     AS_HELP_STRING([--enable-r8169],
                    [Enable r8169 driver]),
@@ -1222,6 +1241,8 @@ AC_CONFIG_FILES([
         devices/igb/Makefile
         devices/igc/Kbuild
         devices/igc/Makefile
+        devices/r8169/Kbuild
+        devices/r8169/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile
