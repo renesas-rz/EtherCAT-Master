@@ -4319,10 +4319,7 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	/* Force memory writes to complete before releasing descriptor */
 	dma_wmb();
 
-	if (!tp->ecdev)
-		door_bell = __netdev_sent_queue(dev, skb->len, netdev_xmit_more());
-	else
-		door_bell = 0;
+	door_bell = __netdev_sent_queue(dev, skb->len, !tp->ecdev && netdev_xmit_more());
 
 	txd_first->opts1 |= cpu_to_le32(DescOwn | FirstFrag);
 
@@ -4841,6 +4838,9 @@ static int rtl_open(struct net_device *dev)
 	rtl8169_init_counter_offsets(tp);
 	if (!tp->ecdev)
 		netif_start_queue(dev);
+	else
+		ecdev_set_link(tp->ecdev, netif_carrier_ok(dev));
+
 out:
 	pm_runtime_put_sync(&pdev->dev);
 
@@ -5334,6 +5334,10 @@ static void ec_poll(struct net_device *dev)
 	struct rtl8169_private *tp = netdev_priv(dev);
 	u16 status = rtl_get_events(tp);
 
+	if (jiffies - tp->ec_watchdog_jiffies >= 2 * HZ) {
+		ecdev_set_link(tp->ecdev, netif_carrier_ok(dev));
+		tp->ec_watchdog_jiffies = jiffies;
+	}
 
 	if ((status & 0xffff) == 0xffff || !(status & tp->irq_mask))
 		return;
@@ -5344,12 +5348,6 @@ static void ec_poll(struct net_device *dev)
 
 	if (status & LinkChg)
 		phy_mac_interrupt(tp->phydev);
-
-	if (jiffies - tp->ec_watchdog_jiffies >= 2 * HZ) {
-		void __iomem *ioaddr = tp->mmio_addr;
-		ecdev_set_link(tp->ecdev, netif_carrier_ok(dev));
-		tp->ec_watchdog_jiffies = jiffies;
-	}
 
 	rtl_ack_events(tp, status);
 }
