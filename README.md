@@ -1,14 +1,8 @@
 This is the README file of the IgH EtherCAT Master.
 
-vim: spelllang=en spell tw=78
-
 Contents:
-- [General Information](#general-information)
-- [Requirements](#requirements)
-- [Building and Installing](#building-and-installing)
-- [Realtime and Tuning](#realtime-and-tuning)
-- [License](#license)
-- [Coding Style](#coding-style)
+
+[[_TOC_]]
 
 # General Information
 
