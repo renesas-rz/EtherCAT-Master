@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
