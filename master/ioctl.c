@@ -128,6 +128,8 @@ static ATTRIBUTES int ec_ioctl_master(
     io.domain_count = ec_master_domain_count(master);
 #ifdef EC_EOE
     io.eoe_handler_count = ec_master_eoe_handler_count(master);
+#else
+    io.eoe_handler_count = 0;
 #endif
     io.phase = (uint8_t) master->phase;
     io.active = (uint8_t) master->active;

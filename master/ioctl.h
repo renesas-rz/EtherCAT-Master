@@ -47,7 +47,7 @@
  *
  * Increment this when changing the ioctl interface!
  */
-#define EC_IOCTL_VERSION_MAGIC 37
+#define EC_IOCTL_VERSION_MAGIC 38
 
 // Command-line tool
 #define EC_IOCTL_MODULE                EC_IOR(0x00, ec_ioctl_module_t)
@@ -172,9 +172,7 @@ typedef struct {
     uint32_t slave_count;
     uint32_t config_count;
     uint32_t domain_count;
-#ifdef EC_EOE
     uint32_t eoe_handler_count;
-#endif
     uint8_t phase;
     uint8_t active;
     uint8_t scan_busy;
