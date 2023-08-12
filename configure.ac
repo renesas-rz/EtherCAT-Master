@@ -578,25 +578,6 @@ AC_SUBST(KERNEL_IGC,[$kerneligc])
 # r8169 driver
 #------------------------------------------------------------------------------
 
-AC_ARG_ENABLE([r8169x],
-    AS_HELP_STRING([--enable-r8169x],
-                   [Enable r8169 driver (kernel > 4.0)]),
-    [
-        case "${enableval}" in
-            yes) enable_r8169x=1
-                ;;
-            no) enable_r8169x=0
-                ;;
-            *) AC_MSG_ERROR([Invalid value for --enable-r8169x])
-                ;;
-        esac
-    ],
-    [enable_r8169x=0] # disabled by default
-)
-
-AM_CONDITIONAL(ENABLE_R8169X, test "x$enable_r8169x" = "x1")
-AC_SUBST(ENABLE_R8169X,[$enable_r8169x])
-
 AC_ARG_ENABLE([r8169],
     AS_HELP_STRING([--enable-r8169],
                    [Enable r8169 driver]),
@@ -629,12 +610,18 @@ AC_ARG_WITH([r8169-kernel],
     ]
 )
 
+AX_COMPARE_VERSION(["$kernel_r8169"], [ge], [5.0.0],
+    AC_SUBST(R8169_KERNEL_5, [1]),
+    AC_SUBST(R8169_KERNEL_5, [0])
+)
+
 if test "x${enable_r8169}" = "x1"; then
     AC_MSG_CHECKING([for kernel for r8169 driver])
 
     kernels=`ls -1 ${srcdir}/devices/ | grep -oE "^r8169-.*-" | cut -d "-" -f 2 | uniq`
+    kernels5=`ls -1 ${srcdir}/devices/r8169/ | grep -oE "^r8169_main-.*-" | cut -d "-" -f 2 | uniq`
     found=0
-    for k in $kernels; do
+    for k in $kernels $kernels5; do
         if test "$kernel_r8169" = "$k"; then
             found=1
         fi

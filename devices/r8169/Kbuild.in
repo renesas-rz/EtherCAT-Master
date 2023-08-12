@@ -40,7 +40,8 @@ REV := $(shell if test -s $(TOPDIR)/revision; then \
 		git -C $(TOPDIR) describe 2>/dev/null || echo "unknown"; \
 	fi)
 
-ifeq (@ENABLE_R8169X@,1)
+ifeq (@ENABLE_R8169@,1)
+ifeq (@R8169_KERNEL_5@,1)
 	obj-m += ec_r8169.o
 
 	ec_r8169-objs := \
@@ -49,6 +50,7 @@ ifeq (@ENABLE_R8169X@,1)
 		r8169_phy_config-@KERNEL_R8169@-ethercat.o
 
 	CFLAGS_r8169_main-@KERNEL_R8169@-ethercat.o = -DREV=$(REV)
+endif
 endif
 
 
