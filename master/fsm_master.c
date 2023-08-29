@@ -584,6 +584,7 @@ void ec_fsm_master_action_idle(
     for (slave = master->slaves;
             slave < master->slaves + master->slave_count;
             slave++) {
+#ifndef EC_SKIP_SDO_DICT
         if (!(slave->sii.mailbox_protocols & EC_MBOX_COE)
                 || (slave->sii.has_general
                     && !slave->sii.coe_details.enable_sdo_info)
@@ -596,8 +597,10 @@ void ec_fsm_master_action_idle(
                     || (slave->sii.has_general
                         && !slave->sii.coe_details.enable_sdo_info)
                     ){
+#endif
                 // SDO info not supported. Enable processing of requests
                 ec_fsm_slave_set_ready(&slave->fsm);
+#ifndef EC_SKIP_SDO_DICT
             }
             continue;
         }
@@ -614,6 +617,7 @@ void ec_fsm_master_action_idle(
         ec_fsm_coe_exec(&fsm->fsm_coe, fsm->datagram); // execute immediately
         fsm->datagram->device_index = fsm->slave->device_index;
         return;
+#endif
     }
 
     // check for pending SII write operations.
@@ -1135,6 +1139,9 @@ void ec_fsm_master_state_scan_slave(
     if (ec_fsm_slave_scan_exec(&fsm->fsm_slave_scan)) {
         return;
     }
+    // Assume that the slaves mailbox data is valid even if the slave scanning skipped
+    // the clear mailbox state, e.g. if the slave refused to enter state INIT.
+    fsm->slave->valid_mbox_data = 1;
 
 #ifdef EC_EOE
     if (slave->sii.mailbox_protocols & EC_MBOX_EOE) {

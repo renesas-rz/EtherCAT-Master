@@ -47,7 +47,7 @@
  *
  * Increment this when changing the ioctl interface!
  */
-#define EC_IOCTL_VERSION_MAGIC 38
+#define EC_IOCTL_VERSION_MAGIC 39
 
 // Command-line tool
 #define EC_IOCTL_MODULE                EC_IOR(0x00, ec_ioctl_module_t)
@@ -86,6 +86,7 @@
 #ifdef EC_EOE
 #define EC_IOCTL_EOE_HANDLER          EC_IOWR(0x1f, ec_ioctl_eoe_handler_t)
 #endif
+#define EC_IOCTL_SLAVE_DICT_UPLOAD    EC_IOW(0x7f, ec_ioctl_slave_dict_upload_t)
 
 // Application interface
 #define EC_IOCTL_REQUEST                EC_IO(0x20)
@@ -809,6 +810,13 @@ typedef struct {
     // outputs
     ec_master_link_state_t *state;
 } ec_ioctl_link_state_t;
+
+/*****************************************************************************/
+
+typedef struct {
+    // inputs
+    uint16_t slave_position;
+} ec_ioctl_slave_dict_upload_t;
 
 /*****************************************************************************/
 
