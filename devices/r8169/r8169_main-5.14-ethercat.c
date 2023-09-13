@@ -38,6 +38,18 @@
 #include "../ecdev.h"
 
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
+
 
 #define FIRMWARE_8168D_1	"rtl_nic/rtl8168d-1.fw"
 #define FIRMWARE_8168D_2	"rtl_nic/rtl8168d-2.fw"
@@ -1758,7 +1770,15 @@ rtl_coalesce_info(struct rtl8169_private *tp)
 	return ERR_PTR(-ELNRNG);
 }
 
-static int rtl_get_coalesce(struct net_device *dev, struct ethtool_coalesce *ec)
+static int rtl_get_coalesce(struct net_device *dev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 4
+			    struct ethtool_coalesce *ec,
+			    struct kernel_ethtool_coalesce *kec,
+			    struct netlink_ext_ack *ack)
+
+#else
+			    struct ethtool_coalesce *ec)
+#endif
 {
 	struct rtl8169_private *tp = netdev_priv(dev);
 	const struct rtl_coalesce_info *ci;
@@ -1816,7 +1836,15 @@ static int rtl_coalesce_choose_scale(struct rtl8169_private *tp, u32 usec,
 	return -ERANGE;
 }
 
-static int rtl_set_coalesce(struct net_device *dev, struct ethtool_coalesce *ec)
+static int rtl_set_coalesce(struct net_device *dev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 4
+			    struct ethtool_coalesce *ec,
+			    struct kernel_ethtool_coalesce *kec,
+			    struct netlink_ext_ack *ack)
+
+#else
+			    struct ethtool_coalesce *ec)
+#endif
 {
 	struct rtl8169_private *tp = netdev_priv(dev);
 	u32 tx_fr = ec->tx_max_coalesced_frames;
