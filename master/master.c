@@ -1919,11 +1919,9 @@ static int ec_master_eoe_thread(void *priv_data)
         }
 
         if (sth_to_send) {
-	    ec_lock_down(&master->io_sem);
             list_for_each_entry(eoe, &master->eoe_handlers, list) {
                 ec_eoe_queue(eoe);
             }
-	    ec_lock_up(&master->io_sem);
             // (try to) send datagrams
             ec_lock_down(&master->io_sem);
             master->send_cb(master->cb_data);
