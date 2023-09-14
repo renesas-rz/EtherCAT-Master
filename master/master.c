@@ -1925,9 +1925,9 @@ static int ec_master_eoe_thread(void *priv_data)
             }
 	    ec_lock_up(&master->io_sem);
             // (try to) send datagrams
-            ec_lock_down(&master->ext_queue_sem);
+            ec_lock_down(&master->io_sem);
             master->send_cb(master->cb_data);
-            ec_lock_up(&master->ext_queue_sem);
+            ec_lock_up(&master->io_sem);
         }
 
 schedule:
