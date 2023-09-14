@@ -2852,11 +2852,13 @@ void ecrt_master_send_ext(ec_master_t *master)
 {
     ec_datagram_t *datagram, *next;
 
-    list_for_each_entry_safe(datagram, next, &master->ext_datagram_queue,
-            queue) {
-        list_del(&datagram->queue);
-        ec_master_queue_datagram(master, datagram);
-    }
+    ec_lock_down(&master->ext_queue_sem);
+        list_for_each_entry_safe(datagram, next, &master->ext_datagram_queue,
+                queue) {
+            list_del(&datagram->queue);
+            ec_master_queue_datagram(master, datagram);
+        }
+    ec_lock_up(&master->ext_queue_sem);
 
     ecrt_master_send(master);
 }
