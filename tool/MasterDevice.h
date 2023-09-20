@@ -94,6 +94,7 @@ class MasterDeviceSoeException:
 
 /****************************************************************************/
 
+#ifdef EC_EOE
 class MasterDeviceEoeException:
     public MasterDeviceException
 {
@@ -108,6 +109,7 @@ class MasterDeviceEoeException:
             MasterDeviceException("EoE set IP parameter failed."),
             result(result) {};
 };
+#endif
 
 /****************************************************************************/
 

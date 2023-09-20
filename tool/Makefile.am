@@ -49,7 +49,6 @@ ethercat_SOURCES = \
 	CommandFoeRead.cpp \
 	CommandFoeWrite.cpp \
 	CommandGraph.cpp \
-	CommandIp.cpp \
 	CommandMaster.cpp \
 	CommandPdos.cpp \
 	CommandRegRead.cpp \
@@ -75,9 +74,9 @@ ethercat_SOURCES = \
 	sii_crc.cpp
 
 if ENABLE_EOE
-ethercat_SOURCES += CommandEoe.cpp
+ethercat_SOURCES += CommandEoe.cpp CommandIp.cpp
 else
-EXTRA_DIST += CommandEoe.cpp
+EXTRA_DIST += CommandEoe.cpp CommandIp.cpp
 endif
 
 noinst_HEADERS = \
@@ -93,7 +92,6 @@ noinst_HEADERS = \
 	CommandFoeRead.h \
 	CommandFoeWrite.h \
 	CommandGraph.h \
-	CommandIp.h \
 	CommandMaster.h \
 	CommandPdos.h \
 	CommandRegRead.h \
@@ -118,9 +116,9 @@ noinst_HEADERS = \
 	sii_crc.h
 
 if ENABLE_EOE
-noinst_HEADERS += CommandEoe.h
+noinst_HEADERS += CommandEoe.h CommandIp.h
 else
-EXTRA_DIST += CommandEoe.h
+EXTRA_DIST += CommandEoe.h CommandIp.h
 endif
 
 REV = `if test -s $(top_srcdir)/revision; then \
