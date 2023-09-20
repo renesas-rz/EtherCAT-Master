@@ -159,31 +159,20 @@ int ec_fsm_eoe_prepare_set(
     ec_slave_t *slave = fsm->slave;
     ec_master_t *master = slave->master;
     ec_eoe_request_t *req = fsm->request;
-    size_t size = 8;
 
-    if (req->mac_address_included) {
-        size += ETH_ALEN;
-    }
-
-    if (req->ip_address_included) {
-        size += 4;
-    }
-
-    if (req->subnet_mask_included) {
-        size += 4;
-    }
-
-    if (req->gateway_included) {
-        size += 4;
-    }
-
-    if (req->dns_included) {
-        size += 4;
-    }
-
-    if (req->name_included) {
-        size += EC_MAX_HOSTNAME_SIZE;
-    }
+    // Note: based on wireshark packet filter it suggests that the EOE_INIT
+    //   information is a fixed size with fixed information positions.
+    //   see: packet-ecatmb.h and packet-ecatmb.c
+    //   However, TwinCAT 2.1 testing also indicates that if a piece of
+    //   information is missing then all subsequent items are ignored
+    //   Also, if you want DHCP, then only set the mac address.
+    size_t size = 8 +                       // header + flags
+                  ETH_ALEN +                // mac address
+                  4 +                       // ip address
+                  4 +                       // subnet mask
+                  4 +                       // gateway
+                  4 +                       // dns server
+                  EC_MAX_HOSTNAME_SIZE;     // dns name
 
     data = ec_slave_mbox_prepare_send(slave, datagram, EC_MBOX_TYPE_EOE,
             size);
@@ -191,9 +180,13 @@ int ec_fsm_eoe_prepare_set(
         return PTR_ERR(data);
     }
 
+    // zero data
+    memset(data, 0, size);
+
+    // header
     EC_WRITE_U8(data, EC_EOE_FRAMETYPE_SET_IP_REQ); // Set IP parameter req.
-    EC_WRITE_U8(data + 1, 0x01); // last fragment, no timestamps
-    EC_WRITE_U16(data + 2, 0x0000); // fragment no., offset, frame no.
+    EC_WRITE_U8(data + 1, 0x00);                    // not used
+    EC_WRITE_U16(data + 2, 0x0000);                 // not used
 
     EC_WRITE_U32(data + 4,
             ((req->mac_address_included != 0) << 0) |
@@ -208,37 +201,37 @@ int ec_fsm_eoe_prepare_set(
 
     if (req->mac_address_included) {
         memcpy(cur, req->mac_address, ETH_ALEN);
-        cur += ETH_ALEN;
     }
+    cur += ETH_ALEN;
 
     if (req->ip_address_included) {
         uint32_t swapped = htonl(req->ip_address);
         memcpy(cur, &swapped, 4);
-        cur += 4;
     }
+    cur += 4;
 
     if (req->subnet_mask_included) {
         uint32_t swapped = htonl(req->subnet_mask);
         memcpy(cur, &swapped, 4);
-        cur += 4;
     }
+    cur += 4;
 
     if (req->gateway_included) {
         uint32_t swapped = htonl(req->gateway);
         memcpy(cur, &swapped, 4);
-        cur += 4;
     }
+    cur += 4;
 
     if (req->dns_included) {
         uint32_t swapped = htonl(req->dns);
         memcpy(cur, &swapped, 4);
-        cur += 4;
     }
+    cur += 4;
 
     if (req->name_included) {
         memcpy(cur, req->name, EC_MAX_HOSTNAME_SIZE);
-        cur += EC_MAX_HOSTNAME_SIZE;
     }
+    cur += EC_MAX_HOSTNAME_SIZE;
 
     if (master->debug_level) {
         EC_SLAVE_DBG(slave, 0, "Set IP parameter request:\n");
