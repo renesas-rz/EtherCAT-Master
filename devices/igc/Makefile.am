@@ -74,5 +74,54 @@ EXTRiA_DIST = igc-6.6-ethercat.h \
 	igc_nvm-6.6-ethercat.c \
 	igc_phy-6.6-ethercat.h \
 	igc_regs-6.6-ethercat.h \
-	igc_tsn-6.6-orig.h
+	igc_tsn-6.6-orig.h \
+	igc-6.4-ethercat.h \
+	igc_base-6.4-orig.h \
+	igc_diag-6.4-orig.c \
+	igc_ethtool-6.4-orig.c \
+	igc_i225-6.4-orig.c \
+	igc_mac-6.4-orig.c \
+	igc_nvm-6.4-ethercat.h \
+	igc_phy-6.4-orig.c \
+	igc_regs-6.4-orig.h \
+	igc_xdp-6.4-ethercat.c \
+	igc-6.4-orig.h \
+	igc_defines-6.4-ethercat.h \
+	igc_diag-6.4-orig.h \
+	igc_hw-6.4-ethercat.h \
+	igc_i225-6.4-orig.h \
+	igc_mac-6.4-orig.h \
+	igc_nvm-6.4-orig.c \
+	igc_phy-6.4-orig.h \
+	igc_tsn-6.4-ethercat.c \
+	igc_xdp-6.4-ethercat.h \
+	igc_base-6.4-ethercat.c \
+	igc_defines-6.4-orig.h \
+	igc_dump-6.4-ethercat.c \
+	igc_hw-6.4-orig.h \
+	igc_main-6.4-ethercat.c \
+	igc_nvm-6.4-orig.h \
+	igc_ptp-6.4-ethercat.c \
+	igc_tsn-6.4-ethercat.h \
+	igc_xdp-6.4-orig.c\
+	igc_base-6.4-ethercat.h \
+	igc_diag-6.4-ethercat.c \
+	igc_dump-6.4-orig.c \
+	igc_i225-6.4-ethercat.c \
+	igc_mac-6.4-ethercat.c \
+	igc_main-6.4-orig.c \
+	igc_phy-6.4-ethercat.c \
+	igc_ptp-6.4-orig.c \
+	igc_tsn-6.4-orig.c \
+	igc_xdp-6.4-orig.h\
+	igc_base-6.4-orig.c \
+	igc_diag-6.4-ethercat.h \
+	igc_ethtool-6.4-ethercat.c \
+	igc_i225-6.4-ethercat.h \
+	igc_mac-6.4-ethercat.h \
+	igc_nvm-6.4-ethercat.c \
+	igc_phy-6.4-ethercat.h \
+	igc_regs-6.4-ethercat.h \
+	igc_tsn-6.4-orig.h
+
 
