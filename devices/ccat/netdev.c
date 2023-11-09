@@ -249,9 +249,11 @@ struct ccat_mac_register {
 	u8 mii_connected;
 };
 
+static void ccat_eth_fifo_reset(struct ccat_eth_fifo *const fifo);
 static void fifo_set_end(struct ccat_eth_fifo *const fifo, size_t size)
 {
 	fifo->end = fifo->mem.start + size - sizeof(struct ccat_eth_frame);
+	ccat_eth_fifo_reset(fifo);
 }
 
 static void ccat_dma_free(struct ccat_eth_priv *const priv)
