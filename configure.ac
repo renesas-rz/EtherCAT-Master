@@ -728,12 +728,12 @@ AC_MSG_CHECKING([for Xenomai path])
 if test -z "${xenomaidir}"; then
     AC_MSG_RESULT([not specified.])
 else
-    if test \! -r ${xenomaidir}/include/xeno_config.h; then
+    if test \! -x ${xenomaidir}/bin/xeno-config; then
         AC_MSG_ERROR([no Xenomai installation found in ${xenomaidir}!])
     fi
     AC_MSG_RESULT([$xenomaidir])
 
-    xenomai_ver=`grep -R "VERSION_STRING" ${xenomaidir}/include/xeno_config.h | awk '{print $3}'`
+    xenomai_ver=`$xenomaidir/bin/xeno-config --version`
     xenomai_ver=${xenomai_ver##\"}
     xenomai_ver=${xenomai_ver%%\"}
     echo "xenomai version: " $xenomai_ver
