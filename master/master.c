@@ -1732,9 +1732,7 @@ static int ec_master_eoe_thread(void *priv_data)
                 ec_eoe_queue(eoe);
             }
             // (try to) send datagrams
-            down(&master->ext_queue_sem);
             master->send_cb(master->cb_data);
-            up(&master->ext_queue_sem);
         }
 
 schedule:
@@ -2513,11 +2511,13 @@ void ecrt_master_send_ext(ec_master_t *master)
 {
     ec_datagram_t *datagram, *next;
 
+    down(&master->ext_queue_sem);
     list_for_each_entry_safe(datagram, next, &master->ext_datagram_queue,
             queue) {
         list_del(&datagram->queue);
         ec_master_queue_datagram(master, datagram);
     }
+    up(&master->ext_queue_sem);
 
     ecrt_master_send(master);
 }
