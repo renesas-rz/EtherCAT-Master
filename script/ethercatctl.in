@@ -126,12 +126,12 @@ start)
         fi
 
         if [ "${MODULE}" != "generic" ] && [ "${MODULE}" != "ccat" ]; then
-            # try to unload standard module
+            # unload standard module and check if unloading was successful
+            ${RMMOD} "${MODULE}" 2> /dev/null || true
             if ${LSMOD} | grep "^${MODULE} " > /dev/null; then
-                if ! ${RMMOD} "${MODULE}"; then
-                    ${RMMOD} ${LOADED_MODULES}
-                    exit 1
-                fi
+                # could not unload module
+                ${RMMOD} ${LOADED_MODULES}
+                exit 1
             fi
         fi
 
