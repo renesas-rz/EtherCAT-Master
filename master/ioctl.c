@@ -3050,6 +3050,7 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
         kfree(key);
         return -EFAULT;
     }
+    key[ioctl.key_size] = '\0';
 
     if (down_interruptible(&master->master_sem)) {
         kfree(key);
