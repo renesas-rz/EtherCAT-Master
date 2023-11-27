@@ -144,6 +144,8 @@ noinst_HEADERS = \
 	e100-5.4-orig.c \
 	e100-5.10-ethercat.c \
 	e100-5.10-orig.c \
+	e100-5.14-ethercat.c \
+	e100-5.14-orig.c \
 	ecdev.h \
 	generic.c \
 	r8169-2.6.24-ethercat.c \
