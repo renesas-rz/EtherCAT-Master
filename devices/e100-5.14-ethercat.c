@@ -192,6 +192,18 @@
 #include "../globals.h"
 #include "ecdev.h"
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
+
 #define DRV_NAME		"ec_e100"
 #define DRV_DESCRIPTION		"Intel(R) PRO/100 Network Driver, EtherCAT enabled"
 #define DRV_COPYRIGHT		"Copyright(c) 1999-2006 Intel Corporation"
@@ -2710,7 +2722,13 @@ static int e100_set_eeprom(struct net_device *netdev,
 }
 
 static void e100_get_ringparam(struct net_device *netdev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 5
+    struct ethtool_ringparam *ring,
+    struct kernel_ethtool_ringparam *kring,
+    struct netlink_ext_ack *ack)
+#else
 	struct ethtool_ringparam *ring)
+#endif
 {
 	struct nic *nic = netdev_priv(netdev);
 	struct param_range *rfds = &nic->params.rfds;
@@ -2723,7 +2741,13 @@ static void e100_get_ringparam(struct net_device *netdev,
 }
 
 static int e100_set_ringparam(struct net_device *netdev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 5
+    struct ethtool_ringparam *ring,
+    struct kernel_ethtool_ringparam *kring,
+    struct netlink_ext_ack *ack)
+#else
 	struct ethtool_ringparam *ring)
+#endif
 {
 	struct nic *nic = netdev_priv(netdev);
 	struct param_range *rfds = &nic->params.rfds;
