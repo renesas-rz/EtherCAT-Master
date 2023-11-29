@@ -469,6 +469,52 @@ if test "x${enableigb}" = "x1"; then
 fi
 
 AC_SUBST(KERNEL_IGB,[$kerneligb])
+#------------------------------------------------------------------------------
+# igc driver
+#------------------------------------------------------------------------------
+
+AC_ARG_ENABLE([igc],
+    AS_HELP_STRING([--enable-igc],
+                   [Enable igc driver]),
+    [
+        case "${enableval}" in
+            yes) enableigc=1
+                ;;
+            no) enableigc=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-igc])
+                ;;
+        esac
+    ],
+    [enableigc=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_IGC, test "x$enableigc" = "x1")
+AC_SUBST(ENABLE_IGC,[$enableigc])
+
+AC_ARG_WITH([igc-kernel],
+    AS_HELP_STRING([--with-igc-kernel=<X.Y.Z>],
+                   [igc kernel (only if differing)]
+    ),
+    [
+        kerneligc=[$withval]
+    ],
+    [
+        kerneligc=$linuxversion
+    ]
+)
+
+if test "x${enableigc}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for igc driver])
+
+    if test ! -f "${srcdir}/devices/igc/igc_main-${kerneligc}-orig.c"; then
+        AC_MSG_ERROR([kernel $kerneligc not available for igc driver!])
+    fi
+
+    AC_MSG_RESULT([$kerneligc])
+fi
+
+AC_SUBST(KERNEL_IGC,[$kerneligc])
 
 #------------------------------------------------------------------------------
 # r8169 driver
@@ -1230,6 +1276,8 @@ AC_CONFIG_FILES([
         devices/e1000e/Makefile
         devices/igb/Kbuild
         devices/igb/Makefile
+        devices/igc/Kbuild
+        devices/igc/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile
