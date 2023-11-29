@@ -54,6 +54,8 @@ noinst_HEADERS = \
 	8139too-4.4-orig.c \
 	8139too-5.10-ethercat.c \
 	8139too-5.10-orig.c \
+	8139too-5.14-ethercat.c \
+	8139too-5.14-orig.c \
 	8139too-6.1-ethercat.c \
 	8139too-6.1-orig.c \
 	create_driver_table.py \
