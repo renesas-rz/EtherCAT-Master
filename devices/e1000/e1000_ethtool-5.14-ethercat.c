@@ -7,6 +7,18 @@
 #include <linux/jiffies.h>
 #include <linux/uaccess.h>
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
+
 enum {NETDEV_STATS, E1000_STATS};
 
 struct e1000_stats {
@@ -539,7 +551,13 @@ static void e1000_get_drvinfo(struct net_device *netdev,
 }
 
 static void e1000_get_ringparam(struct net_device *netdev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 5
+                             struct ethtool_ringparam *ring,
+                              struct kernel_ethtool_ringparam *kring,
+                              struct netlink_ext_ack *ack)
+#else
 				struct ethtool_ringparam *ring)
+#endif
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
@@ -556,7 +574,13 @@ static void e1000_get_ringparam(struct net_device *netdev,
 }
 
 static int e1000_set_ringparam(struct net_device *netdev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 5
+                             struct ethtool_ringparam *ring,
+                              struct kernel_ethtool_ringparam *kring,
+                              struct netlink_ext_ack *ack)
+#else
 			       struct ethtool_ringparam *ring)
+#endif
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
@@ -1739,7 +1763,14 @@ static int e1000_set_phys_id(struct net_device *netdev,
 }
 
 static int e1000_get_coalesce(struct net_device *netdev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 4
+                            struct ethtool_coalesce *ec,
+                            struct kernel_ethtool_coalesce *kec,
+                            struct netlink_ext_ack *ack)
+
+#else
 			      struct ethtool_coalesce *ec)
+#endif
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 
@@ -1755,7 +1786,13 @@ static int e1000_get_coalesce(struct net_device *netdev,
 }
 
 static int e1000_set_coalesce(struct net_device *netdev,
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 4
+                            struct ethtool_coalesce *ec,
+                            struct kernel_ethtool_coalesce *kec,
+                            struct netlink_ext_ack *ack)
+#else
 			      struct ethtool_coalesce *ec)
+#endif
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
