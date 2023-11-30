@@ -32,7 +32,8 @@ SUBDIRS = \
 	e1000 \
 	e1000e \
 	genet \
-	igb
+	igb \
+	igc
 
 # using HEADERS to enable tags target
 noinst_HEADERS = \

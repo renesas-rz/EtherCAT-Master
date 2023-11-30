@@ -39,6 +39,7 @@ DRIVER_MAP=(
     ("e1000e", "e1000e", "netdev"),
     ("genet", "bcmgenet", "bcmgenet"),
     ("igb", "igb", "igb_main"),
+    ("igc", "igc", "igc_main"),
     (".", "r8169", "r8169"),
 )
 
