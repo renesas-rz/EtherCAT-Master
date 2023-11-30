@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -1482,7 +1480,7 @@ static ATTRIBUTES int ec_ioctl_config_idn(
 
     ioctl->drive_no = req->drive_no;
     ioctl->idn = req->idn;
-    ioctl->state = req->state;
+    ioctl->state = req->al_state;
     ioctl->size = req->data_size;
     memcpy(ioctl->data, req->data,
             min((u32) ioctl->size, (u32) EC_MAX_IDN_DATA_SIZE));
@@ -3052,6 +3050,7 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
         kfree(key);
         return -EFAULT;
     }
+    key[ioctl.key_size] = '\0';
 
     if (down_interruptible(&master->master_sem)) {
         kfree(key);

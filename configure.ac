@@ -433,6 +433,54 @@ AC_SUBST(KERNEL_E1000E,[$kernele1000e])
 AC_SUBST(E1000E_LAYOUT, [$e1000elayout])
 
 #------------------------------------------------------------------------------
+# genet driver
+#------------------------------------------------------------------------------
+
+AC_ARG_ENABLE([genet],
+    AS_HELP_STRING([--enable-genet],
+                   [Enable genet driver (for Raspi 4)]),
+    [
+        case "${enableval}" in
+            yes) enablegenet=1
+                ;;
+            no) enablegenet=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-genet])
+                ;;
+        esac
+    ],
+    [enablegenet=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_GENET, test "x$enablegenet" = "x1")
+AC_SUBST(ENABLE_GENET,[$enablegenet])
+
+AC_ARG_WITH([genet-kernel],
+    AC_HELP_STRING(
+        [--with-genet-kernel=<X.Y.Z>],
+        [genet kernel (only if differing)]
+    ),
+    [
+        kernelgenet=[$withval]
+    ],
+    [
+        kernelgenet=$linuxversion
+    ]
+)
+
+if test "x${enablegenet}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for genet driver])
+
+    if test ! -f "${srcdir}/devices/genet/bcmgenet-${kernelgenet}-orig.c"; then
+        AC_MSG_ERROR([kernel $kernelgenet not available for genet driver!])
+    fi
+
+    AC_MSG_RESULT([$kernelgenet])
+fi
+
+AC_SUBST(KERNEL_GENET,[$kernelgenet])
+
+#------------------------------------------------------------------------------
 # igb driver
 #------------------------------------------------------------------------------
 
@@ -1168,6 +1216,8 @@ AC_CONFIG_FILES([
         devices/e1000/Makefile
         devices/e1000e/Kbuild
         devices/e1000e/Makefile
+        devices/genet/Kbuild
+        devices/genet/Makefile
         devices/igb/Kbuild
         devices/igb/Makefile
         devices/igc/Kbuild

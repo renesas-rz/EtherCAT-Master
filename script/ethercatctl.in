@@ -102,6 +102,14 @@ start)
         MASTER_INDEX=$((${MASTER_INDEX} + 1))
     done
 
+    if [ -z "${DEVICES}" ]; then
+        echo "ERROR: No network cards for EtherCAT specified."
+        echo -n "Please edit ${ETHERCAT_CONFIG} with root permissions"
+        echo -n " and set MASTER0_DEVICE variable to either a "
+        echo "network interface name (like eth0) or to a MAC address."
+        exit 1
+    fi
+
     # load master module
     if ! ${MODPROBE} ${MODPROBE_FLAGS} ec_master \
             main_devices="${DEVICES}" backup_devices="${BACKUPS}"; then
@@ -118,12 +126,12 @@ start)
         fi
 
         if [ "${MODULE}" != "generic" ] && [ "${MODULE}" != "ccat" ]; then
-            # try to unload standard module
+            # unload standard module and check if unloading was successful
+            ${RMMOD} "${MODULE}" 2> /dev/null || true
             if ${LSMOD} | grep "^${MODULE} " > /dev/null; then
-                if ! ${RMMOD} "${MODULE}"; then
-                    ${RMMOD} ${LOADED_MODULES}
-                    exit 1
-                fi
+                # could not unload module
+                ${RMMOD} ${LOADED_MODULES}
+                exit 1
             fi
         fi
 

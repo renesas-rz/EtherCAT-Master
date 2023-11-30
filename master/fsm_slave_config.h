@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -68,6 +66,7 @@ struct ec_fsm_slave_config
     ec_soe_request_t soe_request_copy; /**< Copied SDO request. */
     unsigned long jiffies_start; /**< For timeout calculations. */
     unsigned int take_time; /**< Store jiffies after datagram reception. */
+    unsigned long wait_ms; /**< Wait time (used to wait before SAFEOP). */
 };
 
 /*****************************************************************************/

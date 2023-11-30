@@ -56,6 +56,11 @@
 
 /*****************************************************************************/
 
+enum {
+    /* genet driver needs extra headroom in skb for status block */
+    EXTRA_HEADROOM = 64,
+};
+
 /** Constructor.
  *
  * \return 0 in case of success, else < 0
@@ -127,14 +132,14 @@ int ec_device_init(
 #endif
 
     for (i = 0; i < EC_TX_RING_SIZE; i++) {
-        if (!(device->tx_skb[i] = dev_alloc_skb(ETH_FRAME_LEN))) {
+        if (!(device->tx_skb[i] = dev_alloc_skb(ETH_FRAME_LEN + EXTRA_HEADROOM))) {
             EC_MASTER_ERR(master, "Error allocating device socket buffer!\n");
             ret = -ENOMEM;
             goto out_tx_ring;
         }
 
         // add Ethernet-II-header
-        skb_reserve(device->tx_skb[i], ETH_HLEN);
+        skb_reserve(device->tx_skb[i], ETH_HLEN + EXTRA_HEADROOM);
         eth = (struct ethhdr *) skb_push(device->tx_skb[i], ETH_HLEN);
         eth->h_proto = htons(0x88A4);
         memset(eth->h_dest, 0xFF, ETH_ALEN);
