@@ -2607,7 +2607,6 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 			total_bytes += size;
 		} 
 		else if (adapter->ecdev) {
-			/// @todo uncertain about this
 			unsigned char *va = page_address(rx_buffer->page) + rx_buffer->page_offset;
 			unsigned int size = le16_to_cpu(rx_desc->wb.upper.length);
 			ecdev_receive(adapter->ecdev, va, size);
