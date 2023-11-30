@@ -7164,11 +7164,15 @@ static int __igc_shutdown(struct pci_dev *pdev, bool *enable_wake,
 	u32 ctrl, rctl, status;
 	bool wake;
 
-	rtnl_lock();
-	netif_device_detach(netdev);
+	if (adapter->ecdev) {
+		ecdev_close(adapter->ecdev);
+	} else {
+		rtnl_lock();
+		netif_device_detach(netdev);
 
-	if (netif_running(netdev))
-		__igc_close(netdev, true);
+		if (netif_running(netdev))
+			__igc_close(netdev, true);
+	}
 
 	igc_ptp_suspend(adapter);
 
@@ -7301,14 +7305,17 @@ static int __maybe_unused igc_resume(struct device *dev)
 
 	wr32(IGC_WUS, ~0);
 
-	rtnl_lock();
-	if (!err && netif_running(netdev))
-		err = __igc_open(netdev, true);
+	if (adapter->ecdev) {
+		ecdev_open(adapter->ecdev);
+	} else {
+		rtnl_lock();
+		if (!err && netif_running(netdev))
+			err = __igc_open(netdev, true);
 
-	if (!err)
-		netif_device_attach(netdev);
-	rtnl_unlock();
-
+		if (!err)
+			netif_device_attach(netdev);
+		rtnl_unlock();
+	}
 	return err;
 }
 
