@@ -83,7 +83,7 @@ pdf:
 update docs server:
     stage: deploy
     rules:
-        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_NAMESPACE == "etherlab.org"
+        - if: $CI_COMMIT_BRANCH == "stable-1.5" && $CI_PROJECT_NAMESPACE == "etherlab.org"
     trigger: etherlab.org/docs
 
 # from 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml', but on all branches
