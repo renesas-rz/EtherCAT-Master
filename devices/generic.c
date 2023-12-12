@@ -126,13 +126,11 @@ void ec_gen_poll(struct net_device *dev)
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 static const struct net_device_ops ec_gen_netdev_ops = {
     .ndo_open       = ec_gen_netdev_open,
     .ndo_stop       = ec_gen_netdev_stop,
     .ndo_start_xmit = ec_gen_netdev_start_xmit,
 };
-#endif
 
 /*****************************************************************************/
 
@@ -159,13 +157,7 @@ int ec_gen_device_init(
         return -ENOMEM;
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     dev->netdev->netdev_ops = &ec_gen_netdev_ops;
-#else
-    dev->netdev->open = ec_gen_netdev_open;
-    dev->netdev->stop = ec_gen_netdev_stop;
-    dev->netdev->hard_start_xmit = ec_gen_netdev_start_xmit;
-#endif
 
     priv = netdev_priv(dev->netdev);
     *priv = dev;
