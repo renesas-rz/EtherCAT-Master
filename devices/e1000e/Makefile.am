@@ -55,16 +55,6 @@ EXTRA_DIST = \
 	80003es2lan-4.4-ethercat.h \
 	80003es2lan-4.4-orig.c \
 	80003es2lan-4.4-orig.h \
-	82571-2.6.32-ethercat.c \
-	82571-2.6.32-orig.c \
-	82571-2.6.33-ethercat.c \
-	82571-2.6.33-orig.c \
-	82571-2.6.34-ethercat.c \
-	82571-2.6.34-orig.c \
-	82571-2.6.35-ethercat.c \
-	82571-2.6.35-orig.c \
-	82571-2.6.37-ethercat.c \
-	82571-2.6.37-orig.c \
 	82571-3.10-ethercat.c \
 	82571-3.10-ethercat.h \
 	82571-3.10-orig.c \
@@ -93,16 +83,6 @@ EXTRA_DIST = \
 	82571-4.4-ethercat.h \
 	82571-4.4-orig.c \
 	82571-4.4-orig.h \
-	defines-2.6.32-ethercat.h \
-	defines-2.6.32-orig.h \
-	defines-2.6.33-ethercat.h \
-	defines-2.6.33-orig.h \
-	defines-2.6.34-ethercat.h \
-	defines-2.6.34-orig.h \
-	defines-2.6.35-ethercat.h \
-	defines-2.6.35-orig.h \
-	defines-2.6.37-ethercat.h \
-	defines-2.6.37-orig.h \
 	defines-3.10-ethercat.h \
 	defines-3.10-orig.h \
 	defines-3.12-ethercat.h \
@@ -121,16 +101,6 @@ EXTRA_DIST = \
 	defines-3.8-orig.h \
 	defines-4.4-ethercat.h \
 	defines-4.4-orig.h \
-	e1000-2.6.32-ethercat.h \
-	e1000-2.6.32-orig.h \
-	e1000-2.6.33-ethercat.h \
-	e1000-2.6.33-orig.h \
-	e1000-2.6.34-ethercat.h \
-	e1000-2.6.34-orig.h \
-	e1000-2.6.35-ethercat.h \
-	e1000-2.6.35-orig.h \
-	e1000-2.6.37-ethercat.h \
-	e1000-2.6.37-orig.h \
 	e1000-3.10-ethercat.h \
 	e1000-3.10-orig.h \
 	e1000-3.12-ethercat.h \
@@ -149,28 +119,8 @@ EXTRA_DIST = \
 	e1000-3.8-orig.h \
 	e1000-4.4-ethercat.h \
 	e1000-4.4-orig.h \
-	es2lan-2.6.32-ethercat.c \
-	es2lan-2.6.32-orig.c \
-	es2lan-2.6.33-ethercat.c \
-	es2lan-2.6.33-orig.c \
-	es2lan-2.6.34-ethercat.c \
-	es2lan-2.6.34-orig.c \
-	es2lan-2.6.35-ethercat.c \
-	es2lan-2.6.35-orig.c \
-	es2lan-2.6.37-ethercat.c \
-	es2lan-2.6.37-orig.c \
 	es2lan-3.2-ethercat.c \
 	es2lan-3.2-orig.c \
-	ethtool-2.6.32-ethercat.c \
-	ethtool-2.6.32-orig.c \
-	ethtool-2.6.33-ethercat.c \
-	ethtool-2.6.33-orig.c \
-	ethtool-2.6.34-ethercat.c \
-	ethtool-2.6.34-orig.c \
-	ethtool-2.6.35-ethercat.c \
-	ethtool-2.6.35-orig.c \
-	ethtool-2.6.37-ethercat.c \
-	ethtool-2.6.37-orig.c \
 	ethtool-3.10-ethercat.c \
 	ethtool-3.10-orig.c \
 	ethtool-3.12-ethercat.c \
@@ -189,16 +139,6 @@ EXTRA_DIST = \
 	ethtool-3.8-orig.c \
 	ethtool-4.4-ethercat.c \
 	ethtool-4.4-orig.c \
-	hw-2.6.32-ethercat.h \
-	hw-2.6.32-orig.h \
-	hw-2.6.33-ethercat.h \
-	hw-2.6.33-orig.h \
-	hw-2.6.34-ethercat.h \
-	hw-2.6.34-orig.h \
-	hw-2.6.35-ethercat.h \
-	hw-2.6.35-orig.h \
-	hw-2.6.37-ethercat.h \
-	hw-2.6.37-orig.h \
 	hw-3.10-ethercat.h \
 	hw-3.10-orig.h \
 	hw-3.12-ethercat.h \
@@ -217,16 +157,6 @@ EXTRA_DIST = \
 	hw-3.8-orig.h \
 	hw-4.4-ethercat.h \
 	hw-4.4-orig.h \
-	ich8lan-2.6.32-ethercat.c \
-	ich8lan-2.6.32-orig.c \
-	ich8lan-2.6.33-ethercat.c \
-	ich8lan-2.6.33-orig.c \
-	ich8lan-2.6.34-ethercat.c \
-	ich8lan-2.6.34-orig.c \
-	ich8lan-2.6.35-ethercat.c \
-	ich8lan-2.6.35-orig.c \
-	ich8lan-2.6.37-ethercat.c \
-	ich8lan-2.6.37-orig.c \
 	ich8lan-3.10-ethercat.c \
 	ich8lan-3.10-ethercat.h \
 	ich8lan-3.10-orig.c \
@@ -255,16 +185,6 @@ EXTRA_DIST = \
 	ich8lan-4.4-ethercat.h \
 	ich8lan-4.4-orig.c \
 	ich8lan-4.4-orig.h \
-	lib-2.6.32-ethercat.c \
-	lib-2.6.32-orig.c \
-	lib-2.6.33-ethercat.c \
-	lib-2.6.33-orig.c \
-	lib-2.6.34-ethercat.c \
-	lib-2.6.34-orig.c \
-	lib-2.6.35-ethercat.c \
-	lib-2.6.35-orig.c \
-	lib-2.6.37-ethercat.c \
-	lib-2.6.37-orig.c \
 	lib-3.2-ethercat.c \
 	lib-3.2-orig.c \
 	mac-3.10-ethercat.c \
@@ -319,16 +239,6 @@ EXTRA_DIST = \
 	manage-4.4-ethercat.h \
 	manage-4.4-orig.c \
 	manage-4.4-orig.h \
-	netdev-2.6.32-ethercat.c \
-	netdev-2.6.32-orig.c \
-	netdev-2.6.33-ethercat.c \
-	netdev-2.6.33-orig.c \
-	netdev-2.6.34-ethercat.c \
-	netdev-2.6.34-orig.c \
-	netdev-2.6.35-ethercat.c \
-	netdev-2.6.35-orig.c \
-	netdev-2.6.37-ethercat.c \
-	netdev-2.6.37-orig.c \
 	netdev-3.10-ethercat.c \
 	netdev-3.10-orig.c \
 	netdev-3.12-ethercat.c \
@@ -373,16 +283,6 @@ EXTRA_DIST = \
 	nvm-4.4-ethercat.h \
 	nvm-4.4-orig.c \
 	nvm-4.4-orig.h \
-	param-2.6.32-ethercat.c \
-	param-2.6.32-orig.c \
-	param-2.6.33-ethercat.c \
-	param-2.6.33-orig.c \
-	param-2.6.34-ethercat.c \
-	param-2.6.34-orig.c \
-	param-2.6.35-ethercat.c \
-	param-2.6.35-orig.c \
-	param-2.6.37-ethercat.c \
-	param-2.6.37-orig.c \
 	param-3.10-ethercat.c \
 	param-3.10-orig.c \
 	param-3.12-ethercat.c \
@@ -401,16 +301,6 @@ EXTRA_DIST = \
 	param-3.8-orig.c \
 	param-4.4-ethercat.c \
 	param-4.4-orig.c \
-	phy-2.6.32-ethercat.c \
-	phy-2.6.32-orig.c \
-	phy-2.6.33-ethercat.c \
-	phy-2.6.33-orig.c \
-	phy-2.6.34-ethercat.c \
-	phy-2.6.34-orig.c \
-	phy-2.6.35-ethercat.c \
-	phy-2.6.35-orig.c \
-	phy-2.6.37-ethercat.c \
-	phy-2.6.37-orig.c \
 	phy-3.10-ethercat.c \
 	phy-3.10-ethercat.h \
 	phy-3.10-orig.c \
