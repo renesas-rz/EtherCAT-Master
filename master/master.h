@@ -43,11 +43,7 @@
 #include <linux/wait.h>
 #include <linux/kthread.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
 #include <linux/semaphore.h>
-#else
-#include <asm/semaphore.h>
-#endif
 
 #include "device.h"
 #include "domain.h"
@@ -196,11 +192,7 @@ struct ec_master {
     unsigned int reserved; /**< \a True, if the master is in use. */
 
     ec_cdev_t cdev; /**< Master character device. */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     struct device *class_device; /**< Master class device. */
-#else
-    struct class_device *class_device; /**< Master class device. */
-#endif
 
 #ifdef EC_RTDM
     ec_rtdm_dev_t rtdm_dev; /**< RTDM device. */
