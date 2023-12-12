@@ -326,23 +326,9 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     if (ret)
         goto out_clear_sync_mon;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
     master->class_device = device_create(class, NULL,
             MKDEV(MAJOR(device_number), master->index), NULL,
             "EtherCAT%u", master->index);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
-    master->class_device = device_create(class, NULL,
-            MKDEV(MAJOR(device_number), master->index),
-            "EtherCAT%u", master->index);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15)
-    master->class_device = class_device_create(class, NULL,
-            MKDEV(MAJOR(device_number), master->index), NULL,
-            "EtherCAT%u", master->index);
-#else
-    master->class_device = class_device_create(class,
-            MKDEV(MAJOR(device_number), master->index), NULL,
-            "EtherCAT%u", master->index);
-#endif
     if (IS_ERR(master->class_device)) {
         EC_MASTER_ERR(master, "Failed to create class device!\n");
         ret = PTR_ERR(master->class_device);
@@ -361,11 +347,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
 
 #ifdef EC_RTDM
 out_unregister_class_device:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     device_unregister(master->class_device);
-#else
-    class_device_unregister(master->class_device);
-#endif
 #endif
 out_clear_cdev:
     ec_cdev_clear(&master->cdev);
@@ -402,11 +384,7 @@ void ec_master_clear(
     ec_rtdm_dev_clear(&master->rtdm_dev);
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     device_unregister(master->class_device);
-#else
-    class_device_unregister(master->class_device);
-#endif
 
     ec_cdev_clear(&master->cdev);
 
@@ -1404,22 +1382,6 @@ static enum hrtimer_restart ec_master_nanosleep_wakeup(struct hrtimer *timer)
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
-
-/* compatibility with new hrtimer interface */
-static inline ktime_t hrtimer_get_expires(const struct hrtimer *timer)
-{
-    return timer->expires;
-}
-
-/*****************************************************************************/
-
-static inline void hrtimer_set_expires(struct hrtimer *timer, ktime_t time)
-{
-    timer->expires = time;
-}
-
-#endif
 
 /*****************************************************************************/
 
@@ -1431,15 +1393,6 @@ void ec_master_nanosleep(const unsigned long nsecs)
     hrtimer_init(&t.timer, CLOCK_MONOTONIC, mode);
     t.timer.function = ec_master_nanosleep_wakeup;
     t.task = current;
-#ifdef CONFIG_HIGH_RES_TIMERS
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
-    t.timer.cb_mode = HRTIMER_CB_IRQSAFE_NO_RESTART;
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 26)
-    t.timer.cb_mode = HRTIMER_CB_IRQSAFE_NO_SOFTIRQ;
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 28)
-    t.timer.cb_mode = HRTIMER_CB_IRQSAFE_UNLOCKED;
-#endif
-#endif
     hrtimer_set_expires(&t.timer, ktime_set(0, nsecs));
 
     do {

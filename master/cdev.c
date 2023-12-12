@@ -57,7 +57,6 @@ static int eccdev_mmap(struct file *, struct vm_area_struct *);
 /** This is the kernel version from which the .fault member of the
  * vm_operations_struct is usable.
  */
-#define PAGE_FAULT_VERSION KERNEL_VERSION(2, 6, 23)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 17, 0)
 # define FAULT_RETURN_TYPE int
@@ -65,16 +64,11 @@ static int eccdev_mmap(struct file *, struct vm_area_struct *);
 # define FAULT_RETURN_TYPE vm_fault_t
 #endif
 
-#if LINUX_VERSION_CODE >= PAGE_FAULT_VERSION
 static FAULT_RETURN_TYPE eccdev_vma_fault(
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 11, 0)
         struct vm_area_struct *,
 #endif
         struct vm_fault *);
-#else
-static struct page *eccdev_vma_nopage(
-        struct vm_area_struct *, unsigned long, int *);
-#endif
 
 /*****************************************************************************/
 
@@ -91,11 +85,7 @@ static struct file_operations eccdev_fops = {
 /** Callbacks for a virtual memory area retrieved with ecdevc_mmap().
  */
 struct vm_operations_struct eccdev_vm_ops = {
-#if LINUX_VERSION_CODE >= PAGE_FAULT_VERSION
     .fault = eccdev_vma_fault
-#else
-    .nopage = eccdev_vma_nopage
-#endif
 };
 
 /*****************************************************************************/
@@ -255,8 +245,6 @@ int eccdev_mmap(
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE >= PAGE_FAULT_VERSION
-
 /** Page fault callback for a virtual memory area.
  *
  * Called at the first access on a virtual-memory area retrieved with
@@ -295,43 +283,5 @@ static FAULT_RETURN_TYPE eccdev_vma_fault(
 
     return 0;
 }
-
-#else
-
-/** Nopage callback for a virtual memory area.
- *
- * Called at the first access on a virtual-memory area retrieved with
- * ecdev_mmap().
- */
-struct page *eccdev_vma_nopage(
-        struct vm_area_struct *vma, /**< Virtual memory area initialized by
-                                      the kernel. */
-        unsigned long address, /**< Requested virtual address. */
-        int *type /**< Type output parameter. */
-        )
-{
-    unsigned long offset;
-    struct page *page = NOPAGE_SIGBUS;
-    ec_cdev_priv_t *priv = (ec_cdev_priv_t *) vma->vm_private_data;
-    ec_master_t *master = priv->cdev->master;
-
-    offset = (address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
-
-    if (offset >= priv->ctx.process_data_size)
-        return NOPAGE_SIGBUS;
-
-    page = vmalloc_to_page(priv->ctx.process_data + offset);
-
-    EC_MASTER_DBG(master, 1, "Nopage fault vma, address = %#lx,"
-            " offset = %#lx, page = %p\n", address, offset, page);
-
-    get_page(page);
-    if (type)
-        *type = VM_FAULT_MINOR;
-
-    return page;
-}
-
-#endif
 
 /*****************************************************************************/
