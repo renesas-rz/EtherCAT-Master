@@ -527,11 +527,7 @@ static int ec_tty_write(
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
 static int ec_tty_put_char(struct tty_struct *tty, unsigned char ch)
-#else
-static void ec_tty_put_char(struct tty_struct *tty, unsigned char ch)
-#endif
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
 
@@ -542,14 +538,10 @@ static void ec_tty_put_char(struct tty_struct *tty, unsigned char ch)
     if (ec_tty_tx_space(t)) {
         t->tx_buffer[t->tx_write_idx] = ch;
         t->tx_write_idx = (t->tx_write_idx + 1) % EC_TTY_TX_BUFFER_SIZE;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
         return 1;
-#endif
     } else {
         printk(KERN_WARNING PFX "%s(): Dropped a byte!\n", __func__);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
         return 0;
-#endif
     }
 }
 
@@ -609,9 +601,6 @@ static void ec_tty_flush_buffer(struct tty_struct *tty)
 /*****************************************************************************/
 
 static int ec_tty_ioctl(struct tty_struct *tty,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
-        struct file *file,
-#endif
         unsigned int cmd, unsigned long arg)
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
@@ -619,14 +608,8 @@ static int ec_tty_ioctl(struct tty_struct *tty,
 
 #if EC_TTY_DEBUG >= 2
     printk(KERN_INFO PFX "%s(tty=%p, "
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
-            "file=%p, "
-#endif
             "cmd=%08x, arg=%08lx).\n",
             __func__, tty,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 39)
-            file,
-#endif
             cmd, arg);
     printk(KERN_INFO PFX "decoded: type=%02x nr=%u\n",
             _IOC_TYPE(cmd), _IOC_NR(cmd));
@@ -730,19 +713,13 @@ static void ec_tty_hangup(struct tty_struct *tty)
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
 static int ec_tty_break(struct tty_struct *tty, int break_state)
-#else
-static void ec_tty_break(struct tty_struct *tty, int break_state)
-#endif
 {
 #if EC_TTY_DEBUG >= 2
     printk(KERN_INFO PFX "%s(break_state = %i).\n", __func__, break_state);
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
     return -EIO; // not implemented
-#endif
 }
 
 /*****************************************************************************/
