@@ -19,12 +19,6 @@
  *
  *  ---
  *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
-
 /** \file
  *
  * EtherCAT slave configuration state machine.

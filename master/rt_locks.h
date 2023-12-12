@@ -23,33 +23,49 @@
 
 /**
    \file
-   EtherCAT master character device.
+   Abstract locks for realtime part of interface.
 */
 
 /*****************************************************************************/
 
-#ifndef __EC_CDEV_H__
-#define __EC_CDEV_H__
-
-#include <linux/fs.h>
-#include <linux/cdev.h>
+#ifndef __EC_LOCKS_H__
+#define __EC_LOCKS_H__
 
 #include "globals.h"
+#include <linux/version.h>
+
+#include <linux/semaphore.h>
 
 /*****************************************************************************/
 
-/** EtherCAT master character device.
-*/
-typedef struct {
-    ec_master_t *master; /**< Master owning the device. */
-    struct cdev cdev; /**< Character device. */
-} ec_cdev_t;
+#ifdef EC_USE_RTMUTEX
 
-/*****************************************************************************/
+#include <linux/rtmutex.h>
 
-int ec_cdev_init(ec_cdev_t *, ec_master_t *, dev_t);
-void ec_cdev_clear(ec_cdev_t *);
+typedef struct rt_mutex ec_lock_t;
+
+static inline void ec_lock_init(ec_lock_t *sem) { rt_mutex_init(sem); }
+static inline void ec_lock_down(ec_lock_t *sem) { rt_mutex_lock(sem); }
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 34)
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) { return rt_mutex_lock_interruptible(sem); }
+#else
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) { return rt_mutex_lock_interruptible(sem, 1); }
+#endif
+static inline void ec_lock_up(ec_lock_t *sem) { rt_mutex_unlock(sem); }
+
+#else
+
+typedef struct semaphore ec_lock_t;
+
+static inline void ec_lock_init(ec_lock_t *sem) { sema_init(sem, 1); }
+static inline void ec_lock_down(ec_lock_t *sem) { down(sem); }
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) { return down_interruptible(sem); }
+static inline void ec_lock_up(ec_lock_t *sem) { up(sem); }
+
+#endif
 
 /*****************************************************************************/
 
 #endif
+
+/*****************************************************************************/
