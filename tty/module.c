@@ -496,17 +496,26 @@ static void ec_tty_close(struct tty_struct *tty, struct file *file)
 
 /*****************************************************************************/
 
-static int ec_tty_write(
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)
+static ssize_t
+#else
+static int
+#endif
+ec_tty_write(
         struct tty_struct *tty,
         const unsigned char *buffer,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)
+        size_t count
+#else
         int count
+#endif
         )
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
     unsigned int data_size, i;
 
 #if EC_TTY_DEBUG >= 1
-    printk(KERN_INFO PFX "%s(count=%i)\n", __func__, count);
+    printk(KERN_INFO PFX "%s(count=%i)\n", __func__, (int)count);
 #endif
 
     if (count <= 0) {
