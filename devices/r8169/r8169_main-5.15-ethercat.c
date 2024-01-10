@@ -3964,7 +3964,7 @@ static void rtl8169_tx_clear_range(struct rtl8169_private *tp, u32 start,
 			struct sk_buff *skb = tx_skb->skb;
 
 			rtl8169_unmap_tx_skb(tp, entry);
-			if (skb && !tp->ecdev)
+			if (!tp->ecdev && skb)
 				dev_consume_skb_any(skb);
 		}
 	}
@@ -3973,7 +3973,8 @@ static void rtl8169_tx_clear_range(struct rtl8169_private *tp, u32 start,
 static void rtl8169_tx_clear(struct rtl8169_private *tp)
 {
 	rtl8169_tx_clear_range(tp, tp->dirty_tx, NUM_TX_DESC);
-	netdev_reset_queue(tp->dev);
+	if (!tp->ecdev)
+		netdev_reset_queue(tp->dev);
 }
 
 static void rtl8169_cleanup(struct rtl8169_private *tp, bool going_down)
@@ -4281,7 +4282,7 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	struct rtl8169_private *tp = netdev_priv(dev);
 	unsigned int entry = tp->cur_tx % NUM_TX_DESC;
 	struct TxDesc *txd_first, *txd_last;
-	bool stop_queue, door_bell;
+	bool stop_queue = 0, door_bell = 0;
 	u32 opts[2];
 
 	if (unlikely(!rtl_tx_slots_avail(tp))) {
@@ -4319,7 +4320,7 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	/* Force memory writes to complete before releasing descriptor */
 	dma_wmb();
 
-	door_bell = __netdev_sent_queue(dev, skb->len, !tp->ecdev && netdev_xmit_more());
+	door_bell = tp->ecdev || __netdev_sent_queue(dev, skb->len, netdev_xmit_more());
 
 	txd_first->opts1 |= cpu_to_le32(DescOwn | FirstFrag);
 
@@ -4328,8 +4329,8 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 
 	WRITE_ONCE(tp->cur_tx, tp->cur_tx + frags + 1);
 
-	stop_queue = !rtl_tx_slots_avail(tp);
-	if (unlikely(stop_queue) && !tp->ecdev) {
+	stop_queue = !tp->ecdev && !rtl_tx_slots_avail(tp);
+	if (unlikely(stop_queue)) {
 		/* Avoid wrongly optimistic queue wake-up: rtl_tx thread must
 		 * not miss a ring update when it notices a stopped queue.
 		 */
@@ -4747,7 +4748,8 @@ static void rtl8169_up(struct rtl8169_private *tp)
 	phy_init_hw(tp->phydev);
 	phy_resume(tp->phydev);
 	rtl8169_init_phy(tp);
-	napi_enable(&tp->napi);
+	if (!tp->ecdev)
+		napi_enable(&tp->napi);
 	set_bit(RTL_FLAG_TASK_ENABLED, tp->wk.flags);
 	rtl_reset_work(tp);
 
@@ -4761,7 +4763,8 @@ static int rtl8169_close(struct net_device *dev)
 
 	pm_runtime_get_sync(&pdev->dev);
 
-	netif_stop_queue(dev);
+	if (!tp->ecdev)
+		netif_stop_queue(dev);
 	rtl8169_down(tp);
 	rtl8169_rx_clear(tp);
 
