@@ -31,6 +31,8 @@
 #include <linux/version.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
+#include <linux/lockdep.h>
+#include <linux/skbuff.h>
 
 #include "globals.h"
 #include "master.h"
@@ -825,6 +827,9 @@ int ec_eoedev_tx(struct sk_buff *skb, /**< transmit socket buffer */
         return 0;
     }
 #endif
+
+    WARN_ON_ONCE(skb_get_queue_mapping(skb) != 0);
+    lockdep_assert_held(&netdev_get_tx_queue(dev, 0)->_xmit_lock);
 
     if (!(frame =
           (ec_eoe_frame_t *) kmalloc(sizeof(ec_eoe_frame_t), GFP_ATOMIC))) {
