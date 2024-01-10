@@ -83,7 +83,7 @@ ifeq (@ENABLE_IGC@,1)
 endif
 
 ifeq (@ENABLE_R8169@,1)
-ifeq (@R8169_KERNEL_5@,1)
+ifeq (@R8169_IN_SUBDIR@,1)
 	obj-m += r8169/
 else
 	EC_R8169_OBJ := r8169-@KERNEL_R8169@-ethercat.o

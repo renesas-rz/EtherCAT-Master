@@ -41,7 +41,7 @@ REV := $(shell if test -s $(TOPDIR)/revision; then \
 	fi)
 
 ifeq (@ENABLE_R8169@,1)
-ifeq (@R8169_KERNEL_5@,1)
+ifeq (@R8169_IN_SUBDIR@,1)
 	obj-m += ec_r8169.o
 
 	ec_r8169-objs := \

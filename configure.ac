@@ -610,26 +610,29 @@ AC_ARG_WITH([r8169-kernel],
     ]
 )
 
-AX_COMPARE_VERSION(["$kernel_r8169"], [ge], [5.0.0],
-    AC_SUBST(R8169_KERNEL_5, [1]),
-    AC_SUBST(R8169_KERNEL_5, [0])
-)
-
 if test "x${enable_r8169}" = "x1"; then
     AC_MSG_CHECKING([for kernel for r8169 driver])
 
     kernels=`ls -1 ${srcdir}/devices/ | grep -oE "^r8169-.*-" | cut -d "-" -f 2 | uniq`
-    kernels5=`ls -1 ${srcdir}/devices/r8169/ | grep -oE "^r8169_main-.*-" | cut -d "-" -f 2 | uniq`
+    kernels_subdir=`ls -1 ${srcdir}/devices/r8169/ | grep -oE "^r8169_main-.*-" | cut -d "-" -f 2 | uniq`
     found=0
-    for k in $kernels $kernels5; do
+    found_subdir=0
+    for k in $kernels; do
         if test "$kernel_r8169" = "$k"; then
             found=1
+        fi
+    done
+    for k in $kernels_subdir; do
+        if test "$kernel_r8169" = "$k"; then
+            found=1
+            found_subdir=1
         fi
     done
     if test $found -ne 1; then
         AC_MSG_ERROR([kernel $kernel_r8169 not available for r8169 driver!])
     fi
 
+    AC_SUBST(R8169_IN_SUBDIR, [$found_subdir])
     AC_MSG_RESULT([$kernel_r8169])
 fi
 
