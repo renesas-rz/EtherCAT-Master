@@ -4510,8 +4510,8 @@ static int rtl_rx(struct net_device *dev, struct rtl8169_private *tp, int budget
 
 			napi_gro_receive(&tp->napi, skb);
 
+			dev_sw_netstats_rx_add(dev, pkt_size);
 		}
-		dev_sw_netstats_rx_add(dev, pkt_size);
 release_descriptor:
 		rtl8169_mark_to_asic(desc);
 	}
