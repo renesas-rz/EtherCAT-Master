@@ -37,6 +37,7 @@
 #include <linux/wait.h>
 #include <linux/kthread.h>
 
+#include <linux/rtmutex.h>
 #include <linux/semaphore.h>
 
 #include "device.h"
@@ -279,7 +280,7 @@ struct ec_master {
     struct list_head eoe_handlers; /**< Ethernet over EtherCAT handlers. */
 #endif
 
-    struct semaphore io_sem; /**< Semaphore used in \a IDLE phase. */
+    struct rt_mutex io_mutex;  /**< Mutex used in \a IDLE and \a OP phase. */
 
     void (*send_cb)(void *); /**< Current send datagrams callback. */
     void (*receive_cb)(void *); /**< Current receive datagrams callback. */

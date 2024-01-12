@@ -50,6 +50,19 @@
 #define ATTRIBUTES
 #endif
 
+#ifdef EC_IOCTL_RTDM
+/* RTDM does not support locking yet,
+ * therefore no send/receive callbacks are set too. */
+# define ec_ioctl_lock(lock) do {} while(0)
+# define ec_ioctl_unlock(lock) do {} while(0)
+# define ec_ioctl_lock_interruptible(lock) (0)
+#else
+# define ec_ioctl_lock(lock)   rt_mutex_lock(lock)
+# define ec_ioctl_unlock(lock) rt_mutex_unlock(lock)
+# define ec_ioctl_lock_interruptible(lock) \
+         rt_mutex_lock_interruptible(lock)
+#endif  // EC_IOCTL_RTDM
+
 /*****************************************************************************/
 
 /** Copies a string to an ioctl structure.
@@ -1812,6 +1825,7 @@ static ATTRIBUTES int ec_ioctl_activate(
     io.process_data_size = ctx->process_data_size;
 
 #ifndef EC_IOCTL_RTDM
+    /* RTDM does not support locking yet. */
     ecrt_master_callbacks(master, ec_master_internal_send_cb,
             ec_master_internal_receive_cb, master);
 #endif
@@ -1894,9 +1908,10 @@ static ATTRIBUTES int ec_ioctl_send(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_send(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -1916,9 +1931,10 @@ static ATTRIBUTES int ec_ioctl_receive(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_receive(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -2017,9 +2033,10 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_reference_clock(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -2044,9 +2061,10 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
         return -EFAULT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_reference_clock_to(master, time);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -2066,9 +2084,10 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_slave_clocks(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -2119,9 +2138,10 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_monitor_queue(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -3185,9 +3205,10 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
         return -ENOENT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_domain_queue(domain);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
@@ -3905,9 +3926,10 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
         return -ENOENT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     data.state = ecrt_voe_handler_execute(voe);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     if (data.state == EC_REQUEST_SUCCESS && voe->dir == EC_DIR_INPUT)
         data.size = ecrt_voe_handler_data_size(voe);
     else

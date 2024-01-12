@@ -231,7 +231,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     INIT_LIST_HEAD(&master->eoe_handlers);
 #endif
 
-    sema_init(&master->io_sem, 1);
+    rt_mutex_init(&master->io_mutex);
     master->send_cb = NULL;
     master->receive_cb = NULL;
     master->cb_data = NULL;
@@ -523,9 +523,10 @@ void ec_master_internal_send_cb(
         )
 {
     ec_master_t *master = (ec_master_t *) cb_data;
-    down(&master->io_sem);
+    if (rt_mutex_lock_interruptible(&master->io_mutex))
+        return;
     ecrt_master_send_ext(master);
-    up(&master->io_sem);
+    rt_mutex_unlock(&master->io_mutex);
 }
 
 /*****************************************************************************/
@@ -537,9 +538,10 @@ void ec_master_internal_receive_cb(
         )
 {
     ec_master_t *master = (ec_master_t *) cb_data;
-    down(&master->io_sem);
+    if (rt_mutex_lock_interruptible(&master->io_mutex))
+        return;
     ecrt_master_receive(master);
-    up(&master->io_sem);
+    rt_mutex_unlock(&master->io_mutex);
 }
 
 /*****************************************************************************/
@@ -1517,9 +1519,10 @@ static int ec_master_idle_thread(void *priv_data)
         ec_datagram_output_stats(&master->fsm_datagram);
 
         // receive
-        down(&master->io_sem);
+        if (rt_mutex_lock_interruptible(&master->io_mutex))
+            break;
         ecrt_master_receive(master);
-        up(&master->io_sem);
+        rt_mutex_unlock(&master->io_mutex);
 
         // execute master & slave state machines
         if (down_interruptible(&master->master_sem)) {
@@ -1533,7 +1536,8 @@ static int ec_master_idle_thread(void *priv_data)
         up(&master->master_sem);
 
         // queue and send
-        down(&master->io_sem);
+        if (rt_mutex_lock_interruptible(&master->io_mutex))
+            break;
         if (fsm_exec) {
             ec_master_queue_datagram(master, &master->fsm_datagram);
         }
@@ -1542,7 +1546,7 @@ static int ec_master_idle_thread(void *priv_data)
         sent_bytes = master->devices[EC_DEVICE_MAIN].tx_skb[
             master->devices[EC_DEVICE_MAIN].tx_ring_index]->len;
 #endif
-        up(&master->io_sem);
+        rt_mutex_unlock(&master->io_mutex);
 
         if (ec_fsm_master_idle(&master->fsm)) {
 #ifdef EC_USE_HRTIMER
