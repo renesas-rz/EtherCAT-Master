@@ -26,12 +26,23 @@
  *
  * EtherCAT master application interface.
  *
- * \defgroup ApplicationInterface EtherCAT Application Interface
+ * \defgroup ApplicationInterface EtherCAT Configuration Interface
  *
- * EtherCAT interface for realtime applications. This interface is designed
- * for realtime modules that want to use EtherCAT. There are functions to
- * request a master, to map process data, to communicate with slaves via CoE
+ * Interface for configuring the EtherCAT master for realtime applications.
+ * There are functions to request a master, to map process data,
+ * to communicate with slaves via CoE
  * and to configure and activate the bus.
+ * All methods in this group should be used before the
+ * application switches to operational (real-time) mode
+ * by calling ecrt_master_activate().
+ * After that, only calls to the functions in \ref ApplicationInterfaceRT
+ * are allowed.
+ * The real-time operational mode finishes by calling ecrt_master_deactivate().
+ * Many functions in this group are blocking and/or they
+ * acquire locks.
+ * Do not use these functions in non-Userspace contexts,
+ * e.g. in RTAI/Xenomai Real-Time tasks or in atomic/softirq/tasklet
+ * context in kernel modules. You have been warned.
  *
  * Changes since version 1.5.2:
  *
@@ -111,6 +122,20 @@
  *   ad-hoc via the user-space library.
  * - Added ecrt_master_reset() to initiate retrying to configure slaves.
  *
+ * \defgroup ApplicationInterfaceRT EtherCAT Real Time Application Interface
+ *
+ * Interface to interact with the EtherCAT master with real time contraints.
+ *
+ * After configuring the EtherCAT master,
+ * the application switches to the operational mode
+ * by calling ecrt_master_activate().
+ * In operational mode, do not call other methods than these
+ * listed in this group.
+ * Many of the methods in \ref ApplicationInterface are blocking,
+ * calling these in operational mode will result in a deadlock.
+ *
+ *
+ * \addtogroup ApplicationInterface
  * @{
  */
 
@@ -975,6 +1000,8 @@ EC_PUBLIC_API int ecrt_master_set_send_interval(
  *
  * Has to be called cyclically by the application after ecrt_master_activate()
  * has returned.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_send(
         ec_master_t *master /**< EtherCAT master. */
@@ -989,6 +1016,8 @@ EC_PUBLIC_API void ecrt_master_send(
  *
  * Has to be called cyclically by the realtime application after
  * ecrt_master_activate() has returned.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_receive(
         ec_master_t *master /**< EtherCAT master. */
@@ -1048,6 +1077,8 @@ EC_PUBLIC_API int ecrt_master_link_state(
  * The time is defined as nanoseconds from 2000-01-01 00:00. Converting an
  * epoch time can be done with the EC_TIMEVAL2NANO() macro, but is not
  * necessary, since the absolute value is not of any interest.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_application_time(
         ec_master_t *master, /**< EtherCAT master. */
@@ -1058,6 +1089,8 @@ EC_PUBLIC_API void ecrt_master_application_time(
  *
  * The reference clock will by synchronized to the application time provided
  * by the last call off ecrt_master_application_time().
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_sync_reference_clock(
         ec_master_t *master /**< EtherCAT master. */
@@ -1067,6 +1100,8 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock(
  *
  * The reference clock will by synchronized to the time passed in the
  * sync_time parameter.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
         ec_master_t *master, /**< EtherCAT master. */
@@ -1076,6 +1111,8 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
 /** Queues the DC clock drift compensation datagram for sending.
  *
  * All slave clocks synchronized to the reference clock.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_sync_slave_clocks(
         ec_master_t *master /**< EtherCAT master. */
@@ -1107,6 +1144,8 @@ EC_PUBLIC_API int ecrt_master_reference_clock_time(
  * The datagram broadcast-reads all "System time difference" registers (\a
  * 0x092c) to get an upper estimation of the DC synchrony. The result can be
  * checked with the ecrt_master_sync_monitor_process() method.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_sync_monitor_queue(
         ec_master_t *master /**< EtherCAT master. */
@@ -1117,6 +1156,8 @@ EC_PUBLIC_API void ecrt_master_sync_monitor_queue(
  * If the sync monitoring datagram was sent before with
  * ecrt_master_sync_monitor_queue(), the result can be queried with this
  * method.
+ *
+ * \ingroup ApplicationInterfaceRT
  *
  * \return Upper estimation of the maximum time difference in ns.
  */
@@ -1752,6 +1793,8 @@ EC_PUBLIC_API uint8_t *ecrt_domain_data(
  * statistics, if necessary. This must be called after ecrt_master_receive()
  * is expected to receive the domain datagrams in order to make
  * ecrt_domain_state() return the result of the last process data exchange.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_domain_process(
         ec_domain_t *domain /**< Domain. */
@@ -1761,6 +1804,8 @@ EC_PUBLIC_API void ecrt_domain_process(
  *
  * Call this function to mark the domain's datagrams for exchanging at the
  * next call of ecrt_master_send().
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_domain_queue(
         ec_domain_t *domain /**< Domain. */
@@ -1771,6 +1816,8 @@ EC_PUBLIC_API void ecrt_domain_queue(
  * Stores the domain state in the given \a state structure.
  *
  * Using this method, the process data exchange can be monitored in realtime.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_domain_state(
         const ec_domain_t *domain, /**< Domain. */
