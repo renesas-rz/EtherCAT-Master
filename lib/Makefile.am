@@ -44,7 +44,9 @@ noinst_HEADERS = \
 	slave_config.h \
 	voe_handler.h
 
-libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir)
+libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir) \
+	-Dethercat_EXPORTS \
+	-fvisibility=hidden
 
 #
 # http://www.gnu.org/software/libtool/manual/html_node/ ...
@@ -65,7 +67,8 @@ libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir)
 # 	ecrt_master_sync_reference_clock_to() added.
 # 2:0:1
 #
-libethercat_la_LDFLAGS = -version-info 2:0:1
+libethercat_la_LDFLAGS = -version-info 2:0:1 \
+	-fvisibility=hidden
 
 pkgconfig_DATA = libethercat.pc
 
