@@ -538,6 +538,54 @@ int ecrt_master_read_idn(ec_master_t *master, uint16_t slave_position,
 
 /****************************************************************************/
 
+int ecrt_master_foe_read(ec_master_t *master, uint16_t slave_position, const char *file_name,
+         size_t buffer_size, uint8_t *buffer, size_t* out_data_size)
+{
+    ec_ioctl_slave_foe_t foe_data;
+    int ret;
+
+    foe_data.slave_position = slave_position;
+    foe_data.buffer_size = buffer_size;
+    foe_data.buffer = buffer;
+    snprintf(foe_data.file_name, sizeof(foe_data.file_name), "%s", file_name);
+
+    ret = ioctl(master->fd, EC_IOCTL_SLAVE_FOE_READ, &foe_data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    if(out_data_size) {
+        *out_data_size = foe_data.data_size;
+    }
+    
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_master_foe_write(ec_master_t *master, uint16_t slave_position, const char *file_name,
+         size_t data_size, const uint8_t *data)
+{
+    ec_ioctl_slave_foe_t foe_data;
+    int ret;
+
+    foe_data.slave_position = slave_position;
+    foe_data.buffer_size = data_size;
+    // const cast, since foe_data.buffer is not of type const uint8*
+    foe_data.buffer = (uint8_t*)data;
+    foe_data.data_size = data_size;
+    snprintf(foe_data.file_name, sizeof(foe_data.file_name), "%s", file_name);
+
+    ret = ioctl(master->fd, EC_IOCTL_SLAVE_FOE_WRITE, &foe_data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
 int ecrt_master_setup_domain_memory(ec_master_t *master)
 {
     ec_ioctl_master_activate_t io;

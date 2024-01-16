@@ -931,6 +931,36 @@ int ecrt_master_read_idn(
                                can be stored. */
         );
 
+/** Reads a file via FoE and writes it to the specified buffer.
+ * 
+ * \retval 0  Success.
+ * \retval <0 Error code.
+ */
+int ecrt_master_foe_read(
+        ec_master_t *master, /**< EtherCAT master. */
+        uint16_t slave_position, /**< Slave position. */
+        const char *file_name, /**< File name. */
+        size_t buffer_size, /**< Size of the buffer to read the file into. */
+        uint8_t *buffer, /**< Pointer to the buffer to read the file into. */
+        size_t* out_data_size /**< Pointer to the variable to write the number 
+                                of read bytes to. */
+        );
+
+/** Writes a buffer to a file on a slave via FoE. 
+ * 
+ * \retval 0  Success.
+ * \retval <0 Error code.
+ */
+int ecrt_master_foe_write(
+        ec_master_t *master, /**< EtherCAT master. */
+        uint16_t slave_position, /**< Slave position. */
+        const char *file_name, /**< File name. */
+        size_t data_size, /**< Size of the buffer to read the file from. */
+        const uint8_t *data /**< Pointer to the buffer to read the file from. */
+        );
+
+
+
 /** Finishes the configuration phase and prepares for cyclic operation.
  *
  * This function tells the master that the configuration phase is finished and
