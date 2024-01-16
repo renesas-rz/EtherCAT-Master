@@ -538,6 +538,47 @@ int ecrt_master_read_idn(ec_master_t *master, uint16_t slave_position,
 
 /****************************************************************************/
 
+int ecrt_master_get_sii_size_words(ec_master_t *master, uint16_t slave_position,
+        uint32_t *nwords)
+{
+    ec_ioctl_slave_t data;
+    int ret;
+
+    data.position = slave_position;
+
+    ret = ioctl(master->fd, EC_IOCTL_SLAVE, &data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    *nwords = data.sii_nwords;
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_master_read_sii(ec_master_t *master, uint16_t slave_position, uint16_t offset,
+         uint32_t nwords, uint16_t *words)
+{
+    ec_ioctl_slave_sii_t data;
+    int ret;
+
+    data.slave_position = slave_position;
+    data.offset = offset;
+    data.nwords = nwords;
+    data.words = words;
+
+    ret = ioctl(master->fd, EC_IOCTL_SLAVE_SII_READ, &data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
 int ecrt_master_setup_domain_memory(ec_master_t *master)
 {
     ec_ioctl_master_activate_t io;
