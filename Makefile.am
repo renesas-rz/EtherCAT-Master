@@ -30,7 +30,6 @@ include $(top_srcdir)/Makefile.kbuild
 ACLOCAL_AMFLAGS = -I m4
 
 AM_DISTCHECK_CONFIGURE_FLAGS = \
-	--disable-8139too \
 	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
 SUBDIRS = \
