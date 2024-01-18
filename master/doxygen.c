@@ -43,6 +43,9 @@
    The API documentations are in the <a href="modules.html">modules
    section</a>.
 
+   A list of all native network card drivers can be found
+   <a href="devicedrivers.html">here</a>.
+
    For information how to build and install, see the INSTALL file in the source
    root.
 

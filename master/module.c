@@ -115,7 +115,11 @@ int __init ec_init_module(void)
         }
     }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
     class = class_create(THIS_MODULE, "EtherCAT");
+#else
+    class = class_create("EtherCAT");
+#endif
     if (IS_ERR(class)) {
         EC_ERR("Failed to create device class.\n");
         ret = PTR_ERR(class);

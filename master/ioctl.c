@@ -116,6 +116,8 @@ static ATTRIBUTES int ec_ioctl_master(
     io.domain_count = ec_master_domain_count(master);
 #ifdef EC_EOE
     io.eoe_handler_count = ec_master_eoe_handler_count(master);
+#else
+    io.eoe_handler_count = 0;
 #endif
     io.phase = (uint8_t) master->phase;
     io.active = (uint8_t) master->active;
@@ -1478,7 +1480,7 @@ static ATTRIBUTES int ec_ioctl_config_idn(
 
     ioctl->drive_no = req->drive_no;
     ioctl->idn = req->idn;
-    ioctl->state = req->state;
+    ioctl->state = req->al_state;
     ioctl->size = req->data_size;
     memcpy(ioctl->data, req->data,
             min((u32) ioctl->size, (u32) EC_MAX_IDN_DATA_SIZE));
@@ -3101,6 +3103,7 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
         kfree(key);
         return -EFAULT;
     }
+    key[ioctl.key_size] = '\0';
 
     if (down_interruptible(&master->master_sem)) {
         kfree(key);

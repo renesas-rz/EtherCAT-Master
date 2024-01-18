@@ -45,6 +45,10 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+#include <linux/termios_internal.h>
+#endif
+
 #include "../master/globals.h"
 #include "../include/ectty.h"
 
@@ -132,6 +136,7 @@ static const struct tty_operations ec_tty_ops; // see below
 int __init ec_tty_init_module(void)
 {
     int i, ret = 0;
+    unsigned flags = TTY_DRIVER_REAL_RAW | TTY_DRIVER_DYNAMIC_DEV;
 
     printk(KERN_INFO PFX "TTY driver %s\n", EC_MASTER_VERSION);
 
@@ -141,7 +146,11 @@ int __init ec_tty_init_module(void)
         ttys[i] = NULL;
     }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+    tty_driver = tty_alloc_driver(EC_TTY_MAX_DEVICES, flags);
+#else
     tty_driver = alloc_tty_driver(EC_TTY_MAX_DEVICES);
+#endif
     if (!tty_driver) {
         printk(KERN_ERR PFX "Failed to allocate tty driver.\n");
         ret = -ENOMEM;
@@ -155,7 +164,9 @@ int __init ec_tty_init_module(void)
     tty_driver->minor_start = 0;
     tty_driver->type = TTY_DRIVER_TYPE_SERIAL;
     tty_driver->subtype = SERIAL_TYPE_NORMAL;
-    tty_driver->flags = TTY_DRIVER_REAL_RAW | TTY_DRIVER_DYNAMIC_DEV;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
+    tty_driver->flags = flags;
+#endif
     tty_driver->init_termios = ec_tty_std_termios;
     tty_set_operations(tty_driver, &ec_tty_ops);
 
@@ -168,7 +179,11 @@ int __init ec_tty_init_module(void)
     return ret;
 
 out_put:
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+    tty_driver_kref_put(tty_driver);
+#else
     put_tty_driver(tty_driver);
+#endif
 out_return:
     return ret;
 }
@@ -194,7 +209,11 @@ void __exit ec_tty_cleanup_module(void)
 #endif
 
     tty_unregister_driver(tty_driver);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+    tty_driver_kref_put(tty_driver);
+#else
     put_tty_driver(tty_driver);
+#endif
     printk(KERN_INFO PFX "Module unloading.\n");
 }
 
@@ -536,7 +555,11 @@ static void ec_tty_put_char(struct tty_struct *tty, unsigned char ch)
 
 /*****************************************************************************/
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+static unsigned int ec_tty_write_room(struct tty_struct *tty)
+#else
 static int ec_tty_write_room(struct tty_struct *tty)
+#endif
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
     int ret = ec_tty_tx_space(t);
@@ -550,7 +573,11 @@ static int ec_tty_write_room(struct tty_struct *tty)
 
 /*****************************************************************************/
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+static unsigned int ec_tty_chars_in_buffer(struct tty_struct *tty)
+#else
 static int ec_tty_chars_in_buffer(struct tty_struct *tty)
+#endif
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
     int ret;
@@ -634,8 +661,13 @@ static int ec_tty_ioctl(struct tty_struct *tty,
 
 /*****************************************************************************/
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
+static void ec_tty_set_termios(struct tty_struct *tty,
+        const struct ktermios *old_termios)
+#else
 static void ec_tty_set_termios(struct tty_struct *tty,
         struct ktermios *old_termios)
+#endif
 {
     ec_tty_t *t = (ec_tty_t *) tty->driver_data;
     int ret;

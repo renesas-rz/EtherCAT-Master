@@ -171,9 +171,7 @@ typedef struct {
     uint32_t slave_count;
     uint32_t config_count;
     uint32_t domain_count;
-#ifdef EC_EOE
     uint32_t eoe_handler_count;
-#endif
     uint8_t phase;
     uint8_t active;
     uint8_t scan_busy;

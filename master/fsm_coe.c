@@ -1202,7 +1202,8 @@ int ec_fsm_coe_prepare_down_start(
     ec_sdo_request_t *request = fsm->request;
     uint8_t data_set_size;
 
-    if (request->data_size <= 4) { // use expedited transfer type
+    if (request->data_size > 0 && request->data_size <= 4) {
+        // use expedited transfer mode for lengths between 1 and 4 bytes
         data = ec_slave_mbox_prepare_send(slave, datagram, EC_MBOX_TYPE_COE,
                 EC_COE_DOWN_REQ_HEADER_SIZE);
         if (IS_ERR(data)) {
@@ -1230,7 +1231,7 @@ int ec_fsm_coe_prepare_down_start(
             ec_print_data(data, EC_COE_DOWN_REQ_HEADER_SIZE);
         }
     }
-    else { // request->data_size > 4, use normal transfer type
+    else { // data_size < 1 or data_size > 4, use normal transfer type
         size_t data_size,
                max_data_size =
                    slave->configured_rx_mailbox_size - EC_MBOX_HEADER_SIZE,
@@ -2218,14 +2219,6 @@ void ec_fsm_coe_up_response(
 
         data_size = rec_size - 10;
         fsm->complete_size = EC_READ_U32(data + 6);
-
-        if (!fsm->complete_size) {
-            request->errno = EIO;
-            fsm->state = ec_fsm_coe_error;
-            EC_SLAVE_ERR(slave, "No complete size supplied!\n");
-            ec_print_data(data, rec_size);
-            return;
-        }
 
         ret = ec_sdo_request_alloc(request, fsm->complete_size);
         if (ret) {

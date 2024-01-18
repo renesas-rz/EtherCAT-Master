@@ -1689,6 +1689,9 @@ int ecrt_slave_config_idn(
  *   assigned to EtherCAT (except during transition to PREOP). Non-zero
  *   assigns the SII to the slave controller side before going to PREOP and
  *   leaves it there until a write command happens.
+ * - WaitBeforeSAFEOPms: Number of milliseconds to wait before commanding the
+ *   transition from PREOP to SAFEOP. This can be used as a workaround for
+ *   slaves that need a little time to initialize.
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().

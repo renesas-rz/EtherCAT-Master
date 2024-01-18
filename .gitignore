@@ -43,3 +43,6 @@ script/ethercatctl
 script/init.d/ethercat
 stamp-h1
 tool/ethercat
+device_drivers.md
+generated_table.md
+doxygen-output/

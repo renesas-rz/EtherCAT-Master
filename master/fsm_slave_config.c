@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -85,6 +83,7 @@ void ec_fsm_slave_config_state_dc_cycle(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_dc_sync_check(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_dc_start(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_dc_assign(ec_fsm_slave_config_t *);
+void ec_fsm_slave_config_state_wait_safeop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_safeop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_soe_conf_safeop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_op(ec_fsm_slave_config_t *);
@@ -105,6 +104,7 @@ void ec_fsm_slave_config_enter_watchdog(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_pdo_sync(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_fmmu(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_dc_cycle(ec_fsm_slave_config_t *);
+void ec_fsm_slave_config_enter_wait_safeop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_safeop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_soe_conf_safeop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_op(ec_fsm_slave_config_t *);
@@ -135,6 +135,8 @@ void ec_fsm_slave_config_init(
     fsm->fsm_coe = fsm_coe;
     fsm->fsm_soe = fsm_soe;
     fsm->fsm_pdo = fsm_pdo;
+
+    fsm->wait_ms = 0;
 }
 
 /*****************************************************************************/
@@ -1224,7 +1226,7 @@ void ec_fsm_slave_config_enter_fmmu(
     const ec_sync_t *sync;
 
     if (!slave->config) {
-        ec_fsm_slave_config_enter_safeop(fsm);
+        ec_fsm_slave_config_enter_wait_safeop(fsm);
         return;
     }
 
@@ -1329,7 +1331,7 @@ void ec_fsm_slave_config_enter_dc_cycle(
         fsm->state = ec_fsm_slave_config_state_dc_cycle;
     } else {
         // DC are unused
-        ec_fsm_slave_config_enter_safeop(fsm);
+        ec_fsm_slave_config_enter_wait_safeop(fsm);
     }
 }
 
@@ -1548,6 +1550,59 @@ void ec_fsm_slave_config_state_dc_assign(
         fsm->state = ec_fsm_slave_config_state_error;
         EC_SLAVE_ERR(slave, "Failed to activate DC: ");
         ec_datagram_print_wc_error(datagram);
+        return;
+    }
+
+    ec_fsm_slave_config_enter_wait_safeop(fsm);
+}
+
+/*****************************************************************************/
+
+/** Wait before SAFEOP transition.
+ *
+ * The feature flag WaitBeforeSAFEOPms can be used to add a wait time before
+ * going to SAFEOP. This can be used as a workaround for slaves that need some
+ * extra time for initialisation.
+ */
+void ec_fsm_slave_config_enter_wait_safeop(
+        ec_fsm_slave_config_t *fsm /**< slave state machine */
+        )
+{
+    ec_slave_config_t *config = fsm->slave->config;
+    fsm->wait_ms = 0UL;
+    if (config) {
+        ec_flag_t *flag = ec_slave_config_find_flag(config,
+                "WaitBeforeSAFEOPms");
+        if (flag && flag->value > 0) {
+            fsm->wait_ms = (unsigned long) flag->value;
+        }
+    }
+
+    if (fsm->wait_ms > 0) {
+        fsm->state = ec_fsm_slave_config_state_wait_safeop;
+
+        /* dummy read */
+        ec_datagram_fprd(fsm->datagram, fsm->slave->station_address,
+                0x0600, 1);
+
+        fsm->jiffies_start = jiffies;
+    }
+    else {
+        ec_fsm_slave_config_enter_safeop(fsm);
+    }
+}
+
+/*****************************************************************************/
+
+/** Slave configuration state: WAIT SAFEOP.
+ */
+void ec_fsm_slave_config_state_wait_safeop(
+        ec_fsm_slave_config_t *fsm /**< slave state machine */
+        )
+{
+    unsigned long diff = jiffies - fsm->jiffies_start;
+
+    if (diff * 1000 / HZ < fsm->wait_ms) {
         return;
     }
 

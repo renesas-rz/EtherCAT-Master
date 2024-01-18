@@ -83,8 +83,13 @@ int ec_debug_init(
 
     memset(&dbg->stats, 0, sizeof(struct net_device_stats));
 
-    if (!(dbg->dev =
-          alloc_netdev(sizeof(ec_debug_t *), name, ether_setup))) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+    dbg->dev = alloc_netdev(sizeof(ec_debug_t *), name, NET_NAME_UNKNOWN, ether_setup);
+#else
+    dbg->dev = alloc_netdev(sizeof(ec_debug_t *), name, ether_setup);
+#endif
+    if (!(dbg->dev)) 
+    {
         EC_MASTER_ERR(device->master, "Unable to allocate net_device"
                 " for debug object!\n");
         return -ENODEV;

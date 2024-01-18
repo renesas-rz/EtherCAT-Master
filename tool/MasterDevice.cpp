@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -86,7 +84,13 @@ void MasterDevice::open(Permissions perm)
             stringstream err;
             err << "ioctl() version magic is differing: "
                 << deviceName.str() << ": " << module_data.ioctl_version_magic
-                << ", ethercat tool: " << EC_IOCTL_VERSION_MAGIC;
+                << ", ethercat tool: " << EC_IOCTL_VERSION_MAGIC << endl
+                << "A probable reason is that the command-line tool" << endl
+                << "you are using is built with a different" << endl
+                << "source code version than the currently loaded" << endl
+                << "kernel module. Please install an updated version" << endl
+                << "of either the tool (ethercat) or the kernel" << endl
+                << "module (ec_master.ko).";
             throw MasterDeviceException(err);
         }
         masterCount = module_data.master_count;

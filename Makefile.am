@@ -100,10 +100,16 @@ mrproper: clean cleandoc
 		libtool \
 		stamp-h1
 
-doc:
+generated_table.md: devices/create_driver_table.py
+	python3 $< --markdown $@ $(abs_srcdir)/devices
+
+device_drivers.md: $(srcdir)/devices/device_drivers_template.md generated_table.md
+	cat $^ > $@
+
+doc: device_drivers.md
 	doxygen Doxyfile
 
 cleandoc:
-	@rm -rf doxygen-output
+	@rm -rf doxygen-output generated_table.md device_drivers.md
 
 #-----------------------------------------------------------------------------

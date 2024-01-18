@@ -7,10 +7,10 @@ KBUILD = $(MAKE) -C "$(LINUX_SOURCE_DIR)" M="$(abs_srcdir)" INSTALL_MOD_DIR="$(I
 
 
 modules:
-	$(KBUILD) modules
+	+$(KBUILD) modules
 
 modules_install:
-	$(KBUILD) modules_install
+	+$(KBUILD) modules_install
 
 
 # Override default `clean` target to call Kbuild clean *before* automake

@@ -1,8 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  $Id$
-#
-#  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT Master.
 #
@@ -26,13 +24,16 @@
 #  industrial property and similar rights of Beckhoff Automation GmbH.
 #
 #------------------------------------------------------------------------------
+
 include $(top_srcdir)/Makefile.kbuild
 
 SUBDIRS = \
 	ccat \
 	e1000 \
 	e1000e \
-	igb
+	genet \
+	igb \
+	igc
 
 # using HEADERS to enable tags target
 noinst_HEADERS = \
@@ -94,6 +95,12 @@ noinst_HEADERS = \
 	8139too-3.8-orig.c \
 	8139too-4.4-ethercat.c \
 	8139too-4.4-orig.c \
+	8139too-5.10-ethercat.c \
+	8139too-5.10-orig.c \
+	8139too-6.1-ethercat.c \
+	8139too-6.1-orig.c \
+	create_driver_table.py \
+	device_drivers_template.md \
 	e100-2.6.20-ethercat.c \
 	e100-2.6.20-orig.c \
 	e100-2.6.24-ethercat.c \
@@ -134,6 +141,18 @@ noinst_HEADERS = \
 	e100-3.8-orig.c \
 	e100-4.4-ethercat.c \
 	e100-4.4-orig.c \
+	e100-5.4-ethercat.c \
+	e100-5.4-orig.c \
+	e100-5.10-ethercat.c \
+	e100-5.10-orig.c \
+	e100-5.14-ethercat.c \
+	e100-5.14-orig.c \
+	e100-5.15-ethercat.c \
+	e100-5.15-orig.c \
+	e100-6.1-ethercat.c \
+	e100-6.1-orig.c \
+	e100-6.4-ethercat.c \
+	e100-6.4-orig.c \
 	ecdev.h \
 	generic.c \
 	r8169-2.6.24-ethercat.c \
