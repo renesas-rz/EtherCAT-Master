@@ -35,6 +35,7 @@
 #include "slave_config.h"
 #include "domain.h"
 #include "sdo_request.h"
+#include "soe_request.h"
 #include "reg_request.h"
 #include "voe_handler.h"
 #include "master.h"
@@ -44,6 +45,7 @@
 void ec_slave_config_clear(ec_slave_config_t *sc)
 {
     ec_sdo_request_t *r, *next_r;
+    ec_soe_request_t *s, *next_s;
     ec_reg_request_t *e, *next_e;
     ec_voe_handler_t *v, *next_v;
 
@@ -55,6 +57,15 @@ void ec_slave_config_clear(ec_slave_config_t *sc)
         r = next_r;
     }
     sc->first_sdo_request = NULL;
+
+    s = sc->first_soe_request;
+    while (r) {
+        next_s = s->next;
+        ec_soe_request_clear(s);
+        free(s);
+        s = next_s;
+    }
+    sc->first_soe_request = NULL;
 
     e = sc->first_reg_request;
     while (e) {
@@ -601,6 +612,76 @@ ec_sdo_request_t *ecrt_slave_config_create_sdo_request(ec_slave_config_t *sc,
     req->mem_size = size;
 
     ec_slave_config_add_sdo_request(sc, req);
+
+    return req;
+}
+
+/*****************************************************************************/
+
+void ec_slave_config_add_soe_request(ec_slave_config_t *sc,
+        ec_soe_request_t *req)
+{
+    if (sc->first_soe_request) {
+        ec_soe_request_t *r = sc->first_soe_request;
+        while (r->next) {
+            r = r->next;
+        }
+        r->next = req;
+    } else {
+        sc->first_soe_request = req;
+    }
+}
+
+/*****************************************************************************/
+
+ec_soe_request_t *ecrt_slave_config_create_soe_request(ec_slave_config_t *sc,
+        uint8_t drive_no, uint16_t idn, size_t size)
+{
+    ec_ioctl_soe_request_t data;
+    ec_soe_request_t *req;
+    int ret;
+
+    req = malloc(sizeof(ec_soe_request_t));
+    if (!req) {
+        fprintf(stderr, "Failed to allocate memory.\n");
+        return 0;
+    }
+
+    if (size) {
+        req->data = malloc(size);
+        if (!req->data) {
+            fprintf(stderr, "Failed to allocate %zu bytes of SoE data"
+                    " memory.\n", size);
+            free(req);
+            return 0;
+        }
+    } else {
+        req->data = NULL;
+    }
+
+    data.config_index = sc->index;
+    data.drive_no = drive_no;
+    data.idn = idn;
+    data.size = size;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_SOE_REQUEST, &data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to create SoE request: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        ec_soe_request_clear(req);
+        free(req);
+        return NULL;
+    }
+
+    req->next = NULL;
+    req->config = sc;
+    req->index = data.request_index;
+    req->drive_no = data.drive_no;
+    req->idn = data.idn;
+    req->data_size = size;
+    req->mem_size = size;
+
+    ec_slave_config_add_soe_request(sc, req);
 
     return req;
 }

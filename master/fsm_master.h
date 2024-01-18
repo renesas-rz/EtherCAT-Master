@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -88,6 +86,7 @@ struct ec_fsm_master {
     ec_sii_write_request_t *sii_request; /**< SII write request */
     off_t sii_index; /**< index to SII write request data */
     ec_sdo_request_t *sdo_request; /**< SDO request to process. */
+    ec_soe_request_t *soe_request; /**< SoE request to process. */
 
     ec_fsm_coe_t fsm_coe; /**< CoE state machine */
     ec_fsm_soe_t fsm_soe; /**< SoE state machine */

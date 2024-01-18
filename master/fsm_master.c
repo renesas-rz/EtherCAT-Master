@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -66,6 +64,7 @@ void ec_fsm_master_state_assign_sii(ec_fsm_master_t *);
 void ec_fsm_master_state_write_sii(ec_fsm_master_t *);
 void ec_fsm_master_state_sdo_dictionary(ec_fsm_master_t *);
 void ec_fsm_master_state_sdo_request(ec_fsm_master_t *);
+void ec_fsm_master_state_soe_request(ec_fsm_master_t *);
 
 void ec_fsm_master_enter_clear_addresses(ec_fsm_master_t *);
 void ec_fsm_master_enter_write_system_times(ec_fsm_master_t *);
@@ -83,7 +82,17 @@ void ec_fsm_master_init(
     fsm->master = master;
     fsm->datagram = datagram;
 
+    // inits the member variables state, idle, dev_idx, link_state,
+    // slaves_responding, slave_states and rescan_required
     ec_fsm_master_reset(fsm);
+
+    fsm->retries = 0;
+    fsm->scan_jiffies = 0;
+    fsm->slave = NULL;
+    fsm->sii_request = NULL;
+    fsm->sii_index = 0;
+    fsm->sdo_request = NULL;
+    fsm->soe_request = NULL;
 
     // init sub-state-machines
     ec_fsm_coe_init(&fsm->fsm_coe);
@@ -492,17 +501,18 @@ int ec_fsm_master_action_process_sii(
 
 /*****************************************************************************/
 
-/** Check for pending SDO requests and process one.
+/** Check for pending internal SDO/SoE requests and process one.
  *
  * \return non-zero, if an SDO request is processed.
  */
-int ec_fsm_master_action_process_sdo(
+int ec_fsm_master_action_process_int_request(
         ec_fsm_master_t *fsm /**< Master state machine. */
         )
 {
     ec_master_t *master = fsm->master;
     ec_slave_t *slave;
-    ec_sdo_request_t *req;
+    ec_sdo_request_t *sdo_req;
+    ec_soe_request_t *soe_req;
 
     // search for internal requests to be processed
     for (slave = master->slaves;
@@ -513,30 +523,58 @@ int ec_fsm_master_action_process_sdo(
             continue;
         }
 
-        list_for_each_entry(req, &slave->config->sdo_requests, list) {
-            if (req->state == EC_INT_REQUEST_QUEUED) {
+        list_for_each_entry(sdo_req, &slave->config->sdo_requests, list) {
+            if (sdo_req->state == EC_INT_REQUEST_QUEUED) {
 
-                if (ec_sdo_request_timed_out(req)) {
-                    req->state = EC_INT_REQUEST_FAILURE;
+                if (ec_sdo_request_timed_out(sdo_req)) {
+                    sdo_req->state = EC_INT_REQUEST_FAILURE;
                     EC_SLAVE_DBG(slave, 1, "Internal SDO request"
                             " timed out.\n");
                     continue;
                 }
 
                 if (slave->current_state == EC_SLAVE_STATE_INIT) {
-                    req->state = EC_INT_REQUEST_FAILURE;
+                    sdo_req->state = EC_INT_REQUEST_FAILURE;
                     continue;
                 }
 
-                req->state = EC_INT_REQUEST_BUSY;
+                sdo_req->state = EC_INT_REQUEST_BUSY;
                 EC_SLAVE_DBG(slave, 1, "Processing internal"
                         " SDO request...\n");
                 fsm->idle = 0;
-                fsm->sdo_request = req;
+                fsm->sdo_request = sdo_req;
                 fsm->slave = slave;
                 fsm->state = ec_fsm_master_state_sdo_request;
-                ec_fsm_coe_transfer(&fsm->fsm_coe, slave, req);
+                ec_fsm_coe_transfer(&fsm->fsm_coe, slave, sdo_req);
                 ec_fsm_coe_exec(&fsm->fsm_coe, fsm->datagram);
+                return 1;
+            }
+        }
+
+        list_for_each_entry(soe_req, &slave->config->soe_requests, list) {
+            if (soe_req->state == EC_INT_REQUEST_QUEUED) {
+
+                if (ec_soe_request_timed_out(soe_req)) {
+                    soe_req->state = EC_INT_REQUEST_FAILURE;
+                    EC_SLAVE_DBG(slave, 1, "Internal SoE request"
+                            " timed out.\n");
+                    continue;
+                }
+
+                if (slave->current_state == EC_SLAVE_STATE_INIT) {
+                    soe_req->state = EC_INT_REQUEST_FAILURE;
+                    continue;
+                }
+
+                soe_req->state = EC_INT_REQUEST_BUSY;
+                EC_SLAVE_DBG(slave, 1, "Processing internal"
+                        " SoE request...\n");
+                fsm->idle = 0;
+                fsm->soe_request = soe_req;
+                fsm->slave = slave;
+                fsm->state = ec_fsm_master_state_soe_request;
+                ec_fsm_soe_transfer(&fsm->fsm_soe, slave, soe_req);
+                ec_fsm_soe_exec(&fsm->fsm_soe, fsm->datagram);
                 return 1;
             }
         }
@@ -557,8 +595,8 @@ void ec_fsm_master_action_idle(
     ec_master_t *master = fsm->master;
     ec_slave_t *slave;
 
-    // Check for pending internal SDO requests
-    if (ec_fsm_master_action_process_sdo(fsm)) {
+    // Check for pending internal SDO or SoE requests
+    if (ec_fsm_master_action_process_int_request(fsm)) {
         return;
     }
 
@@ -1357,8 +1395,51 @@ void ec_fsm_master_state_sdo_request(
 
     EC_SLAVE_DBG(fsm->slave, 1, "Finished internal SDO request.\n");
 
-    // check for another SDO request
-    if (ec_fsm_master_action_process_sdo(fsm)) {
+    // check for another SDO/SoE request
+    if (ec_fsm_master_action_process_int_request(fsm)) {
+        return; // processing another request
+    }
+
+    ec_fsm_master_restart(fsm);
+}
+
+/*****************************************************************************/
+
+/** Master state: SoE REQUEST.
+ */
+void ec_fsm_master_state_soe_request(
+        ec_fsm_master_t *fsm /**< Master state machine. */
+        )
+{
+    ec_soe_request_t *request = fsm->soe_request;
+
+    if (!request) {
+        // configuration was cleared in the meantime
+        ec_fsm_master_restart(fsm);
+        return;
+    }
+
+    if (ec_fsm_soe_exec(&fsm->fsm_soe, fsm->datagram)) {
+        return;
+    }
+
+    if (!ec_fsm_soe_success(&fsm->fsm_soe)) {
+        EC_SLAVE_DBG(fsm->slave, 1,
+                "Failed to process internal SoE request.\n");
+        request->state = EC_INT_REQUEST_FAILURE;
+        wake_up_all(&fsm->master->request_queue);
+        ec_fsm_master_restart(fsm);
+        return;
+    }
+
+    // SoE request finished
+    request->state = EC_INT_REQUEST_SUCCESS;
+    wake_up_all(&fsm->master->request_queue);
+
+    EC_SLAVE_DBG(fsm->slave, 1, "Finished internal SoE request.\n");
+
+    // check for another CoE/SoE request
+    if (ec_fsm_master_action_process_int_request(fsm)) {
         return; // processing another request
     }
 
