@@ -1893,7 +1893,7 @@ static ATTRIBUTES int ec_ioctl_activate(
             offset += ecrt_domain_size(domain);
         }
 
-#ifdef EC_IOCTL_RTDM
+#if defined(EC_IOCTL_RTDM) && !defined(EC_RTDM_OPS_HAS_MMAP)
         /* RTDM uses a different approach for memory-mapping, which has to be
          * initiated by the kernel.
          */

@@ -273,6 +273,12 @@ static int ec_rtdm_ioctl(struct rtdm_fd *fd, unsigned int request,
 	return ec_ioctl_rtdm(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 }
 
+static int ec_rtdm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
+{
+	struct ec_rtdm_context *ctx = (struct ec_rtdm_context *) rtdm_fd_to_private(fd);
+	return rtdm_mmap_kmem(vma, (void *)ctx->ioctl_ctx.process_data);
+}
+
 static struct rtdm_driver ec_rtdm_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(ec_rtdm,
 						    RTDM_CLASS_EXPERIMENTAL,
@@ -286,6 +292,7 @@ static struct rtdm_driver ec_rtdm_driver = {
 		.close		= ec_rtdm_close,
 		.ioctl_rt	= ec_rtdm_ioctl_rt,
 		.ioctl_nrt	= ec_rtdm_ioctl,
+		.mmap		= ec_rtdm_mmap,
 	},
 };
 
@@ -330,21 +337,4 @@ void ec_rtdm_dev_clear(ec_rtdm_dev_t *rtdm_dev)
 			rtdm_dev->dev->name);
 
 	kfree(rtdm_dev->dev);
-}
-
-int ec_rtdm_mmap(ec_ioctl_context_t *ioctl_ctx, void **user_address)
-{
-	struct ec_rtdm_context *ctx =
-		container_of(ioctl_ctx, struct ec_rtdm_context, ioctl_ctx);
-	int ret;
-
-	ret = rtdm_mmap_to_user(ctx->fd,
-			ioctl_ctx->process_data, ioctl_ctx->process_data_size,
-			PROT_READ | PROT_WRITE,
-			user_address,
-			NULL, NULL);
-	if (ret < 0)
-		return ret;
-
-	return 0;
 }

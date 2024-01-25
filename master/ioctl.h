@@ -845,7 +845,10 @@ long ec_ioctl(ec_master_t *, ec_ioctl_context_t *, unsigned int,
 
 long ec_ioctl_rtdm(ec_master_t *, ec_ioctl_context_t *, unsigned int,
         void __user *);
+
+#ifndef EC_RTDM_OPS_HAS_MMAP
 int ec_rtdm_mmap(ec_ioctl_context_t *, void **);
+#endif
 
 #endif
 
