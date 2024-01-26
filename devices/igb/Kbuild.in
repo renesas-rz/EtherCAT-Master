@@ -37,6 +37,10 @@ REV := $(shell if test -s $(TOPDIR)/revision; then \
 ifeq (@ENABLE_IGB@,1)
 	obj-m += ec_igb.o
 
+ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+	ccflags-y := -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+endif
+
 	ec_igb-objs := \
 		e1000_82575-@KERNEL_IGB@-ethercat.o \
 		e1000_i210-@KERNEL_IGB@-ethercat.o \
