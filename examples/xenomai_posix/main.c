@@ -43,7 +43,7 @@ static unsigned int cycle_us = 1000; /* 1 ms */
 
 static pthread_t cyclic_thread;
 
-static int run = 1;
+static volatile sig_atomic_t run = 1;
 
 /****************************************************************************/
 

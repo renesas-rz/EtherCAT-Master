@@ -41,7 +41,7 @@
 
 RT_TASK my_task;
 
-static int run = 1;
+static volatile sig_atomic_t run = 1;
 
 /****************************************************************************/
 
