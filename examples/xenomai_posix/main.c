@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
     pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
     pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
     pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-    pthread_setschedparam(cyclic_thread, SCHED_FIFO, &param);
+    pthread_attr_setschedparam(&thattr, &param);
 
     ret = pthread_create(&cyclic_thread, &thattr, &my_thread, NULL);
     if (ret) {
