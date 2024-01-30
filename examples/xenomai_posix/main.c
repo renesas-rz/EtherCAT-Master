@@ -32,8 +32,10 @@
 #include <sys/mman.h>
 #include <time.h>
 
+#ifndef XENOMAI_API_V3
 #include <rtdm/rtdm.h>
 #include <rtdk.h>
+#endif
 
 #include "ecrt.h"
 

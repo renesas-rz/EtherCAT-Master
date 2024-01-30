@@ -29,12 +29,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#ifdef XENOMAI_API_V3
+#include <alchemy/task.h>
+#include <alchemy/sem.h>
+enum {T_FPU = 0};
+#else
 #include <rtdm/rtdm.h>
 #include <native/task.h>
 #include <native/sem.h>
 #include <native/mutex.h>
 #include <native/timer.h>
 #include <rtdk.h>
+#endif
 #include <pthread.h>
 
 #include "ecrt.h"
@@ -201,8 +207,10 @@ int main(int argc, char *argv[])
     ec_slave_config_t *sc;
     int ret;
 
+#ifndef XENOMAI_API_V3
     /* Perform auto-init of rt_print buffers if the task doesn't do so */
     rt_print_auto_init(1);
+#endif
 
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);
