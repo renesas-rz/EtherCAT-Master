@@ -723,38 +723,51 @@ AC_ARG_WITH([xenomai-dir],
     ]
 )
 
+AC_ARG_WITH([xenomai-config],
+    AC_HELP_STRING(
+        [--with-xenomai-config=<CMD>],
+        [Xenomai config invokation, default to xenomai-dir/bin/xeno-config]
+    ),
+    [
+        xenomaiconfig=[$withval]
+    ],
+    [
+        xenomaiconfig="$xenomaidir/bin/xeno-config"
+    ]
+)
+
 AC_MSG_CHECKING([for Xenomai path])
 
 if test -z "${xenomaidir}"; then
     AC_MSG_RESULT([not specified.])
 else
-    if test \! -x ${xenomaidir}/bin/xeno-config; then
+    if test \! -x ${xenomaiconfig}; then
         AC_MSG_ERROR([no Xenomai installation found in ${xenomaidir}!])
     fi
     AC_MSG_RESULT([$xenomaidir])
 
-    xenomai_ver=`$xenomaidir/bin/xeno-config --version`
+    xenomai_ver=`$xenomaiconfig --version`
     xenomai_ver=${xenomai_ver##\"}
     xenomai_ver=${xenomai_ver%%\"}
     echo "xenomai version: " $xenomai_ver
 
     if test ${xenomai_ver%%.*} -gt 2; then
-        xeno_alchemy_cflags=`$xenomaidir/bin/xeno-config --skin alchemy --cflags`
-        xeno_alchemy_ldflags=`$xenomaidir/bin/xeno-config --skin alchemy --auto-init-solib --ldflags`
-        xeno_posix_ldflags=`$xenomaidir/bin/xeno-config --skin posix --auto-init-solib --ldflags`
-        xeno_rtdm_ldflags=`$xenomaidir/bin/xeno-config --skin rtdm --auto-init-solib --ldflags`
+        xeno_alchemy_cflags=`$xenomaiconfig --skin alchemy --cflags`
+        xeno_alchemy_ldflags=`$xenomaiconfig --skin alchemy --auto-init-solib --ldflags`
+        xeno_posix_ldflags=`$xenomaiconfig --skin posix --auto-init-solib --ldflags`
+        xeno_rtdm_ldflags=`$xenomaiconfig --skin rtdm --auto-init-solib --ldflags`
         xeno_v3=1
         xeno=0
         AC_DEFINE([EC_RTDM_OPS_HAS_MMAP], [1], [RTDM device operations has mmap handler])
     else
-        xeno_native_cflags=`$xenomaidir/bin/xeno-config --skin native --cflags`
-        xeno_native_ldflags=`$xenomaidir/bin/xeno-config --skin native --ldflags`
-        xeno_posix_ldflags=`$xenomaidir/bin/xeno-config --skin posix --ldflags`
-        xeno_rtdm_ldflags=`$xenomaidir/bin/xeno-config --skin rtdm --ldflags`
+        xeno_native_cflags=`$xenomaiconfig --skin native --cflags`
+        xeno_native_ldflags=`$xenomaiconfig --skin native --ldflags`
+        xeno_posix_ldflags=`$xenomaiconfig --skin posix --ldflags`
+        xeno_rtdm_ldflags=`$xenomaiconfig --skin rtdm --ldflags`
     fi
 
-    xeno_posix_cflags=`$xenomaidir/bin/xeno-config --skin posix --cflags`
-    xeno_rtdm_cflags=`$xenomaidir/bin/xeno-config --skin rtdm --cflags`
+    xeno_posix_cflags=`$xenomaiconfig --skin posix --cflags`
+    xeno_rtdm_cflags=`$xenomaiconfig --skin rtdm --cflags`
 fi
 
 AC_SUBST(XENOMAI_DIR,[$xenomaidir])
