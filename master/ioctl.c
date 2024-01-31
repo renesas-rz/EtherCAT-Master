@@ -61,6 +61,9 @@
          rt_mutex_lock_interruptible(lock)
 #endif  // EC_IOCTL_RTDM
 
+#define ec_copy_to_user(to, from, n, ctx) copy_to_user(to, from, n)
+#define ec_copy_from_user(to, from, n, ctx) copy_from_user(to, from, n)
+
 /****************************************************************************/
 
 /** Copies a string to an ioctl structure.
@@ -85,7 +88,8 @@ static void ec_ioctl_strcpy(
  * \return Zero on success, otherwise a negative error code.
  */
 static ATTRIBUTES int ec_ioctl_module(
-        void *arg /**< Userspace address to store the results. */
+        void *arg, /**< ioctl() argument. */
+        ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
     ec_ioctl_module_t data;
@@ -93,7 +97,7 @@ static ATTRIBUTES int ec_ioctl_module(
     data.ioctl_version_magic = EC_IOCTL_VERSION_MAGIC;
     data.master_count = ec_master_count();
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
@@ -2038,7 +2042,7 @@ static ATTRIBUTES int ec_ioctl_master_state(
 
     ecrt_master_state(master, &data);
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
@@ -2060,7 +2064,7 @@ static ATTRIBUTES int ec_ioctl_master_link_state(
     ec_master_link_state_t state;
     int ret;
 
-    if (copy_from_user(&ioctl, (void __user *) arg, sizeof(ioctl))) {
+    if (ec_copy_from_user(&ioctl, (void __user *) arg, sizeof(ioctl), ctx)) {
         return -EFAULT;
     }
 
@@ -2069,7 +2073,8 @@ static ATTRIBUTES int ec_ioctl_master_link_state(
         return ret;
     }
 
-    if (copy_to_user((void __user *) ioctl.state, &state, sizeof(state))) {
+    if (ec_copy_to_user((void __user *) ioctl.state,
+                        &state, sizeof(state), ctx)) {
         return -EFAULT;
     }
 
@@ -2093,7 +2098,7 @@ static ATTRIBUTES int ec_ioctl_app_time(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&time, (void __user *) arg, sizeof(time))) {
+    if (ec_copy_from_user(&time, (void __user *) arg, sizeof(time), ctx)) {
         return -EFAULT;
     }
 
@@ -2141,7 +2146,7 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&time, (void __user *) arg, sizeof(time))) {
+    if (ec_copy_from_user(&time, (void __user *) arg, sizeof(time), ctx)) {
         return -EFAULT;
     }
 
@@ -2199,7 +2204,7 @@ static ATTRIBUTES int ec_ioctl_ref_clock_time(
         return ret;
     }
 
-    if (copy_to_user((void __user *) arg, &time, sizeof(time))) {
+    if (ec_copy_to_user((void __user *) arg, &time, sizeof(time), ctx)) {
         return -EFAULT;
     }
 
@@ -2248,7 +2253,8 @@ static ATTRIBUTES int ec_ioctl_sync_mon_process(
 
     time_diff = ecrt_master_sync_monitor_process(master);
 
-    if (copy_to_user((void __user *) arg, &time_diff, sizeof(time_diff)))
+    if (ec_copy_to_user((void __user *) arg, &time_diff,
+                        sizeof(time_diff), ctx))
         return -EFAULT;
 
     return 0;
@@ -2764,7 +2770,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_pop(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -2780,7 +2786,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_pop(
         return ret;
     }
 
-    if (copy_to_user((void __user *) io.target, msg, sizeof(msg))) {
+    if (ec_copy_to_user((void __user *) io.target, msg, sizeof(msg), ctx)) {
         return -EFAULT;
     }
 
@@ -2806,7 +2812,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_clear(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -2840,7 +2846,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_overruns(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -2858,7 +2864,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_overruns(
 
     io.overruns = ret;
 
-    if (copy_to_user((void __user *) arg, &io, sizeof(io))) {
+    if (ec_copy_to_user((void __user *) arg, &io, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3092,7 +3098,7 @@ static ATTRIBUTES int ec_ioctl_sc_state(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data))) {
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx)) {
         return -EFAULT;
     }
 
@@ -3105,7 +3111,8 @@ static ATTRIBUTES int ec_ioctl_sc_state(
 
     ecrt_slave_config_state(sc, &state);
 
-    if (copy_to_user((void __user *) data.state, &state, sizeof(state)))
+    if (ec_copy_to_user((void __user *) data.state,
+                        &state, sizeof(state), ctx))
         return -EFAULT;
 
     return 0;
@@ -3368,7 +3375,7 @@ static ATTRIBUTES int ec_ioctl_domain_state(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data))) {
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx)) {
         return -EFAULT;
     }
 
@@ -3381,7 +3388,7 @@ static ATTRIBUTES int ec_ioctl_domain_state(
 
     ecrt_domain_state(domain, &state);
 
-    if (copy_to_user((void __user *) data.state, &state, sizeof(state)))
+    if (ec_copy_to_user((void __user *) data.state, &state, sizeof(state), ctx))
         return -EFAULT;
 
     return 0;
@@ -3406,7 +3413,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_index(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3443,7 +3450,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3480,7 +3487,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_state(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3500,7 +3507,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_state(
     else
         data.size = 0;
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
@@ -3525,7 +3532,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_read(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3563,7 +3570,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     if (!data.size) {
@@ -3586,7 +3593,8 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     if (ret)
         return ret;
 
-    if (copy_from_user(req->data, (void __user *) data.data, data.size))
+    if (ec_copy_from_user(req->data, (void __user *) data.data,
+                          data.size, ctx))
         return -EFAULT;
 
     req->data_size = data.size;
@@ -3613,7 +3621,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_data(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3627,8 +3635,8 @@ static ATTRIBUTES int ec_ioctl_sdo_request_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) data.data, ecrt_sdo_request_data(req),
-                ecrt_sdo_request_data_size(req)))
+    if (ec_copy_to_user((void __user *) data.data, ecrt_sdo_request_data(req),
+                ecrt_sdo_request_data_size(req), ctx))
         return -EFAULT;
 
     return 0;
@@ -3653,7 +3661,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_index(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3690,7 +3698,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_timeout(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3727,7 +3735,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_state(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3749,7 +3757,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_state(
         data.size = 0;
     }
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
@@ -3774,7 +3782,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_read(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3812,7 +3820,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     if (!data.size) {
@@ -3835,7 +3843,8 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     if (ret)
         return ret;
 
-    if (copy_from_user(req->data, (void __user *) data.data, data.size))
+    if (ec_copy_from_user(req->data, (void __user *) data.data,
+                          data.size, ctx))
         return -EFAULT;
 
     req->data_size = data.size;
@@ -3862,7 +3871,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_data(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3876,8 +3885,8 @@ static ATTRIBUTES int ec_ioctl_soe_request_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) data.data, ecrt_soe_request_data(req),
-                ecrt_soe_request_data_size(req)))
+    if (ec_copy_to_user((void __user *) data.data, ecrt_soe_request_data(req),
+                ecrt_soe_request_data_size(req), ctx))
         return -EFAULT;
 
     return 0;
@@ -3903,7 +3912,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_data(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3922,8 +3931,8 @@ static ATTRIBUTES int ec_ioctl_reg_request_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) io.data, ecrt_reg_request_data(reg),
-                min(reg->mem_size, io.mem_size))) {
+    if (ec_copy_to_user((void __user *) io.data, ecrt_reg_request_data(reg),
+                min(reg->mem_size, io.mem_size), ctx)) {
         return -EFAULT;
     }
 
@@ -3950,7 +3959,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_state(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3968,7 +3977,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_state(
     io.state = ecrt_reg_request_state(reg);
     io.new_data = io.state == EC_REQUEST_SUCCESS && reg->dir == EC_DIR_INPUT;
 
-    if (copy_to_user((void __user *) arg, &io, sizeof(io))) {
+    if (ec_copy_to_user((void __user *) arg, &io, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3995,7 +4004,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -4014,8 +4023,8 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
         return -EOVERFLOW;
     }
 
-    if (copy_from_user(reg->data, (void __user *) io.data,
-                io.transfer_size)) {
+    if (ec_copy_from_user(reg->data, (void __user *) io.data,
+                io.transfer_size, ctx)) {
         return -EFAULT;
     }
 
@@ -4043,7 +4052,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -4087,13 +4096,14 @@ static ATTRIBUTES int ec_ioctl_voe_send_header(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
-    if (get_user(vendor_id, data.vendor_id))
+    if (ec_copy_from_user(&vendor_id, data.vendor_id, sizeof(vendor_id), ctx))
         return -EFAULT;
 
-    if (get_user(vendor_type, data.vendor_type))
+    if (ec_copy_from_user(&vendor_type, data.vendor_type,
+                          sizeof(vendor_type), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4132,7 +4142,7 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4149,11 +4159,13 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
     ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
 
     if (likely(data.vendor_id))
-        if (put_user(vendor_id, data.vendor_id))
+        if (ec_copy_to_user(data.vendor_id, &vendor_id,
+                            sizeof(vendor_id), ctx))
             return -EFAULT;
 
     if (likely(data.vendor_type))
-        if (put_user(vendor_type, data.vendor_type))
+        if (ec_copy_to_user(data.vendor_type, &vendor_type,
+            sizeof(vendor_type), ctx))
             return -EFAULT;
 
     return 0;
@@ -4178,7 +4190,7 @@ static ATTRIBUTES int ec_ioctl_voe_read(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4215,7 +4227,7 @@ static ATTRIBUTES int ec_ioctl_voe_read_nosync(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4252,7 +4264,7 @@ static ATTRIBUTES int ec_ioctl_voe_write(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4270,8 +4282,8 @@ static ATTRIBUTES int ec_ioctl_voe_write(
         if (data.size > ec_voe_handler_mem_size(voe))
             return -EOVERFLOW;
 
-        if (copy_from_user(ecrt_voe_handler_data(voe),
-                    (void __user *) data.data, data.size))
+        if (ec_copy_from_user(ecrt_voe_handler_data(voe),
+                    (void __user *) data.data, data.size, ctx))
             return -EFAULT;
     }
 
@@ -4298,7 +4310,7 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4321,7 +4333,7 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
     else
         data.size = 0;
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
@@ -4346,7 +4358,7 @@ static ATTRIBUTES int ec_ioctl_voe_data(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4360,8 +4372,8 @@ static ATTRIBUTES int ec_ioctl_voe_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) data.data, ecrt_voe_handler_data(voe),
-                ecrt_voe_handler_data_size(voe)))
+    if (ec_copy_to_user((void __user *) data.data, ecrt_voe_handler_data(voe),
+                ecrt_voe_handler_data_size(voe), ctx))
         return -EFAULT;
 
     return 0;
@@ -4675,7 +4687,7 @@ long EC_IOCTL(
 
     switch (cmd) {
         case EC_IOCTL_MODULE:
-            ret = ec_ioctl_module(arg);
+            ret = ec_ioctl_module(arg, ctx);
             break;
         case EC_IOCTL_MASTER:
             ret = ec_ioctl_master(master, arg);
