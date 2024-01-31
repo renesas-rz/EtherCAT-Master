@@ -112,6 +112,7 @@ static ATTRIBUTES int ec_ioctl_master(
     }
 
     io.slave_count = master->slave_count;
+    io.scan_index = master->scan_index;
     io.config_count = ec_master_config_count(master);
     io.domain_count = ec_master_domain_count(master);
 #ifdef EC_EOE
