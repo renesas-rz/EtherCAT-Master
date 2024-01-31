@@ -11,6 +11,33 @@ stages:
 variables:
     PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/ethercat/${CI_COMMIT_TAG}"
 
+rtai:
+    stage: build
+    image: registry.gitlab.com/etherlab.org/build-container-factory/ethercat-kernels:rtai
+
+    script:
+        - ./bootstrap
+        - ./configure --enable-8139too --enable-igb --enable-e100 --with-linux-dir=/usr/src/linux-obj/x86_64/0404rtai --enable-rtdm --with-rtai-dir=/usr
+        - make -j8 all modules
+
+xenomai2:
+    stage: build
+    image: registry.gitlab.com/etherlab.org/build-container-factory/ethercat-kernels:xenomai2
+
+    script:
+        - ./bootstrap
+        - ./configure --disable-8139too --with-linux-dir=/usr/src/linux-obj/x86_64/0318xenomai2 --enable-rtdm --with-xenomai-dir=/usr
+        - make -j8 all modules
+
+xenomai3:
+    stage: build
+    image: registry.gitlab.com/etherlab.org/build-container-factory/ethercat-kernels:xenomai3
+
+    script:
+        - ./bootstrap
+        - ./configure --enable-8139too --enable-igb --enable-e100 --with-linux-dir=/usr/src/linux-obj/x86_64/0510xenomai3 --enable-rtdm --with-xenomai-dir=/usr
+        - make -j8 all modules
+
 build:
     stage: build
 
