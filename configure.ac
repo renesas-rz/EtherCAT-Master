@@ -695,6 +695,7 @@ else
 
     rtai_lxrt_cflags=`$rtaidir/bin/rtai-config --lxrt-cflags`
     rtai_lxrt_ldflags=`$rtaidir/bin/rtai-config --lxrt-ldflags`
+    rtai_module_dir=`$rtaidir/bin/rtai-config --module-dir`
 fi
 
 AC_SUBST(RTAI_DIR,[$rtaidir])
@@ -703,6 +704,7 @@ AC_SUBST(ENABLE_RTAI,[$rtai])
 
 AC_SUBST(RTAI_LXRT_CFLAGS,[$rtai_lxrt_cflags])
 AC_SUBST(RTAI_LXRT_LDFLAGS,[$rtai_lxrt_ldflags])
+AC_SUBST(RTAI_MODULE_DIR,[$rtai_module_dir])
 
 #-----------------------------------------------------------------------------
 # Xenomai path (optional)
