@@ -43,7 +43,7 @@
 #define DEBUG_RTDM 0
 
 struct ec_rtdm_context {
-	struct rtdm_fd *fd;
+	struct rtdm_fd *user_fd;
 	ec_ioctl_context_t ioctl_ctx;	/**< Context structure. */
 };
 
@@ -55,7 +55,7 @@ static int ec_rtdm_open(struct rtdm_fd *fd, int oflags)
 	ec_rtdm_dev_t *rtdm_dev = dev->device_data;
 #endif
 
-	ctx->fd = fd;
+	ctx->user_fd = fd;
 
 	ctx->ioctl_ctx.writable = oflags & O_WRONLY || oflags & O_RDWR;
 	ctx->ioctl_ctx.requested = 0;

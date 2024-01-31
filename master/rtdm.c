@@ -43,7 +43,7 @@
 /** Context structure for an open RTDM file handle.
  */
 typedef struct {
-    rtdm_user_info_t *user_info; /**< RTDM user data. */
+    rtdm_user_info_t *user_fd; /**< RTDM user data. */
     ec_ioctl_context_t ioctl_ctx; /**< Context structure. */
 } ec_rtdm_context_t;
 
@@ -143,7 +143,7 @@ int ec_rtdm_open(
     ec_rtdm_dev_t *rtdm_dev = (ec_rtdm_dev_t *) context->device->device_data;
 #endif
 
-    ctx->user_info = user_info;
+    ctx->user_fd = user_info;
     ctx->ioctl_ctx.writable = oflags & O_WRONLY || oflags & O_RDWR;
     ctx->ioctl_ctx.requested = 0;
     ctx->ioctl_ctx.process_data = NULL;
@@ -220,7 +220,7 @@ int ec_rtdm_mmap(
         container_of(ioctl_ctx, ec_rtdm_context_t, ioctl_ctx);
     int ret;
 
-    ret = rtdm_mmap_to_user(ctx->user_info,
+    ret = rtdm_mmap_to_user(ctx->user_fd,
             ioctl_ctx->process_data, ioctl_ctx->process_data_size,
             PROT_READ | PROT_WRITE,
             user_address,
