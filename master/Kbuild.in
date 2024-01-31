@@ -86,14 +86,16 @@ endif
 
 ifeq (@ENABLE_XENOMAI@, 1)
 CFLAGS_rtdm.o := @XENOMAI_RTDM_CFLAGS@
+CFLAGS_rtdm-ioctl.o := @XENOMAI_RTDM_CFLAGS@
 endif
 
 ifeq (@ENABLE_RTAI@, 1)
 CFLAGS_rtdm.o := -I@RTAI_DIR@/include
+CFLAGS_rtdm-ioctl.o := -I@RTAI_DIR@/include
 endif
 
 ec_master-objs += rtdm-ioctl.o
-CFLAGS_rtdm-ioctl.o := -DEC_IOCTL_RTDM
+CFLAGS_rtdm-ioctl.o += -DEC_IOCTL_RTDM
 
 endif # ENABLE_RTDM
 

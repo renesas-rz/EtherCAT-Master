@@ -27,6 +27,7 @@
 #define __EC_RTDM_DETAILS_H__
 
 #include "../config.h"
+#include "ioctl.h"
 
 #include <linux/kernel.h>
 
@@ -41,7 +42,7 @@
 
 #define EC_RTDM_USERFD_T rtdm_user_info_t
 
-#endif
+#endif // EC_RTDM_XENOMAI_V3
 
 /****************************************************************************/
 
@@ -53,5 +54,11 @@ typedef struct ec_rtdm_context {
 } ec_rtdm_context_t;
 
 /****************************************************************************/
+
+static inline EC_RTDM_USERFD_T *ec_ioctl_to_rtdm(ec_ioctl_context_t *ctx)
+{
+    return container_of(ctx, ec_rtdm_context_t, ioctl_ctx)->user_fd;
+}
+
 
 #endif  // __EC_RTDM_DETAILS_H__

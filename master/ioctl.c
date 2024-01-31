@@ -49,20 +49,24 @@
 #endif
 
 #ifdef EC_IOCTL_RTDM
+# include "rtdm_details.h"
 /* RTDM does not support locking yet,
  * therefore no send/receive callbacks are set too. */
 # define ec_ioctl_lock(lock) do {} while(0)
 # define ec_ioctl_unlock(lock) do {} while(0)
 # define ec_ioctl_lock_interruptible(lock) (0)
+# define ec_copy_to_user(to, from, n, ctx) \
+    rtdm_safe_copy_to_user(ec_ioctl_to_rtdm(ctx), to, from, n)
+# define ec_copy_from_user(to, from, n, ctx) \
+    rtdm_safe_copy_from_user(ec_ioctl_to_rtdm(ctx), to, from, n)
 #else
 # define ec_ioctl_lock(lock)   rt_mutex_lock(lock)
 # define ec_ioctl_unlock(lock) rt_mutex_unlock(lock)
 # define ec_ioctl_lock_interruptible(lock) \
          rt_mutex_lock_interruptible(lock)
+# define ec_copy_to_user(to, from, n, ctx) copy_to_user(to, from, n)
+# define ec_copy_from_user(to, from, n, ctx) copy_from_user(to, from, n)
 #endif  // EC_IOCTL_RTDM
-
-#define ec_copy_to_user(to, from, n, ctx) copy_to_user(to, from, n)
-#define ec_copy_from_user(to, from, n, ctx) copy_from_user(to, from, n)
 
 /****************************************************************************/
 
