@@ -60,6 +60,7 @@ noinst_HEADERS = \
 	reg_request.c reg_request.h \
 	rtdm-ioctl.c \
 	rtdm.c rtdm.h \
+	rtdm_details.h \
 	rtdm_xenomai_v3.c \
 	sdo.c sdo.h \
 	sdo_entry.c sdo_entry.h \

@@ -37,15 +37,11 @@
 #include "master.h"
 #include "ioctl.h"
 #include "rtdm.h"
+#include "rtdm_details.h"
 
 /** Set to 1 to enable device operations debugging.
  */
 #define DEBUG_RTDM 0
-
-struct ec_rtdm_context {
-	struct rtdm_fd *user_fd;
-	ec_ioctl_context_t ioctl_ctx;	/**< Context structure. */
-};
 
 static int ec_rtdm_open(struct rtdm_fd *fd, int oflags)
 {

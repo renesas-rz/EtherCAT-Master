@@ -33,19 +33,11 @@
 #include "master.h"
 #include "ioctl.h"
 #include "rtdm.h"
+#include "rtdm_details.h"
 
 /** Set to 1 to enable device operations debugging.
  */
 #define DEBUG 0
-
-/****************************************************************************/
-
-/** Context structure for an open RTDM file handle.
- */
-typedef struct {
-    rtdm_user_info_t *user_fd; /**< RTDM user data. */
-    ec_ioctl_context_t ioctl_ctx; /**< Context structure. */
-} ec_rtdm_context_t;
 
 /****************************************************************************/
 
