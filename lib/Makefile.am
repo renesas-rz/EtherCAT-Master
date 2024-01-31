@@ -104,7 +104,7 @@ endif
 if ENABLE_XENOMAI_V3
 libethercat_rtdm_la_CFLAGS += $(XENOMAI_RTDM_CFLAGS)
 libethercat_rtdm_la_LDFLAGS += $(XENOMAI_RTDM_LDFLAGS)
-libethercat_rtdm_la_CFLAGS += -DUSE_RTDM_XENOMAI_V3 -DEC_RTDM_OPS_HAS_MMAP
+libethercat_rtdm_la_CFLAGS += -DUSE_RTDM_XENOMAI_V3
 else
 libethercat_rtdm_la_CFLAGS += -DUSE_RTDM
 endif

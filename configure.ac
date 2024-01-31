@@ -758,7 +758,7 @@ else
         xeno_rtdm_ldflags=`$xenomaiconfig --skin rtdm --auto-init-solib --ldflags`
         xeno_v3=1
         xeno=0
-        AC_DEFINE([EC_RTDM_OPS_HAS_MMAP], [1], [RTDM device operations has mmap handler])
+        AC_DEFINE([EC_RTDM_XENOMAI_V3], [1], [Use Xenomai3 RTDM flavour])
     else
         xeno_native_cflags=`$xenomaiconfig --skin native --cflags`
         xeno_native_ldflags=`$xenomaiconfig --skin native --ldflags`
