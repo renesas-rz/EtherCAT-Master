@@ -191,6 +191,7 @@ int eccdev_release(struct inode *inode, struct file *filp)
  */
 long eccdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+    long result;
     ec_cdev_priv_t *priv = (ec_cdev_priv_t *) filp->private_data;
 
 #if DEBUG
@@ -199,7 +200,11 @@ long eccdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
             filp, cmd, _IOC_NR(cmd), arg);
 #endif
 
-    return ec_ioctl(priv->cdev->master, &priv->ctx, cmd, (void __user *) arg);
+    result = ec_ioctl_rt(priv->cdev->master, &priv->ctx, cmd, (void __user *) arg);
+    if (result == -ENOTTY) {
+        result = ec_ioctl_nrt(priv->cdev->master, &priv->ctx, cmd, (void __user *) arg);
+    }
+    return result;
 }
 
 /****************************************************************************/

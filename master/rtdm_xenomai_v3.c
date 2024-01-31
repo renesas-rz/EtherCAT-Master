@@ -84,189 +84,31 @@ static void ec_rtdm_close(struct rtdm_fd *fd)
 #endif
 }
 
-#if DEBUG_RTDM
-struct ec_ioctl_desc {
-	unsigned int cmd;
-	const char *name;
-};
-
-#define EC_IOCTL_DEF(ioctl)	\
-	[_IOC_NR(ioctl)] = {	\
-		.cmd = ioctl,	\
-		.name = #ioctl	\
-	}
-
-static const struct ec_ioctl_desc ec_ioctls[] = {
-	EC_IOCTL_DEF(EC_IOCTL_MODULE),
-	EC_IOCTL_DEF(EC_IOCTL_MASTER),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SYNC),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SYNC_PDO),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SYNC_PDO_ENTRY),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_FMMU),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_DATA),
-	EC_IOCTL_DEF(EC_IOCTL_MASTER_DEBUG),
-	EC_IOCTL_DEF(EC_IOCTL_MASTER_RESCAN),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SDO),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SDO_ENTRY),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SDO_UPLOAD),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SDO_DOWNLOAD),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SII_READ),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SII_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_REG_READ),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_REG_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_FOE_READ),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_FOE_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SOE_READ),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_SOE_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_EOE_IP_PARAM),
-	EC_IOCTL_DEF(EC_IOCTL_CONFIG),
-	EC_IOCTL_DEF(EC_IOCTL_CONFIG_PDO),
-	EC_IOCTL_DEF(EC_IOCTL_CONFIG_PDO_ENTRY),
-	EC_IOCTL_DEF(EC_IOCTL_CONFIG_SDO),
-	EC_IOCTL_DEF(EC_IOCTL_CONFIG_IDN),
-#ifdef EC_EOE
-	EC_IOCTL_DEF(EC_IOCTL_EOE_HANDLER),
-#endif
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_DICT_UPLOAD),
-	EC_IOCTL_DEF(EC_IOCTL_REQUEST),
-	EC_IOCTL_DEF(EC_IOCTL_CREATE_DOMAIN),
-	EC_IOCTL_DEF(EC_IOCTL_CREATE_SLAVE_CONFIG),
-	EC_IOCTL_DEF(EC_IOCTL_SELECT_REF_CLOCK),
-	EC_IOCTL_DEF(EC_IOCTL_ACTIVATE),
-	EC_IOCTL_DEF(EC_IOCTL_DEACTIVATE),
-	EC_IOCTL_DEF(EC_IOCTL_SEND),
-	EC_IOCTL_DEF(EC_IOCTL_RECEIVE),
-	EC_IOCTL_DEF(EC_IOCTL_MASTER_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_MASTER_LINK_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_APP_TIME),
-	EC_IOCTL_DEF(EC_IOCTL_SYNC_REF),
-	EC_IOCTL_DEF(EC_IOCTL_SYNC_SLAVES),
-	EC_IOCTL_DEF(EC_IOCTL_REF_CLOCK_TIME),
-	EC_IOCTL_DEF(EC_IOCTL_SYNC_MON_QUEUE),
-	EC_IOCTL_DEF(EC_IOCTL_SYNC_MON_PROCESS),
-	EC_IOCTL_DEF(EC_IOCTL_RESET),
-	EC_IOCTL_DEF(EC_IOCTL_SC_SYNC),
-	EC_IOCTL_DEF(EC_IOCTL_SC_WATCHDOG),
-	EC_IOCTL_DEF(EC_IOCTL_SC_ADD_PDO),
-	EC_IOCTL_DEF(EC_IOCTL_SC_CLEAR_PDOS),
-	EC_IOCTL_DEF(EC_IOCTL_SC_ADD_ENTRY),
-	EC_IOCTL_DEF(EC_IOCTL_SC_CLEAR_ENTRIES),
-	EC_IOCTL_DEF(EC_IOCTL_SC_REG_PDO_ENTRY),
-	EC_IOCTL_DEF(EC_IOCTL_SC_REG_PDO_POS),
-	EC_IOCTL_DEF(EC_IOCTL_SC_DC),
-	EC_IOCTL_DEF(EC_IOCTL_SC_SDO),
-	EC_IOCTL_DEF(EC_IOCTL_SC_EMERG_SIZE),
-	EC_IOCTL_DEF(EC_IOCTL_SC_EMERG_POP),
-	EC_IOCTL_DEF(EC_IOCTL_SC_EMERG_CLEAR),
-	EC_IOCTL_DEF(EC_IOCTL_SC_EMERG_OVERRUNS),
-	EC_IOCTL_DEF(EC_IOCTL_SC_SDO_REQUEST),
-	EC_IOCTL_DEF(EC_IOCTL_SC_REG_REQUEST),
-	EC_IOCTL_DEF(EC_IOCTL_SC_VOE),
-	EC_IOCTL_DEF(EC_IOCTL_SC_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_SC_IDN),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_SIZE),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_OFFSET),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_PROCESS),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_QUEUE),
-	EC_IOCTL_DEF(EC_IOCTL_DOMAIN_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_SDO_REQUEST_INDEX),
-	EC_IOCTL_DEF(EC_IOCTL_SDO_REQUEST_TIMEOUT),
-	EC_IOCTL_DEF(EC_IOCTL_SDO_REQUEST_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_SDO_REQUEST_READ),
-	EC_IOCTL_DEF(EC_IOCTL_SDO_REQUEST_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_SDO_REQUEST_DATA),
-	EC_IOCTL_DEF(EC_IOCTL_REG_REQUEST_DATA),
-	EC_IOCTL_DEF(EC_IOCTL_REG_REQUEST_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_REG_REQUEST_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_REG_REQUEST_READ),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_SEND_HEADER),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_REC_HEADER),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_READ),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_READ_NOSYNC),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_EXEC),
-	EC_IOCTL_DEF(EC_IOCTL_VOE_DATA),
-	EC_IOCTL_DEF(EC_IOCTL_SET_SEND_INTERVAL),
-	EC_IOCTL_DEF(EC_IOCTL_SC_OVERLAPPING_IO),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_REBOOT),
-	EC_IOCTL_DEF(EC_IOCTL_SLAVE_REG_READWRITE),
-	EC_IOCTL_DEF(EC_IOCTL_REG_REQUEST_READWRITE),
-	EC_IOCTL_DEF(EC_IOCTL_SETUP_DOMAIN_MEMORY),
-	EC_IOCTL_DEF(EC_IOCTL_DEACTIVATE_SLAVES),
-	EC_IOCTL_DEF(EC_IOCTL_64_REF_CLK_TIME_QUEUE),
-	EC_IOCTL_DEF(EC_IOCTL_64_REF_CLK_TIME),
-	EC_IOCTL_DEF(EC_IOCTL_SC_FOE_REQUEST),
-	EC_IOCTL_DEF(EC_IOCTL_FOE_REQUEST_FILE),
-	EC_IOCTL_DEF(EC_IOCTL_FOE_REQUEST_TIMEOUT),
-	EC_IOCTL_DEF(EC_IOCTL_FOE_REQUEST_STATE),
-	EC_IOCTL_DEF(EC_IOCTL_FOE_REQUEST_READ),
-	EC_IOCTL_DEF(EC_IOCTL_FOE_REQUEST_WRITE),
-	EC_IOCTL_DEF(EC_IOCTL_FOE_REQUEST_DATA),
-	EC_IOCTL_DEF(EC_IOCTL_RT_SLAVE_REQUESTS),
-	EC_IOCTL_DEF(EC_IOCTL_EXEC_SLAVE_REQUESTS),
-};
-#endif
-
-static int ec_rtdm_ioctl_rt(struct rtdm_fd *fd, unsigned int request,
+static int ec_rtdm_ioctl_rt_handler(struct rtdm_fd *fd, unsigned int request,
 			 void __user *arg)
 {
+	int result;
 	struct ec_rtdm_context *ctx = rtdm_fd_to_private(fd);
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	ec_rtdm_dev_t *rtdm_dev = dev->device_data;
 
-#if DEBUG_RTDM
-	unsigned int nr = _IOC_NR(request);
-	const struct ec_ioctl_desc *ioctl = &ec_ioctls[nr];
+	result = ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 
-	EC_MASTER_INFO(rtdm_dev->master, "ioctl_rt(request = %u, ctl = %02x %s)"
-			" on RTDM device %s.\n", request, _IOC_NR(request),ioctl->name,
-			dev->name);
-#endif
-
-	/*
-	 * FIXME: Execute ioctls from non-rt context except below ioctls to
-	 *	  avoid any unknown system hanging.
-	 */
-	switch (request) {
-	case EC_IOCTL_SEND:
-	case EC_IOCTL_RECEIVE:
-	case EC_IOCTL_MASTER_STATE:
-	case EC_IOCTL_APP_TIME:
-	case EC_IOCTL_SYNC_REF:
-	case EC_IOCTL_SYNC_SLAVES:
-	case EC_IOCTL_REF_CLOCK_TIME:
-	case EC_IOCTL_SC_STATE:
-	case EC_IOCTL_DOMAIN_PROCESS:
-	case EC_IOCTL_DOMAIN_QUEUE:
-	case EC_IOCTL_DOMAIN_STATE:
-		break;
-	default:
+	if (result == -ENOTTY)
+		/* Try again with nrt ioctl handler below in secondary mode. */
 		return -ENOSYS;
-	}
 
-	return ec_ioctl_rtdm(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+	return result;
 }
 
-static int ec_rtdm_ioctl(struct rtdm_fd *fd, unsigned int request,
+static int ec_rtdm_ioctl_nrt_handler(struct rtdm_fd *fd, unsigned int request,
 			 void __user *arg)
 {
 	struct ec_rtdm_context *ctx = rtdm_fd_to_private(fd);
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	ec_rtdm_dev_t *rtdm_dev = dev->device_data;
 
-#if DEBUG_RTDM
-	unsigned int nr = _IOC_NR(request);
-	const struct ec_ioctl_desc *ioctl = &ec_ioctls[nr];
-
-	EC_MASTER_INFO(rtdm_dev->master, "ioctl(request = %u, ctl = %02x %s)"
-			" on RTDM device %s.\n", request, _IOC_NR(request),ioctl->name,
-			dev->name);
-#endif
-
-	return ec_ioctl_rtdm(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+	return ec_ioctl_rtdm_nrt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 }
 
 static int ec_rtdm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
@@ -286,8 +128,8 @@ static struct rtdm_driver ec_rtdm_driver = {
 	.ops = {
 		.open		= ec_rtdm_open,
 		.close		= ec_rtdm_close,
-		.ioctl_rt	= ec_rtdm_ioctl_rt,
-		.ioctl_nrt	= ec_rtdm_ioctl,
+		.ioctl_rt	= ec_rtdm_ioctl_rt_handler,
+		.ioctl_nrt	= ec_rtdm_ioctl_nrt_handler,
 		.mmap		= ec_rtdm_mmap,
 	},
 };

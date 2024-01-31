@@ -1158,6 +1158,9 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock(
  * The reference clock will by synchronized to the time passed in the
  * sync_time parameter.
  *
+ * Has to be called by the application after ecrt_master_activate()
+ * has returned.
+ *
  * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
@@ -1168,6 +1171,9 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
 /** Queues the DC clock drift compensation datagram for sending.
  *
  * All slave clocks synchronized to the reference clock.
+ *
+ * Has to be called by the application after ecrt_master_activate()
+ * has returned.
  *
  * \ingroup ApplicationInterfaceRT
  */

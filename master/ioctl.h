@@ -838,12 +838,16 @@ typedef struct {
     size_t process_data_size; /**< Size of the \a process_data. */
 } ec_ioctl_context_t;
 
-long ec_ioctl(ec_master_t *, ec_ioctl_context_t *, unsigned int,
+long ec_ioctl_rt(ec_master_t *, ec_ioctl_context_t *, unsigned int,
+        void __user *);
+long ec_ioctl_nrt(ec_master_t *, ec_ioctl_context_t *, unsigned int,
         void __user *);
 
 #ifdef EC_RTDM
 
-long ec_ioctl_rtdm(ec_master_t *, ec_ioctl_context_t *, unsigned int,
+long ec_ioctl_rtdm_rt(ec_master_t *, ec_ioctl_context_t *, unsigned int,
+        void __user *);
+long ec_ioctl_rtdm_nrt(ec_master_t *, ec_ioctl_context_t *, unsigned int,
         void __user *);
 
 #ifndef EC_RTDM_XENOMAI_V3

@@ -41,11 +41,12 @@
 
 /****************************************************************************/
 
-int ec_rtdm_open(struct rtdm_dev_context *, rtdm_user_info_t *, int);
-int ec_rtdm_close(struct rtdm_dev_context *, rtdm_user_info_t *);
-int ec_rtdm_ioctl(struct rtdm_dev_context *, rtdm_user_info_t *,
+static int ec_rtdm_open(struct rtdm_dev_context *, rtdm_user_info_t *, int);
+static int ec_rtdm_close(struct rtdm_dev_context *, rtdm_user_info_t *);
+static int ec_rtdm_ioctl_nrt_handler(struct rtdm_dev_context *, rtdm_user_info_t *,
         unsigned int, void __user *);
-
+static int ec_rtdm_ioctl_rt_handler(struct rtdm_dev_context *, rtdm_user_info_t *,
+        unsigned int, void __user *);
 /****************************************************************************/
 
 /** Initialize an RTDM device.
@@ -74,8 +75,8 @@ int ec_rtdm_dev_init(
             "EtherCAT%u", master->index);
     rtdm_dev->dev->open_nrt = ec_rtdm_open;
     rtdm_dev->dev->ops.close_nrt = ec_rtdm_close;
-    rtdm_dev->dev->ops.ioctl_rt = ec_rtdm_ioctl;
-    rtdm_dev->dev->ops.ioctl_nrt = ec_rtdm_ioctl;
+    rtdm_dev->dev->ops.ioctl_rt = ec_rtdm_ioctl_rt_handler;
+    rtdm_dev->dev->ops.ioctl_nrt = ec_rtdm_ioctl_nrt_handler;
     rtdm_dev->dev->device_class = RTDM_CLASS_EXPERIMENTAL;
     rtdm_dev->dev->device_sub_class = 222;
     rtdm_dev->dev->driver_name = "EtherCAT";
@@ -124,7 +125,7 @@ void ec_rtdm_dev_clear(
  *
  * \return Always zero (success).
  */
-int ec_rtdm_open(
+static int ec_rtdm_open(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info, /**< User data. */
         int oflags /**< Open flags. */
@@ -154,7 +155,7 @@ int ec_rtdm_open(
  *
  * \return Always zero (success).
  */
-int ec_rtdm_close(
+static int ec_rtdm_close(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info /**< User data. */
         )
@@ -179,7 +180,7 @@ int ec_rtdm_close(
  *
  * \return ioctl() return code.
  */
-int ec_rtdm_ioctl(
+static int ec_rtdm_ioctl_nrt_handler(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info, /**< User data. */
         unsigned int request, /**< Request. */
@@ -194,7 +195,32 @@ int ec_rtdm_ioctl(
             " on RTDM device %s.\n", request, _IOC_NR(request),
             context->device->device_name);
 #endif
-    return ec_ioctl_rtdm(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+    return ec_ioctl_rtdm_nrt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+}
+
+static int ec_rtdm_ioctl_rt_handler(
+        struct rtdm_dev_context *context, /**< Context. */
+        rtdm_user_info_t *user_info, /**< User data. */
+        unsigned int request, /**< Request. */
+        void __user *arg /**< Argument. */
+        )
+{
+    int result;
+    ec_rtdm_context_t *ctx = (ec_rtdm_context_t *) context->dev_private;
+    ec_rtdm_dev_t *rtdm_dev = (ec_rtdm_dev_t *) context->device->device_data;
+
+#if DEBUG
+    EC_MASTER_INFO(rtdm_dev->master, "ioctl(request = %u, ctl = %02x)"
+            " on RTDM device %s.\n", request, _IOC_NR(request),
+            context->device->device_name);
+#endif
+    result = ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+
+    if (result == -ENOTTY) {
+		/* Try again with nrt ioctl handler above in secondary mode. */
+        return -ENOSYS;
+    }
+    return result;
 }
 
 /****************************************************************************/
