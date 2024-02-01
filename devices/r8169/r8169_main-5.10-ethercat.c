@@ -35,7 +35,7 @@
 
 #include "../ecdev.h"
 
-#define MODULENAME "r8169"
+#define MODULENAME "ec_r8169"
 
 #define FIRMWARE_8168D_1	"rtl_nic/rtl8168d-1.fw"
 #define FIRMWARE_8168D_2	"rtl_nic/rtl8168d-2.fw"
