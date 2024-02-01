@@ -175,7 +175,7 @@
 
 /** EtherCAT realtime interface minor version number.
  */
-#define ECRT_VER_MINOR 5
+#define ECRT_VER_MINOR 6
 
 /** EtherCAT realtime interface version word generator.
  */
