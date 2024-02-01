@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -18,18 +18,29 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  *
  * EtherCAT master application interface.
  *
- * \defgroup ApplicationInterface EtherCAT Application Interface
+ * \defgroup ApplicationInterface EtherCAT Configuration Interface
  *
- * EtherCAT interface for realtime applications. This interface is designed
- * for realtime modules that want to use EtherCAT. There are functions to
- * request a master, to map process data, to communicate with slaves via CoE
+ * Interface for configuring the EtherCAT master for realtime applications.
+ * There are functions to request a master, to map process data,
+ * to communicate with slaves via CoE
  * and to configure and activate the bus.
+ * All methods in this group should be used before the
+ * application switches to operational (real-time) mode
+ * by calling ecrt_master_activate().
+ * After that, only calls to the functions in \ref ApplicationInterfaceRT
+ * are allowed.
+ * The real-time operational mode finishes by calling ecrt_master_deactivate().
+ * Many functions in this group are blocking and/or they
+ * acquire locks.
+ * Do not use these functions in non-Userspace contexts,
+ * e.g. in RTAI/Xenomai Real-Time tasks or in atomic/softirq/tasklet
+ * context in kernel modules. You have been warned.
  *
  * Changes in version 1.6.0:
  *
@@ -122,10 +133,24 @@
  *   ad-hoc via the user-space library.
  * - Added ecrt_master_reset() to initiate retrying to configure slaves.
  *
+ * \defgroup ApplicationInterfaceRT EtherCAT Real Time Application Interface
+ *
+ * Interface to interact with the EtherCAT master with real time contraints.
+ *
+ * After configuring the EtherCAT master,
+ * the application switches to the operational mode
+ * by calling ecrt_master_activate().
+ * In operational mode, do not call other methods than these
+ * listed in this group.
+ * Many of the methods in \ref ApplicationInterface are blocking,
+ * calling these in operational mode will result in a deadlock.
+ *
+ *
+ * \addtogroup ApplicationInterface
  * @{
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __ECRT_H__
 #define __ECRT_H__
@@ -140,9 +165,9 @@
 #include <sys/time.h> // for struct timeval
 #endif
 
-/******************************************************************************
+/*****************************************************************************
  * Global definitions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** EtherCAT realtime interface major version number.
  */
@@ -160,9 +185,9 @@
  */
 #define ECRT_VERSION_MAGIC ECRT_VERSION(ECRT_VER_MAJOR, ECRT_VER_MINOR)
 
-/******************************************************************************
+/*****************************************************************************
  * Feature flags
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Defined, if the redundancy features are available.
  *
@@ -218,7 +243,19 @@
  */
 #define EC_HAVE_SCAN_PROGRESS
 
-/*****************************************************************************/
+/****************************************************************************/
+
+/** Symbol visibility control macro.
+ */
+#ifndef EC_PUBLIC_API
+# if defined(ethercat_EXPORTS) && !defined(__KERNEL__)
+#  define EC_PUBLIC_API __attribute__ ((visibility ("default")))
+# else
+#  define EC_PUBLIC_API
+# endif
+#endif
+
+/****************************************************************************/
 
 /** End of list marker.
  *
@@ -256,9 +293,9 @@
  */
 #define EC_COE_EMERGENCY_MSG_SIZE 8
 
-/******************************************************************************
+/*****************************************************************************
  * Data types
- *****************************************************************************/
+ ****************************************************************************/
 
 struct ec_master;
 typedef struct ec_master ec_master_t; /**< \see ec_master */
@@ -281,7 +318,7 @@ typedef struct ec_voe_handler ec_voe_handler_t; /**< \see ec_voe_handler. */
 struct ec_reg_request;
 typedef struct ec_reg_request ec_reg_request_t; /**< \see ec_reg_request. */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Master state.
  *
@@ -305,7 +342,7 @@ typedef struct {
                                 up. */
 } ec_master_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Redundant link state.
  *
@@ -329,7 +366,7 @@ typedef struct {
                                */
 } ec_master_link_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state.
  *
@@ -351,7 +388,7 @@ typedef struct  {
                                  bit! */
 } ec_slave_config_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Master information.
  *
@@ -366,7 +403,7 @@ typedef struct {
    uint64_t app_time; /**< Application time. */
 } ec_master_info_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Master scan progress information.
  *
@@ -381,7 +418,7 @@ typedef struct {
                               network scan is in progress. */
 } ec_master_scan_progress_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT slave port descriptor.
  */
@@ -392,7 +429,7 @@ typedef enum {
     EC_PORT_MII /**< Port is a MII. */
 } ec_slave_port_desc_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT slave port information.
  */
@@ -402,7 +439,7 @@ typedef struct {
     uint8_t signal_detected; /**< Detected signal on RX port. */
 } ec_slave_port_link_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave information.
  *
@@ -434,7 +471,7 @@ typedef struct {
     char name[EC_MAX_STRING_LENGTH]; /**< Name of the slave. */
 } ec_slave_info_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Domain working counter interpretation.
  *
@@ -447,7 +484,7 @@ typedef enum {
     EC_WC_COMPLETE    /**< All registered process data were exchanged. */
 } ec_wc_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Domain state.
  *
@@ -459,7 +496,7 @@ typedef struct {
     unsigned int redundancy_active; /**< Redundant link is in use. */
 } ec_domain_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Direction type for PDO assignment functions.
  */
@@ -470,7 +507,7 @@ typedef enum {
     EC_DIR_COUNT /**< Number of directions. For internal use only. */
 } ec_direction_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Watchdog mode for sync manager configuration.
  *
@@ -482,7 +519,7 @@ typedef enum {
     EC_WD_DISABLE, /**< Disable the watchdog. */
 } ec_watchdog_mode_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** PDO entry configuration information.
  *
@@ -496,7 +533,7 @@ typedef struct {
     uint8_t bit_length; /**< Size of the PDO entry in bit. */
 } ec_pdo_entry_info_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** PDO configuration information.
  *
@@ -515,7 +552,7 @@ typedef struct {
                                     least \a n_entries values. */
 } ec_pdo_info_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync manager configuration information.
  *
@@ -534,7 +571,7 @@ typedef struct {
     ec_watchdog_mode_t watchdog_mode; /**< Watchdog mode. */
 } ec_sync_info_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** List record type for PDO entry mass-registration.
  *
@@ -556,7 +593,7 @@ typedef struct {
                                   PDO entry does not byte-align. */
 } ec_pdo_entry_reg_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request state.
  *
@@ -570,7 +607,7 @@ typedef enum {
     EC_REQUEST_ERROR, /**< Request processing failed. */
 } ec_request_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Application-layer state.
  */
@@ -581,9 +618,9 @@ typedef enum {
     EC_AL_STATE_OP = 8, /**< Operational. */
 } ec_al_state_t;
 
-/******************************************************************************
+/*****************************************************************************
  * Global functions
- *****************************************************************************/
+ ****************************************************************************/
 
 #ifdef __cplusplus
 extern "C" {
@@ -593,7 +630,7 @@ extern "C" {
  *
  * \return Value of ECRT_VERSION_MAGIC() at EtherCAT master compile time.
  */
-unsigned int ecrt_version_magic(void);
+EC_PUBLIC_API unsigned int ecrt_version_magic(void);
 
 /** Requests an EtherCAT master for realtime operation.
  *
@@ -610,7 +647,7 @@ unsigned int ecrt_version_magic(void);
  *
  * \return Pointer to the reserved master, otherwise \a NULL.
  */
-ec_master_t *ecrt_request_master(
+EC_PUBLIC_API ec_master_t *ecrt_request_master(
         unsigned int master_index /**< Index of the master to request. */
         );
 
@@ -627,7 +664,7 @@ ec_master_t *ecrt_request_master(
  *
  * \return Pointer to the opened master, otherwise \a NULL.
  */
-ec_master_t *ecrt_open_master(
+EC_PUBLIC_API ec_master_t *ecrt_open_master(
         unsigned int master_index /**< Index of the master to request. */
         );
 
@@ -643,13 +680,13 @@ ec_master_t *ecrt_open_master(
  *
  * If the master was activated, ecrt_master_deactivate() is called internally.
  */
-void ecrt_release_master(
+EC_PUBLIC_API void ecrt_release_master(
         ec_master_t *master /**< EtherCAT master */
         );
 
-/******************************************************************************
+/*****************************************************************************
  * Master methods
- *****************************************************************************/
+ ****************************************************************************/
 
 #ifndef __KERNEL__
 
@@ -660,7 +697,7 @@ void ecrt_release_master(
  *
  * \return 0 in case of success, else < 0
  */
-int ecrt_master_reserve(
+EC_PUBLIC_API int ecrt_master_reserve(
         ec_master_t *master /**< EtherCAT master */
         );
 
@@ -707,7 +744,7 @@ void ecrt_master_callbacks(
  *
  * \return Pointer to the new domain on success, else NULL.
  */
-ec_domain_t *ecrt_master_create_domain(
+EC_PUBLIC_API ec_domain_t *ecrt_master_create_domain(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -741,7 +778,7 @@ ec_domain_t *ecrt_master_create_domain(
  * \retval >0 Pointer to the slave configuration structure.
  * \retval NULL in the error case.
  */
-ec_slave_config_t *ecrt_master_slave_config(
+EC_PUBLIC_API ec_slave_config_t *ecrt_master_slave_config(
         ec_master_t *master, /**< EtherCAT master */
         uint16_t alias, /**< Slave alias. */
         uint16_t position, /**< Slave position. */
@@ -757,7 +794,7 @@ ec_slave_config_t *ecrt_master_slave_config(
  *
  * \return 0 on success, otherwise negative error code.
  */
-int ecrt_master_select_reference_clock(
+EC_PUBLIC_API int ecrt_master_select_reference_clock(
         ec_master_t *master, /**< EtherCAT master. */
         ec_slave_config_t *sc /**< Slave config of the slave to use as the
                                * reference slave (or NULL). */
@@ -772,7 +809,7 @@ int ecrt_master_select_reference_clock(
  *
  * \return 0 in case of success, else < 0
  */
-int ecrt_master(
+EC_PUBLIC_API int ecrt_master(
         ec_master_t *master, /**< EtherCAT master */
         ec_master_info_t *master_info /**< Structure that will output the
                                         information */
@@ -802,7 +839,7 @@ int ecrt_master_scan_progress(
  *
  * \return 0 in case of success, else < 0
  */
-int ecrt_master_get_slave(
+EC_PUBLIC_API int ecrt_master_get_slave(
         ec_master_t *master, /**< EtherCAT master */
         uint16_t slave_position, /**< Slave position. */
         ec_slave_info_t *slave_info /**< Structure that will output the
@@ -819,7 +856,7 @@ int ecrt_master_get_slave(
  *
  * \return zero on success, else non-zero
  */
-int ecrt_master_get_sync_manager(
+EC_PUBLIC_API int ecrt_master_get_sync_manager(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint8_t sync_index, /**< Sync manager index. Must be less
@@ -836,7 +873,7 @@ int ecrt_master_get_sync_manager(
  *
  * \retval zero on success, else non-zero
  */
-int ecrt_master_get_pdo(
+EC_PUBLIC_API int ecrt_master_get_pdo(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint8_t sync_index, /**< Sync manager index. Must be less
@@ -852,7 +889,7 @@ int ecrt_master_get_pdo(
  *
  * \retval zero on success, else non-zero
  */
-int ecrt_master_get_pdo_entry(
+EC_PUBLIC_API int ecrt_master_get_pdo_entry(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint8_t sync_index, /**< Sync manager index. Must be less
@@ -873,7 +910,7 @@ int ecrt_master_get_pdo_entry(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_master_sdo_download(
+EC_PUBLIC_API int ecrt_master_sdo_download(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint16_t index, /**< Index of the SDO. */
@@ -893,7 +930,7 @@ int ecrt_master_sdo_download(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_master_sdo_download_complete(
+EC_PUBLIC_API int ecrt_master_sdo_download_complete(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint16_t index, /**< Index of the SDO. */
@@ -911,7 +948,7 @@ int ecrt_master_sdo_download_complete(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_master_sdo_upload(
+EC_PUBLIC_API int ecrt_master_sdo_upload(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint16_t index, /**< Index of the SDO. */
@@ -930,7 +967,7 @@ int ecrt_master_sdo_upload(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_master_write_idn(
+EC_PUBLIC_API int ecrt_master_write_idn(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint8_t drive_no, /**< Drive number. */
@@ -949,7 +986,7 @@ int ecrt_master_write_idn(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_master_read_idn(
+EC_PUBLIC_API int ecrt_master_read_idn(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint8_t drive_no, /**< Drive number. */
@@ -979,7 +1016,7 @@ int ecrt_master_read_idn(
  *
  * \return 0 in case of success, else < 0
  */
-int ecrt_master_activate(
+EC_PUBLIC_API int ecrt_master_activate(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -993,7 +1030,7 @@ int ecrt_master_activate(
  *
  * This method should not be called in realtime context.
  */
-void ecrt_master_deactivate(
+EC_PUBLIC_API void ecrt_master_deactivate(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1007,7 +1044,7 @@ void ecrt_master_deactivate(
  * \retval 0 on success.
  * \retval <0 Error code.
  */
-int ecrt_master_set_send_interval(
+EC_PUBLIC_API int ecrt_master_set_send_interval(
         ec_master_t *master, /**< EtherCAT master. */
         size_t send_interval /**< Send interval in us */
         );
@@ -1019,8 +1056,10 @@ int ecrt_master_set_send_interval(
  *
  * Has to be called cyclically by the application after ecrt_master_activate()
  * has returned.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_send(
+EC_PUBLIC_API void ecrt_master_send(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1033,8 +1072,10 @@ void ecrt_master_send(
  *
  * Has to be called cyclically by the realtime application after
  * ecrt_master_activate() has returned.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_receive(
+EC_PUBLIC_API void ecrt_master_receive(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1043,7 +1084,7 @@ void ecrt_master_receive(
  * This method has to be called in the send callback function passed via
  * ecrt_master_callbacks() to allow the sending of non-application datagrams.
  */
-void ecrt_master_send_ext(
+EC_PUBLIC_API void ecrt_master_send_ext(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1054,7 +1095,7 @@ void ecrt_master_send_ext(
  * This method returns a global state. For the link-specific states in a
  * redundant bus topology, use the ecrt_master_link_state() method.
  */
-void ecrt_master_state(
+EC_PUBLIC_API void ecrt_master_state(
         const ec_master_t *master, /**< EtherCAT master. */
         ec_master_state_t *state /**< Structure to store the information. */
         );
@@ -1065,7 +1106,7 @@ void ecrt_master_state(
  *
  * \return Zero on success, otherwise negative error code.
  */
-int ecrt_master_link_state(
+EC_PUBLIC_API int ecrt_master_link_state(
         const ec_master_t *master, /**< EtherCAT master. */
         unsigned int dev_idx, /**< Index of the device (0 = main device, 1 =
                                 first backup device, ...). */
@@ -1092,8 +1133,10 @@ int ecrt_master_link_state(
  * The time is defined as nanoseconds from 2000-01-01 00:00. Converting an
  * epoch time can be done with the EC_TIMEVAL2NANO() macro, but is not
  * necessary, since the absolute value is not of any interest.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_application_time(
+EC_PUBLIC_API void ecrt_master_application_time(
         ec_master_t *master, /**< EtherCAT master. */
         uint64_t app_time /**< Application time. */
         );
@@ -1102,8 +1145,10 @@ void ecrt_master_application_time(
  *
  * The reference clock will by synchronized to the application time provided
  * by the last call off ecrt_master_application_time().
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_sync_reference_clock(
+EC_PUBLIC_API void ecrt_master_sync_reference_clock(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1111,8 +1156,10 @@ void ecrt_master_sync_reference_clock(
  *
  * The reference clock will by synchronized to the time passed in the
  * sync_time parameter.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_sync_reference_clock_to(
+EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
         ec_master_t *master, /**< EtherCAT master. */
         uint64_t sync_time /**< Sync reference clock to this time. */
         );
@@ -1120,8 +1167,10 @@ void ecrt_master_sync_reference_clock_to(
 /** Queues the DC clock drift compensation datagram for sending.
  *
  * All slave clocks synchronized to the reference clock.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_sync_slave_clocks(
+EC_PUBLIC_API void ecrt_master_sync_slave_clocks(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1141,7 +1190,7 @@ void ecrt_master_sync_slave_clocks(
  * \retval -ENXIO No reference clock found.
  * \retval -EIO Slave synchronization datagram was not received.
  */
-int ecrt_master_reference_clock_time(
+EC_PUBLIC_API int ecrt_master_reference_clock_time(
         ec_master_t *master, /**< EtherCAT master. */
         uint32_t *time /**< Pointer to store the queried system time. */
         );
@@ -1151,8 +1200,10 @@ int ecrt_master_reference_clock_time(
  * The datagram broadcast-reads all "System time difference" registers (\a
  * 0x092c) to get an upper estimation of the DC synchrony. The result can be
  * checked with the ecrt_master_sync_monitor_process() method.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_master_sync_monitor_queue(
+EC_PUBLIC_API void ecrt_master_sync_monitor_queue(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1162,9 +1213,11 @@ void ecrt_master_sync_monitor_queue(
  * ecrt_master_sync_monitor_queue(), the result can be queried with this
  * method.
  *
+ * \ingroup ApplicationInterfaceRT
+ *
  * \return Upper estimation of the maximum time difference in ns.
  */
-uint32_t ecrt_master_sync_monitor_process(
+EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1175,13 +1228,13 @@ uint32_t ecrt_master_sync_monitor_process(
  * done by the master. But with special slaves, that can be reconfigured by
  * the vendor during runtime, it can be useful.
  */
-void ecrt_master_reset(
+EC_PUBLIC_API void ecrt_master_reset(
         ec_master_t *master /**< EtherCAT master. */
         );
 
-/******************************************************************************
+/*****************************************************************************
  * Slave configuration methods
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Configure a sync manager.
  *
@@ -1193,7 +1246,7 @@ void ecrt_master_reset(
  *
  * \return zero on success, else non-zero
  */
-int ecrt_slave_config_sync_manager(
+EC_PUBLIC_API int ecrt_slave_config_sync_manager(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t sync_index, /**< Sync manager index. Must be less
                               than #EC_MAX_SYNC_MANAGERS. */
@@ -1206,7 +1259,7 @@ int ecrt_slave_config_sync_manager(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  */
-void ecrt_slave_config_watchdog(
+EC_PUBLIC_API void ecrt_slave_config_watchdog(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t watchdog_divider, /**< Number of 40 ns intervals (register
                                      0x0400). Used as a base unit for all
@@ -1227,7 +1280,7 @@ void ecrt_slave_config_watchdog(
  * \see ecrt_slave_config_pdos()
  * \return zero on success, else non-zero
  */
-int ecrt_slave_config_pdo_assign_add(
+EC_PUBLIC_API int ecrt_slave_config_pdo_assign_add(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t sync_index, /**< Sync manager index. Must be less
                               than #EC_MAX_SYNC_MANAGERS. */
@@ -1245,7 +1298,7 @@ int ecrt_slave_config_pdo_assign_add(
  *
  * \see ecrt_slave_config_pdos()
  */
-void ecrt_slave_config_pdo_assign_clear(
+EC_PUBLIC_API void ecrt_slave_config_pdo_assign_clear(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t sync_index /**< Sync manager index. Must be less
                               than #EC_MAX_SYNC_MANAGERS. */
@@ -1259,7 +1312,7 @@ void ecrt_slave_config_pdo_assign_clear(
  * \see ecrt_slave_config_pdos()
  * \return zero on success, else non-zero
  */
-int ecrt_slave_config_pdo_mapping_add(
+EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_add(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t pdo_index, /**< Index of the PDO. */
         uint16_t entry_index, /**< Index of the PDO entry to add to the PDO's
@@ -1279,7 +1332,7 @@ int ecrt_slave_config_pdo_mapping_add(
  *
  * \see ecrt_slave_config_pdos()
  */
-void ecrt_slave_config_pdo_mapping_clear(
+EC_PUBLIC_API void ecrt_slave_config_pdo_mapping_clear(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t pdo_index /**< Index of the PDO. */
         );
@@ -1355,7 +1408,7 @@ void ecrt_slave_config_pdo_mapping_clear(
  *
  * \return zero on success, else non-zero
  */
-int ecrt_slave_config_pdos(
+EC_PUBLIC_API int ecrt_slave_config_pdos(
         ec_slave_config_t *sc, /**< Slave configuration. */
         unsigned int n_syncs, /**< Number of sync manager configurations in
                                 \a syncs. */
@@ -1381,7 +1434,7 @@ int ecrt_slave_config_pdos(
  * \retval >=0 Success: Offset of the PDO entry's process data.
  * \retval  <0 Error code.
  */
-int ecrt_slave_config_reg_pdo_entry(
+EC_PUBLIC_API int ecrt_slave_config_reg_pdo_entry(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t entry_index, /**< Index of the PDO entry to register. */
         uint8_t entry_subindex, /**< Subindex of the PDO entry to register. */
@@ -1403,7 +1456,7 @@ int ecrt_slave_config_reg_pdo_entry(
  * \retval >=0 Success: Offset of the PDO entry's process data.
  * \retval  <0 Error code.
  */
-int ecrt_slave_config_reg_pdo_entry_pos(
+EC_PUBLIC_API int ecrt_slave_config_reg_pdo_entry_pos(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t sync_index, /**< Sync manager index. */
         unsigned int pdo_pos, /**< Position of the PDO inside the SM. */
@@ -1427,7 +1480,7 @@ int ecrt_slave_config_reg_pdo_entry_pos(
  *
  * \attention The \a sync1_shift time is ignored.
  */
-void ecrt_slave_config_dc(
+EC_PUBLIC_API void ecrt_slave_config_dc(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t assign_activate, /**< AssignActivate word. */
         uint32_t sync0_cycle, /**< SYNC0 cycle time [ns]. */
@@ -1461,7 +1514,7 @@ void ecrt_slave_config_dc(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_sdo(
+EC_PUBLIC_API int ecrt_slave_config_sdo(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t index, /**< Index of the SDO to configure. */
         uint8_t subindex, /**< Subindex of the SDO to configure. */
@@ -1479,7 +1532,7 @@ int ecrt_slave_config_sdo(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_sdo8(
+EC_PUBLIC_API int ecrt_slave_config_sdo8(
         ec_slave_config_t *sc, /**< Slave configuration */
         uint16_t sdo_index, /**< Index of the SDO to configure. */
         uint8_t sdo_subindex, /**< Subindex of the SDO to configure. */
@@ -1496,7 +1549,7 @@ int ecrt_slave_config_sdo8(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_sdo16(
+EC_PUBLIC_API int ecrt_slave_config_sdo16(
         ec_slave_config_t *sc, /**< Slave configuration */
         uint16_t sdo_index, /**< Index of the SDO to configure. */
         uint8_t sdo_subindex, /**< Subindex of the SDO to configure. */
@@ -1513,7 +1566,7 @@ int ecrt_slave_config_sdo16(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_sdo32(
+EC_PUBLIC_API int ecrt_slave_config_sdo32(
         ec_slave_config_t *sc, /**< Slave configuration */
         uint16_t sdo_index, /**< Index of the SDO to configure. */
         uint8_t sdo_subindex, /**< Subindex of the SDO to configure. */
@@ -1533,7 +1586,7 @@ int ecrt_slave_config_sdo32(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_complete_sdo(
+EC_PUBLIC_API int ecrt_slave_config_complete_sdo(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t index, /**< Index of the SDO to configure. */
         const uint8_t *data, /**< Pointer to the data. */
@@ -1550,7 +1603,7 @@ int ecrt_slave_config_complete_sdo(
  *
  * \return 0 on success, or negative error code.
  */
-int ecrt_slave_config_emerg_size(
+EC_PUBLIC_API int ecrt_slave_config_emerg_size(
         ec_slave_config_t *sc, /**< Slave configuration. */
         size_t elements /**< Number of records of the CoE emergency ring. */
         );
@@ -1566,7 +1619,7 @@ int ecrt_slave_config_emerg_size(
  * \return 0 on success (record popped), or negative error code (i. e.
  * -ENOENT, if ring is empty).
  */
-int ecrt_slave_config_emerg_pop(
+EC_PUBLIC_API int ecrt_slave_config_emerg_pop(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t *target /**< Pointer to target memory (at least
                           EC_COE_EMERGENCY_MSG_SIZE bytes). */
@@ -1576,7 +1629,7 @@ int ecrt_slave_config_emerg_pop(
  *
  * \return 0 on success, or negative error code.
  */
-int ecrt_slave_config_emerg_clear(
+EC_PUBLIC_API int ecrt_slave_config_emerg_clear(
         ec_slave_config_t *sc /**< Slave configuration. */
         );
 
@@ -1588,7 +1641,7 @@ int ecrt_slave_config_emerg_clear(
  *
  * \return Number of overruns since last clear, or negative error code.
  */
-int ecrt_slave_config_emerg_overruns(
+EC_PUBLIC_API int ecrt_slave_config_emerg_overruns(
         ec_slave_config_t *sc /**< Slave configuration. */
         );
 
@@ -1602,7 +1655,7 @@ int ecrt_slave_config_emerg_overruns(
  *
  * \return New SDO request, or NULL on error.
  */
-ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
+EC_PUBLIC_API ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t index, /**< SDO index. */
         uint8_t subindex, /**< SDO subindex. */
@@ -1641,7 +1694,7 @@ ec_soe_request_t *ecrt_slave_config_create_soe_request(
  *
  * \return New VoE handler, or NULL on error.
  */
-ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
+EC_PUBLIC_API ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
         ec_slave_config_t *sc, /**< Slave configuration. */
         size_t size /**< Data size to reserve. */
         );
@@ -1660,7 +1713,7 @@ ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
  *
  * \return New register request, or NULL on error.
  */
-ec_reg_request_t *ecrt_slave_config_create_reg_request(
+EC_PUBLIC_API ec_reg_request_t *ecrt_slave_config_create_reg_request(
         ec_slave_config_t *sc, /**< Slave configuration. */
         size_t size /**< Data size to reserve. */
         );
@@ -1674,7 +1727,7 @@ ec_reg_request_t *ecrt_slave_config_create_reg_request(
  * \attention If the state of process data exchange shall be monitored in
  * realtime, ecrt_domain_state() should be used.
  */
-void ecrt_slave_config_state(
+EC_PUBLIC_API void ecrt_slave_config_state(
         const ec_slave_config_t *sc, /**< Slave configuration */
         ec_slave_config_state_t *state /**< State object to write to. */
         );
@@ -1701,7 +1754,7 @@ void ecrt_slave_config_state(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_idn(
+EC_PUBLIC_API int ecrt_slave_config_idn(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t drive_no, /**< Drive number. */
         uint16_t idn, /**< SoE IDN. */
@@ -1733,15 +1786,15 @@ int ecrt_slave_config_idn(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-int ecrt_slave_config_flag(
+EC_PUBLIC_API int ecrt_slave_config_flag(
         ec_slave_config_t *sc, /**< Slave configuration. */
         const char *key, /**< Key as null-terminated ascii string. */
         int32_t value /**< Value to store. */
         );
 
-/******************************************************************************
+/*****************************************************************************
  * Domain methods
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Registers a bunch of PDO entries for a domain.
  *
@@ -1754,7 +1807,7 @@ int ecrt_slave_config_flag(
  *            structure, or one with the \a index field set to zero!
  * \return 0 on success, else non-zero.
  */
-int ecrt_domain_reg_pdo_entry_list(
+EC_PUBLIC_API int ecrt_domain_reg_pdo_entry_list(
         ec_domain_t *domain, /**< Domain. */
         const ec_pdo_entry_reg_t *pdo_entry_regs /**< Array of PDO
                                                    registrations. */
@@ -1764,7 +1817,7 @@ int ecrt_domain_reg_pdo_entry_list(
  *
  * \return Size of the process data image, or a negative error code.
  */
-size_t ecrt_domain_size(
+EC_PUBLIC_API size_t ecrt_domain_size(
         const ec_domain_t *domain /**< Domain. */
         );
 
@@ -1803,7 +1856,7 @@ void ecrt_domain_external_memory(
  *
  * \return Pointer to the process data memory.
  */
-uint8_t *ecrt_domain_data(
+EC_PUBLIC_API uint8_t *ecrt_domain_data(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1813,8 +1866,10 @@ uint8_t *ecrt_domain_data(
  * statistics, if necessary. This must be called after ecrt_master_receive()
  * is expected to receive the domain datagrams in order to make
  * ecrt_domain_state() return the result of the last process data exchange.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_domain_process(
+EC_PUBLIC_API void ecrt_domain_process(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1822,8 +1877,10 @@ void ecrt_domain_process(
  *
  * Call this function to mark the domain's datagrams for exchanging at the
  * next call of ecrt_master_send().
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_domain_queue(
+EC_PUBLIC_API void ecrt_domain_queue(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1832,8 +1889,10 @@ void ecrt_domain_queue(
  * Stores the domain state in the given \a state structure.
  *
  * Using this method, the process data exchange can be monitored in realtime.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-void ecrt_domain_state(
+EC_PUBLIC_API void ecrt_domain_state(
         const ec_domain_t *domain, /**< Domain. */
         ec_domain_state_t *state /**< Pointer to a state object to store the
                                    information. */
@@ -1849,7 +1908,7 @@ void ecrt_domain_state(
  * ecrt_sdo_request_state() returns EC_REQUEST_BUSY, this may lead to
  * unexpected results.
  */
-void ecrt_sdo_request_index(
+EC_PUBLIC_API void ecrt_sdo_request_index(
         ec_sdo_request_t *req, /**< SDO request. */
         uint16_t index, /**< SDO index. */
         uint8_t subindex /**< SDO subindex. */
@@ -1863,7 +1922,7 @@ void ecrt_sdo_request_index(
  * The timeout is permanently stored in the request object and is valid until
  * the next call of this method.
  */
-void ecrt_sdo_request_timeout(
+EC_PUBLIC_API void ecrt_sdo_request_timeout(
         ec_sdo_request_t *req, /**< SDO request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
@@ -1892,7 +1951,7 @@ void ecrt_sdo_request_timeout(
  *
  * \return Pointer to the internal SDO data memory.
  */
-uint8_t *ecrt_sdo_request_data(
+EC_PUBLIC_API uint8_t *ecrt_sdo_request_data(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -1904,7 +1963,7 @@ uint8_t *ecrt_sdo_request_data(
  *
  * \return SDO data size in bytes.
  */
-size_t ecrt_sdo_request_data_size(
+EC_PUBLIC_API size_t ecrt_sdo_request_data_size(
         const ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -1917,7 +1976,7 @@ ec_request_state_t ecrt_sdo_request_state(
         const ec_sdo_request_t *req /**< SDO request. */
     );
 #else
-ec_request_state_t ecrt_sdo_request_state(
+EC_PUBLIC_API ec_request_state_t ecrt_sdo_request_state(
         ec_sdo_request_t *req /**< SDO request. */
     );
 #endif
@@ -1927,7 +1986,7 @@ ec_request_state_t ecrt_sdo_request_state(
  * \attention This method may not be called while ecrt_sdo_request_state()
  * returns EC_REQUEST_BUSY.
  */
-void ecrt_sdo_request_write(
+EC_PUBLIC_API void ecrt_sdo_request_write(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -1940,7 +1999,7 @@ void ecrt_sdo_request_write(
  * ecrt_sdo_request_data() must be considered as invalid while
  * ecrt_sdo_request_state() returns EC_REQUEST_BUSY.
  */
-void ecrt_sdo_request_read(
+EC_PUBLIC_API void ecrt_sdo_request_read(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -2054,7 +2113,7 @@ void ecrt_soe_request_read(
  * are valid and will be used for future send operations until the next call
  * of this method.
  */
-void ecrt_voe_handler_send_header(
+EC_PUBLIC_API void ecrt_voe_handler_send_header(
         ec_voe_handler_t *voe, /**< VoE handler. */
         uint32_t vendor_id, /**< Vendor ID. */
         uint16_t vendor_type /**< Vendor-specific type. */
@@ -2068,7 +2127,7 @@ void ecrt_voe_handler_send_header(
  * The header information is stored at the memory given by the pointer
  * parameters.
  */
-void ecrt_voe_handler_received_header(
+EC_PUBLIC_API void ecrt_voe_handler_received_header(
         const ec_voe_handler_t *voe, /**< VoE handler. */
         uint32_t *vendor_id, /**< Vendor ID. */
         uint16_t *vendor_type /**< Vendor-specific type. */
@@ -2094,7 +2153,7 @@ void ecrt_voe_handler_received_header(
  *
  * \return Pointer to the internal memory.
  */
-uint8_t *ecrt_voe_handler_data(
+EC_PUBLIC_API uint8_t *ecrt_voe_handler_data(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2110,7 +2169,7 @@ uint8_t *ecrt_voe_handler_data(
  *
  * \return Data size in bytes.
  */
-size_t ecrt_voe_handler_data_size(
+EC_PUBLIC_API size_t ecrt_voe_handler_data_size(
         const ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2120,7 +2179,7 @@ size_t ecrt_voe_handler_data_size(
  * must be called in every bus cycle as long as it returns EC_REQUEST_BUSY. No
  * other operation may be started while the handler is busy.
  */
-void ecrt_voe_handler_write(
+EC_PUBLIC_API void ecrt_voe_handler_write(
         ec_voe_handler_t *voe, /**< VoE handler. */
         size_t size /**< Number of bytes to write (without the VoE header). */
         );
@@ -2139,7 +2198,7 @@ void ecrt_voe_handler_write(
  * ecrt_voe_handler_data_size(), while the VoE header of the received data
  * can be retrieved with ecrt_voe_handler_received_header().
  */
-void ecrt_voe_handler_read(
+EC_PUBLIC_API void ecrt_voe_handler_read(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2158,7 +2217,7 @@ void ecrt_voe_handler_read(
  * ecrt_voe_handler_data_size(), while the VoE header of the received data
  * can be retrieved with ecrt_voe_handler_received_header().
  */
-void ecrt_voe_handler_read_nosync(
+EC_PUBLIC_API void ecrt_voe_handler_read_nosync(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2169,7 +2228,7 @@ void ecrt_voe_handler_read_nosync(
  *
  * \return Handler state.
  */
-ec_request_state_t ecrt_voe_handler_execute(
+EC_PUBLIC_API ec_request_state_t ecrt_voe_handler_execute(
     ec_voe_handler_t *voe /**< VoE handler. */
     );
 
@@ -2196,7 +2255,7 @@ ec_request_state_t ecrt_voe_handler_execute(
  *
  * \return Pointer to the internal memory.
  */
-uint8_t *ecrt_reg_request_data(
+EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
         ec_reg_request_t *req /**< Register request. */
         );
 
@@ -2209,7 +2268,7 @@ ec_request_state_t ecrt_reg_request_state(
         const ec_reg_request_t *req /**< Register request. */
     );
 #else
-ec_request_state_t ecrt_reg_request_state(
+EC_PUBLIC_API ec_request_state_t ecrt_reg_request_state(
         ec_reg_request_t *req /**< Register request. */
     );
 #endif
@@ -2222,7 +2281,7 @@ ec_request_state_t ecrt_reg_request_state(
  * \attention The \a size parameter is truncated to the size given at request
  * creation.
  */
-void ecrt_reg_request_write(
+EC_PUBLIC_API void ecrt_reg_request_write(
         ec_reg_request_t *req, /**< Register request. */
         uint16_t address, /**< Register address. */
         size_t size /**< Size to write. */
@@ -2236,15 +2295,15 @@ void ecrt_reg_request_write(
  * \attention The \a size parameter is truncated to the size given at request
  * creation.
  */
-void ecrt_reg_request_read(
+EC_PUBLIC_API void ecrt_reg_request_read(
         ec_reg_request_t *req, /**< Register request. */
         uint16_t address, /**< Register address. */
         size_t size /**< Size to write. */
         );
 
-/******************************************************************************
+/*****************************************************************************
  * Bitwise read/write macros
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Read a certain bit of an EtherCAT data byte.
  *
@@ -2265,9 +2324,9 @@ void ecrt_reg_request_read(
         else     *((uint8_t *) (DATA)) &= ~(1 << (POS)); \
     } while (0)
 
-/******************************************************************************
+/*****************************************************************************
  * Byte-swapping functions for user space
- *****************************************************************************/
+ ****************************************************************************/
 
 #ifndef __KERNEL__
 
@@ -2320,9 +2379,9 @@ void ecrt_reg_request_read(
 
 #endif /* ifndef __KERNEL__ */
 
-/******************************************************************************
+/*****************************************************************************
  * Read macros
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Read an 8-bit unsigned value from EtherCAT data.
  *
@@ -2387,9 +2446,9 @@ void ecrt_reg_request_read(
 #define EC_READ_S64(DATA) \
      ((int64_t) le64_to_cpup((void *) (DATA)))
 
-/******************************************************************************
+/*****************************************************************************
  * Floating-point read functions and macros (userspace only)
- *****************************************************************************/
+ ****************************************************************************/
 
 #ifndef __KERNEL__
 
@@ -2398,7 +2457,7 @@ void ecrt_reg_request_read(
  * \param data EtherCAT data pointer
  * \return EtherCAT data value
  */
-float ecrt_read_real(const void *data);
+EC_PUBLIC_API float ecrt_read_real(const void *data);
 
 /** Read a 32-bit floating-point value from EtherCAT data.
  *
@@ -2412,7 +2471,7 @@ float ecrt_read_real(const void *data);
  * \param data EtherCAT data pointer
  * \return EtherCAT data value
  */
-double ecrt_read_lreal(const void *data);
+EC_PUBLIC_API double ecrt_read_lreal(const void *data);
 
 /** Read a 64-bit floating-point value from EtherCAT data.
  *
@@ -2423,9 +2482,9 @@ double ecrt_read_lreal(const void *data);
 
 #endif // ifndef __KERNEL__
 
-/******************************************************************************
+/*****************************************************************************
  * Write macros
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Write an 8-bit unsigned value to EtherCAT data.
  *
@@ -2495,9 +2554,9 @@ double ecrt_read_lreal(const void *data);
  */
 #define EC_WRITE_S64(DATA, VAL) EC_WRITE_U64(DATA, VAL)
 
-/******************************************************************************
+/*****************************************************************************
  * Floating-point write functions and macros (userspace only)
- *****************************************************************************/
+ ****************************************************************************/
 
 #ifndef __KERNEL__
 
@@ -2506,7 +2565,7 @@ double ecrt_read_lreal(const void *data);
  * \param data EtherCAT data pointer
  * \param value new value
  */
-void ecrt_write_real(void *data, float value);
+EC_PUBLIC_API void ecrt_write_real(void *data, float value);
 
 /** Write a 32-bit floating-point value to EtherCAT data.
  *
@@ -2520,7 +2579,7 @@ void ecrt_write_real(void *data, float value);
  * \param data EtherCAT data pointer
  * \param value new value
  */
-void ecrt_write_lreal(void *data, double value);
+EC_PUBLIC_API void ecrt_write_lreal(void *data, double value);
 
 /** Write a 64-bit floating-point value to EtherCAT data.
  *
@@ -2531,13 +2590,13 @@ void ecrt_write_lreal(void *data, double value);
 
 #endif // ifndef __KERNEL__
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef __cplusplus
 }
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** @} */
 

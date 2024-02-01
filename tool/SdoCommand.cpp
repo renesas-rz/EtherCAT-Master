@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -23,7 +21,7 @@
 
 #include "SdoCommand.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 SdoCommand::SdoCommand(const string &name, const string &briefDesc):
     Command(name, briefDesc)
@@ -45,7 +43,7 @@ const char *SdoCommand::abortText(uint32_t abortCode)
     return "???";
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SDO abort messages.
  *

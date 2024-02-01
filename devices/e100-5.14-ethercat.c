@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2007-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -24,7 +22,7 @@
  *
  *  vim: noexpandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
@@ -218,7 +216,7 @@ MODULE_FIRMWARE(FIRMWARE_D101S);
 MODULE_FIRMWARE(FIRMWARE_D102E);
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_LICENSE("GPL");
 
 void e100_ec_poll(struct net_device *);

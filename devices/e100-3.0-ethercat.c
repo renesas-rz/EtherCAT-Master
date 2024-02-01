@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2007-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -23,7 +21,7 @@
  *
  *  vim: noexpandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
@@ -32,7 +30,7 @@
 
 /* Former documentation: */
 
-/*******************************************************************************
+/*****************************************************************************
 
   Intel PRO/100 Linux driver
   Copyright(c) 1999 - 2006 Intel Corporation.
@@ -58,7 +56,7 @@
   e1000-devel Mailing List <e1000-devel@lists.sourceforge.net>
   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
 
-*******************************************************************************/
+*****************************************************************************/
 
 /*
  *	e100.c: Intel(R) PRO/100 ethernet driver
@@ -231,7 +229,7 @@ MODULE_FIRMWARE(FIRMWARE_D101S);
 MODULE_FIRMWARE(FIRMWARE_D102E);
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION ", master " EC_MASTER_VERSION);
 

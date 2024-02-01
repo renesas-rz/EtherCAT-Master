@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -18,19 +18,13 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Canopen over EtherCAT SoE request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -40,7 +34,7 @@
 #include "slave_config.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_soe_request_clear(ec_soe_request_t *req)
 {
@@ -72,7 +66,7 @@ void ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
 {
@@ -90,21 +84,21 @@ void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 uint8_t *ecrt_soe_request_data(ec_soe_request_t *req)
 {
     return req->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_soe_request_data_size(const ec_soe_request_t *req)
 {
     return req->data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_request_state_t ecrt_soe_request_state(ec_soe_request_t *req)
 {
@@ -143,7 +137,7 @@ ec_request_state_t ecrt_soe_request_state(ec_soe_request_t *req)
     return data.state;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_soe_request_read(ec_soe_request_t *req)
 {
@@ -160,7 +154,7 @@ void ecrt_soe_request_read(ec_soe_request_t *req)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_soe_request_write(ec_soe_request_t *req)
 {
@@ -179,4 +173,4 @@ void ecrt_soe_request_write(ec_soe_request_t *req)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

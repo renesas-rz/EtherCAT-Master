@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -26,7 +24,7 @@ using namespace std;
 
 #include "CommandVersion.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandVersion::CommandVersion():
     Command("version", "Show version information.")
@@ -59,4 +57,4 @@ void CommandVersion::execute(const StringVector &args)
     cout << "IgH EtherCAT master " << EC_MASTER_VERSION << endl;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

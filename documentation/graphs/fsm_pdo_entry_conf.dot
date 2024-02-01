@@ -1,6 +1,3 @@
-
-/* $Id$ */
-
 digraph pdo_entry_conf {
     node [fontname="Helvetica"]
     edge [fontname="Helvetica", fontsize="12"]

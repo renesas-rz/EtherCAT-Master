@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,18 +17,20 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
   \file
   Ethernet over EtherCAT (EoE).
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/version.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
+#include <linux/lockdep.h>
+#include <linux/skbuff.h>
 
 #include "globals.h"
 #include "master.h"
@@ -38,7 +38,7 @@
 #include "mailbox.h"
 #include "ethernet.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Defines the debug level of EoE processing.
  *
@@ -57,7 +57,7 @@
  */
 #define EC_EOE_TRIES 100
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_eoe_flush(ec_eoe_t *);
 
@@ -74,7 +74,7 @@ int ec_eoedev_stop(struct net_device *);
 int ec_eoedev_tx(struct sk_buff *, struct net_device *);
 struct net_device_stats *ec_eoedev_stats(struct net_device *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Device operations for EoE interfaces.
  */
@@ -85,7 +85,7 @@ static const struct net_device_ops ec_eoedev_ops = {
     .ndo_get_stats = ec_eoedev_stats,
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EoE constructor.
  *
@@ -117,7 +117,6 @@ int ec_eoe_init(
     eoe->tx_queue_size = EC_EOE_TX_QUEUE_SIZE;
     eoe->tx_queued_frames = 0;
 
-    sema_init(&eoe->tx_queue_sem, 1);
     eoe->tx_frame_number = 0xFF;
     memset(&eoe->stats, 0, sizeof(struct net_device_stats));
 
@@ -200,7 +199,7 @@ int ec_eoe_init(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EoE destructor.
  *
@@ -226,27 +225,30 @@ void ec_eoe_clear(ec_eoe_t *eoe /**< EoE handler */)
     ec_datagram_clear(&eoe->datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Empties the transmit queue.
  */
 void ec_eoe_flush(ec_eoe_t *eoe /**< EoE handler */)
 {
     ec_eoe_frame_t *frame, *next;
+    struct list_head tx_queue;
 
-    down(&eoe->tx_queue_sem);
+    netif_tx_lock_bh(eoe->dev);
 
-    list_for_each_entry_safe(frame, next, &eoe->tx_queue, queue) {
+    list_replace_init(&eoe->tx_queue, &tx_queue);
+    eoe->tx_queued_frames = 0;
+
+    netif_tx_unlock_bh(eoe->dev);
+
+    list_for_each_entry_safe(frame, next, &tx_queue, queue) {
         list_del(&frame->queue);
         dev_kfree_skb(frame->skb);
         kfree(frame);
     }
-    eoe->tx_queued_frames = 0;
-
-    up(&eoe->tx_queue_sem);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sends a frame or the next fragment.
  *
@@ -319,7 +321,7 @@ int ec_eoe_send(ec_eoe_t *eoe /**< EoE handler */)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Runs the EoE state machine.
  */
@@ -347,7 +349,7 @@ void ec_eoe_run(ec_eoe_t *eoe /**< EoE handler */)
     ec_datagram_output_stats(&eoe->datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Queues the datagram, if necessary.
  */
@@ -359,7 +361,7 @@ void ec_eoe_queue(ec_eoe_t *eoe /**< EoE handler */)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Returns the state of the device.
  *
@@ -370,7 +372,7 @@ int ec_eoe_is_open(const ec_eoe_t *eoe /**< EoE handler */)
     return eoe->opened;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Returns the idle state.
  *
@@ -382,9 +384,9 @@ int ec_eoe_is_idle(const ec_eoe_t *eoe /**< EoE handler */)
     return eoe->rx_idle && eoe->tx_idle;
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  STATE PROCESSING FUNCTIONS
- *****************************************************************************/
+ ****************************************************************************/
 
 /** State: RX_START.
  *
@@ -407,7 +409,7 @@ void ec_eoe_state_rx_start(ec_eoe_t *eoe /**< EoE handler */)
     eoe->state = ec_eoe_state_rx_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: RX_CHECK.
  *
@@ -438,7 +440,7 @@ void ec_eoe_state_rx_check(ec_eoe_t *eoe /**< EoE handler */)
     eoe->state = ec_eoe_state_rx_fetch;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: RX_FETCH.
  *
@@ -613,7 +615,7 @@ void ec_eoe_state_rx_fetch(ec_eoe_t *eoe /**< EoE handler */)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: TX START.
  *
@@ -635,10 +637,10 @@ void ec_eoe_state_tx_start(ec_eoe_t *eoe /**< EoE handler */)
         return;
     }
 
-    down(&eoe->tx_queue_sem);
+    netif_tx_lock_bh(eoe->dev);
 
     if (!eoe->tx_queued_frames || list_empty(&eoe->tx_queue)) {
-        up(&eoe->tx_queue_sem);
+        netif_tx_unlock_bh(eoe->dev);
         eoe->tx_idle = 1;
         // no data available.
         // start a new receive immediately.
@@ -659,7 +661,7 @@ void ec_eoe_state_tx_start(ec_eoe_t *eoe /**< EoE handler */)
     }
 
     eoe->tx_queued_frames--;
-    up(&eoe->tx_queue_sem);
+    netif_tx_unlock_bh(eoe->dev);
 
     eoe->tx_idle = 0;
 
@@ -690,7 +692,7 @@ void ec_eoe_state_tx_start(ec_eoe_t *eoe /**< EoE handler */)
     eoe->state = ec_eoe_state_tx_sent;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: TX SENT.
  *
@@ -755,9 +757,9 @@ void ec_eoe_state_tx_sent(ec_eoe_t *eoe /**< EoE handler */)
     }
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  NET_DEVICE functions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Opens the virtual network device.
  *
@@ -779,7 +781,7 @@ int ec_eoedev_open(struct net_device *dev /**< EoE net_device */)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Stops the virtual network device.
  *
@@ -801,7 +803,7 @@ int ec_eoedev_stop(struct net_device *dev /**< EoE net_device */)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Transmits data via the virtual network device.
  *
@@ -824,6 +826,9 @@ int ec_eoedev_tx(struct sk_buff *skb, /**< transmit socket buffer */
     }
 #endif
 
+    WARN_ON_ONCE(skb_get_queue_mapping(skb) != 0);
+    lockdep_assert_held(&netdev_get_tx_queue(dev, 0)->_xmit_lock);
+
     if (!(frame =
           (ec_eoe_frame_t *) kmalloc(sizeof(ec_eoe_frame_t), GFP_ATOMIC))) {
         if (printk_ratelimit())
@@ -833,14 +838,12 @@ int ec_eoedev_tx(struct sk_buff *skb, /**< transmit socket buffer */
 
     frame->skb = skb;
 
-    down(&eoe->tx_queue_sem);
     list_add_tail(&frame->queue, &eoe->tx_queue);
     eoe->tx_queued_frames++;
     if (eoe->tx_queued_frames == eoe->tx_queue_size) {
         netif_stop_queue(dev);
         eoe->tx_queue_active = 0;
     }
-    up(&eoe->tx_queue_sem);
 
 #if EOE_DEBUG_LEVEL >= 2
     EC_SLAVE_DBG(eoe->slave, 0, "EoE %s TX queued frame"
@@ -853,7 +856,7 @@ int ec_eoedev_tx(struct sk_buff *skb, /**< transmit socket buffer */
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets statistics about the virtual network device.
  *
@@ -867,4 +870,4 @@ struct net_device_stats *ec_eoedev_stats(
     return &eoe->stats;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

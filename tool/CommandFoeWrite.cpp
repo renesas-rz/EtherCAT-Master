@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id: CommandFoeWrite.cpp,v 4f682084c643 2010/10/25 08:12:26 fp $
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -33,14 +31,14 @@ using namespace std;
 #include "foe.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandFoeWrite::CommandFoeWrite():
     FoeCommand("foe_write", "Store a file on a slave via FoE.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandFoeWrite::helpString(const string &binaryBaseName) const
 {
@@ -165,7 +163,7 @@ void CommandFoeWrite::execute(const StringVector &args)
         delete [] data.buffer;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandFoeWrite::loadFoeData(
         ec_ioctl_slave_foe_t *data,
@@ -191,4 +189,4 @@ void CommandFoeWrite::loadFoeData(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

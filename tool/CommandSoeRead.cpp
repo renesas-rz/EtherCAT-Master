@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,14 +26,14 @@ using namespace std;
 #include "CommandSoeRead.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandSoeRead::CommandSoeRead():
     Command("soe_read", "Read an SoE IDN from a slave.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandSoeRead::helpString(const string &binaryBaseName) const
 {
@@ -167,4 +165,4 @@ void CommandSoeRead::execute(const StringVector &args)
     delete [] ioctl.data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

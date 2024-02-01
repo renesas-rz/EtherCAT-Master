@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,14 +26,14 @@ using namespace std;
 #include "CommandStates.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandStates::CommandStates():
     Command("states", "Request application-layer states.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandStates::helpString(const string &binaryBaseName) const
 {
@@ -107,4 +105,4 @@ void CommandStates::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

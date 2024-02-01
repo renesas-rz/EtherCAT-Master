@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,14 +28,14 @@ using namespace std;
 #include "CommandEoe.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandEoe::CommandEoe():
     Command("eoe", "Display Ethernet over EtherCAT statictics.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandEoe::helpString(const string &binaryBaseName) const
 {
@@ -112,4 +110,4 @@ void CommandEoe::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

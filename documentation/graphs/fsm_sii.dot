@@ -1,6 +1,3 @@
-
-/* $Id$ */
-
 digraph sii {
     node [fontname="Helvetica"]
     edge [fontname="Helvetica", fontsize="12"]

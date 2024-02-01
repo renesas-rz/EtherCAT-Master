@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2020  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +19,14 @@
  *
  *  vim: expandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT master methods.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -54,7 +54,7 @@
 
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set to 1 to enable external datagram injection debugging.
  */
@@ -95,7 +95,7 @@ const unsigned int rate_intervals[] = {
     1, 10, 60
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_master_clear_slave_configs(ec_master_t *);
 void ec_master_clear_domains(ec_master_t *);
@@ -108,7 +108,7 @@ void ec_master_find_dc_ref_clock(ec_master_t *);
 void ec_master_clear_device_stats(ec_master_t *);
 void ec_master_update_device_stats(ec_master_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Static variables initializer.
 */
@@ -126,7 +126,7 @@ void ec_master_init_static(void)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Master constructor.
@@ -232,7 +232,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     INIT_LIST_HEAD(&master->eoe_handlers);
 #endif
 
-    sema_init(&master->io_sem, 1);
+    rt_mutex_init(&master->io_mutex);
     master->send_cb = NULL;
     master->receive_cb = NULL;
     master->cb_data = NULL;
@@ -365,7 +365,7 @@ out_clear_devices:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
 */
@@ -407,7 +407,7 @@ void ec_master_clear(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_EOE
 /** Clear and free all EoE handlers.
@@ -426,7 +426,7 @@ void ec_master_clear_eoe_handlers(
 }
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear all slave configurations.
  */
@@ -444,7 +444,7 @@ void ec_master_clear_slave_configs(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear all slaves.
  */
@@ -486,7 +486,7 @@ void ec_master_clear_slaves(ec_master_t *master)
     master->slave_count = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear all domains.
  */
@@ -501,7 +501,7 @@ void ec_master_clear_domains(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the configuration applied by the application.
  */
@@ -515,7 +515,7 @@ void ec_master_clear_config(
     up(&master->master_sem);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Internal sending callback.
  */
@@ -524,12 +524,13 @@ void ec_master_internal_send_cb(
         )
 {
     ec_master_t *master = (ec_master_t *) cb_data;
-    down(&master->io_sem);
+    if (rt_mutex_lock_interruptible(&master->io_mutex))
+        return;
     ecrt_master_send_ext(master);
-    up(&master->io_sem);
+    rt_mutex_unlock(&master->io_mutex);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Internal receiving callback.
  */
@@ -538,12 +539,13 @@ void ec_master_internal_receive_cb(
         )
 {
     ec_master_t *master = (ec_master_t *) cb_data;
-    down(&master->io_sem);
+    if (rt_mutex_lock_interruptible(&master->io_mutex))
+        return;
     ecrt_master_receive(master);
-    up(&master->io_sem);
+    rt_mutex_unlock(&master->io_mutex);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts the master thread.
  *
@@ -575,7 +577,7 @@ int ec_master_thread_start(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Stops the master thread.
  */
@@ -605,7 +607,7 @@ void ec_master_thread_stop(
     schedule_timeout(sleep_jiffies);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Transition function from ORPHANED to IDLE phase.
  *
@@ -640,7 +642,7 @@ int ec_master_enter_idle_phase(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Transition function from IDLE to ORPHANED phase.
  */
@@ -662,7 +664,7 @@ void ec_master_leave_idle_phase(ec_master_t *master /**< EtherCAT master */)
     ec_fsm_master_reset(&master->fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Transition function from IDLE to OPERATION phase.
  *
@@ -746,7 +748,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Transition function from OPERATION to IDLE phase.
  */
@@ -768,7 +770,7 @@ void ec_master_leave_operation_phase(
     master->phase = EC_IDLE;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Injects external datagrams that fit into the datagram queue.
  */
@@ -881,7 +883,7 @@ void ec_master_inject_external_datagrams(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets the expected interval between calls to ecrt_master_send
  * and calculates the maximum amount of data to queue.
@@ -897,7 +899,7 @@ void ec_master_set_send_interval(
     master->max_queue_size -= master->max_queue_size / 10;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Searches for a free datagram in the external datagram ring.
  *
@@ -918,7 +920,7 @@ ec_datagram_t *ec_master_get_external_datagram(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Places a datagram in the datagram queue.
  */
@@ -951,7 +953,7 @@ void ec_master_queue_datagram(
     datagram->state = EC_DATAGRAM_QUEUED;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Places a datagram in the non-application datagram queue.
  */
@@ -965,7 +967,7 @@ void ec_master_queue_datagram_ext(
     up(&master->ext_queue_sem);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sends the datagrams in the queue for a certain device.
  *
@@ -1099,7 +1101,7 @@ void ec_master_send_datagrams(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Processes a received frame.
  *
@@ -1238,7 +1240,7 @@ void ec_master_receive_datagrams(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Output master statistics.
  *
@@ -1271,7 +1273,7 @@ void ec_master_output_stats(ec_master_t *master /**< EtherCAT master */)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clears the common device statistics.
  */
@@ -1303,7 +1305,7 @@ void ec_master_clear_device_stats(
     master->device_stats.jiffies = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Updates the common device statistics.
  */
@@ -1355,7 +1357,7 @@ void ec_master_update_device_stats(
     s->jiffies = jiffies;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_USE_HRTIMER
 
@@ -1375,10 +1377,10 @@ static enum hrtimer_restart ec_master_nanosleep_wakeup(struct hrtimer *timer)
     return HRTIMER_NORESTART;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_master_nanosleep(const unsigned long nsecs)
 {
@@ -1405,7 +1407,7 @@ void ec_master_nanosleep(const unsigned long nsecs)
 
 #endif // EC_USE_HRTIMER
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Execute slave FSMs.
  */
@@ -1495,7 +1497,7 @@ void ec_master_exec_slave_fsms(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Master kernel thread function for IDLE phase.
  */
@@ -1518,9 +1520,10 @@ static int ec_master_idle_thread(void *priv_data)
         ec_datagram_output_stats(&master->fsm_datagram);
 
         // receive
-        down(&master->io_sem);
+        if (rt_mutex_lock_interruptible(&master->io_mutex))
+            break;
         ecrt_master_receive(master);
-        up(&master->io_sem);
+        rt_mutex_unlock(&master->io_mutex);
 
         // execute master & slave state machines
         if (down_interruptible(&master->master_sem)) {
@@ -1534,7 +1537,8 @@ static int ec_master_idle_thread(void *priv_data)
         up(&master->master_sem);
 
         // queue and send
-        down(&master->io_sem);
+        if (rt_mutex_lock_interruptible(&master->io_mutex))
+            break;
         if (fsm_exec) {
             ec_master_queue_datagram(master, &master->fsm_datagram);
         }
@@ -1543,7 +1547,7 @@ static int ec_master_idle_thread(void *priv_data)
         sent_bytes = master->devices[EC_DEVICE_MAIN].tx_skb[
             master->devices[EC_DEVICE_MAIN].tx_ring_index]->len;
 #endif
-        up(&master->io_sem);
+        rt_mutex_unlock(&master->io_mutex);
 
         if (ec_fsm_master_idle(&master->fsm)) {
 #ifdef EC_USE_HRTIMER
@@ -1566,7 +1570,7 @@ static int ec_master_idle_thread(void *priv_data)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Master kernel thread function for OPERATION phase.
  */
@@ -1619,7 +1623,7 @@ static int ec_master_operation_thread(void *priv_data)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_EOE
 
@@ -1635,7 +1639,7 @@ static inline void set_normal_priority(struct task_struct *p, int nice)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts Ethernet over EtherCAT processing on demand.
  */
@@ -1669,7 +1673,7 @@ void ec_master_eoe_start(ec_master_t *master /**< EtherCAT master */)
     set_normal_priority(master->eoe_thread, 0);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Stops the Ethernet over EtherCAT processing.
  */
@@ -1684,7 +1688,7 @@ void ec_master_eoe_stop(ec_master_t *master /**< EtherCAT master */)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Does the Ethernet over EtherCAT processing.
  */
@@ -1729,9 +1733,7 @@ static int ec_master_eoe_thread(void *priv_data)
                 ec_eoe_queue(eoe);
             }
             // (try to) send datagrams
-            down(&master->ext_queue_sem);
             master->send_cb(master->cb_data);
-            up(&master->ext_queue_sem);
         }
 
 schedule:
@@ -1749,7 +1751,7 @@ schedule:
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Attaches the slave configurations to the slaves.
  */
@@ -1764,7 +1766,7 @@ void ec_master_attach_slave_configs(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Common implementation for ec_master_find_slave()
  * and ec_master_find_slave_const().
@@ -1819,7 +1821,7 @@ const ec_slave_t *ec_master_find_slave_const(
     EC_FIND_SLAVE;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the number of slave configurations provided by the application.
  *
@@ -1839,7 +1841,7 @@ unsigned int ec_master_config_count(
     return count;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Common implementation for ec_master_get_config()
  * and ec_master_get_config_const().
@@ -1882,7 +1884,7 @@ const ec_slave_config_t *ec_master_get_config_const(
     EC_FIND_CONFIG;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the number of domains.
  *
@@ -1902,7 +1904,7 @@ unsigned int ec_master_domain_count(
     return count;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Common implementation for ec_master_find_domain() and
  * ec_master_find_domain_const().
@@ -1946,7 +1948,7 @@ const ec_domain_t *ec_master_find_domain_const(
     EC_FIND_DOMAIN;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_EOE
 
@@ -1968,7 +1970,7 @@ uint16_t ec_master_eoe_handler_count(
     return count;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get an EoE handler via its position in the list.
  *
@@ -1994,7 +1996,7 @@ const ec_eoe_t *ec_master_get_eoe_handler_const(
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the debug level.
  *
@@ -2020,7 +2022,7 @@ int ec_master_debug_level(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Finds the DC reference clock.
  */
@@ -2080,7 +2082,7 @@ void ec_master_find_dc_ref_clock(
             ref ? ref->station_address : 0xffff, 0x0910, 4);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Calculates the bus topology; recursion function.
  *
@@ -2125,7 +2127,7 @@ int ec_master_calc_topology_rec(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Calculates the bus topology.
  */
@@ -2142,7 +2144,7 @@ void ec_master_calc_topology(
         EC_MASTER_ERR(master, "Failed to calculate bus topology.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Calculates the bus transmission delays.
  */
@@ -2164,7 +2166,7 @@ void ec_master_calc_transmission_delays(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Distributed-clocks calculations.
  */
@@ -2181,7 +2183,7 @@ void ec_master_calc_dc(
     ec_master_calc_transmission_delays(master);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request OP state for configured slaves.
  */
@@ -2211,9 +2213,9 @@ void ec_master_request_op(
     }
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  Application interface
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Same as ecrt_master_create_domain(), but with ERR_PTR() return value.
  *
@@ -2254,7 +2256,7 @@ ec_domain_t *ecrt_master_create_domain_err(
     return domain;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_domain_t *ecrt_master_create_domain(
         ec_master_t *master /**< master */
@@ -2264,7 +2266,7 @@ ec_domain_t *ecrt_master_create_domain(
     return IS_ERR(d) ? NULL : d;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_activate(ec_master_t *master)
 {
@@ -2338,7 +2340,7 @@ int ecrt_master_activate(ec_master_t *master)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_deactivate(ec_master_t *master)
 {
@@ -2408,7 +2410,7 @@ void ecrt_master_deactivate(ec_master_t *master)
     master->active = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_send(ec_master_t *master)
 {
@@ -2452,7 +2454,7 @@ void ecrt_master_send(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_receive(ec_master_t *master)
 {
@@ -2504,22 +2506,24 @@ void ecrt_master_receive(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_send_ext(ec_master_t *master)
 {
     ec_datagram_t *datagram, *next;
 
+    down(&master->ext_queue_sem);
     list_for_each_entry_safe(datagram, next, &master->ext_datagram_queue,
             queue) {
         list_del(&datagram->queue);
         ec_master_queue_datagram(master, datagram);
     }
+    up(&master->ext_queue_sem);
 
     ecrt_master_send(master);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Same as ecrt_master_slave_config(), but with ERR_PTR() return value.
  */
@@ -2579,7 +2583,7 @@ ec_slave_config_t *ecrt_master_slave_config_err(ec_master_t *master,
     return sc;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_slave_config_t *ecrt_master_slave_config(ec_master_t *master,
         uint16_t alias, uint16_t position, uint32_t vendor_id,
@@ -2590,7 +2594,7 @@ ec_slave_config_t *ecrt_master_slave_config(ec_master_t *master,
     return IS_ERR(sc) ? NULL : sc;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_select_reference_clock(ec_master_t *master,
         ec_slave_config_t *sc)
@@ -2610,7 +2614,7 @@ int ecrt_master_select_reference_clock(ec_master_t *master,
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master(ec_master_t *master, ec_master_info_t *master_info)
 {
@@ -2624,7 +2628,7 @@ int ecrt_master(ec_master_t *master, ec_master_info_t *master_info)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_scan_progress(ec_master_t *master,
         ec_master_scan_progress_t *progress)
@@ -2637,7 +2641,7 @@ int ecrt_master_scan_progress(ec_master_t *master,
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_get_slave(ec_master_t *master, uint16_t slave_position,
         ec_slave_info_t *slave_info)
@@ -2699,7 +2703,7 @@ out_get_slave:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_callbacks(ec_master_t *master,
         void (*send_cb)(void *), void (*receive_cb)(void *), void *cb_data)
@@ -2713,7 +2717,7 @@ void ecrt_master_callbacks(ec_master_t *master,
     master->app_cb_data = cb_data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
 {
@@ -2736,7 +2740,7 @@ void ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_link_state(const ec_master_t *master, unsigned int dev_idx,
         ec_master_link_state_t *state)
@@ -2752,7 +2756,7 @@ int ecrt_master_link_state(const ec_master_t *master, unsigned int dev_idx,
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
 {
@@ -2763,7 +2767,7 @@ void ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_reference_clock_time(ec_master_t *master, uint32_t *time)
 {
@@ -2782,7 +2786,7 @@ int ecrt_master_reference_clock_time(ec_master_t *master, uint32_t *time)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_sync_reference_clock(ec_master_t *master)
 {
@@ -2792,7 +2796,7 @@ void ecrt_master_sync_reference_clock(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_sync_reference_clock_to(
         ec_master_t *master,
@@ -2805,7 +2809,7 @@ void ecrt_master_sync_reference_clock_to(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_sync_slave_clocks(ec_master_t *master)
 {
@@ -2815,7 +2819,7 @@ void ecrt_master_sync_slave_clocks(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_sync_monitor_queue(ec_master_t *master)
 {
@@ -2823,7 +2827,7 @@ void ecrt_master_sync_monitor_queue(ec_master_t *master)
     ec_master_queue_datagram(master, &master->sync_mon_datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 uint32_t ecrt_master_sync_monitor_process(ec_master_t *master)
 {
@@ -2834,7 +2838,7 @@ uint32_t ecrt_master_sync_monitor_process(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
         uint16_t index, uint8_t subindex, uint8_t *data,
@@ -2913,7 +2917,7 @@ int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_sdo_download_complete(ec_master_t *master,
         uint16_t slave_position, uint16_t index, uint8_t *data,
@@ -2994,7 +2998,7 @@ int ecrt_master_sdo_download_complete(ec_master_t *master,
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_sdo_upload(ec_master_t *master, uint16_t slave_position,
         uint16_t index, uint8_t subindex, uint8_t *target,
@@ -3077,7 +3081,7 @@ int ecrt_master_sdo_upload(ec_master_t *master, uint16_t slave_position,
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_write_idn(ec_master_t *master, uint16_t slave_position,
         uint8_t drive_no, uint16_t idn, uint8_t *data, size_t data_size,
@@ -3153,7 +3157,7 @@ int ecrt_master_write_idn(ec_master_t *master, uint16_t slave_position,
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_read_idn(ec_master_t *master, uint16_t slave_position,
         uint8_t drive_no, uint16_t idn, uint8_t *target, size_t target_size,
@@ -3237,7 +3241,7 @@ int ecrt_master_read_idn(ec_master_t *master, uint16_t slave_position,
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_master_reset(ec_master_t *master)
 {
@@ -3250,7 +3254,7 @@ void ecrt_master_reset(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -3284,4 +3288,4 @@ EXPORT_SYMBOL(ecrt_master_reset);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

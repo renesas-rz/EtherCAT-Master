@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2019  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,14 +17,13 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
- *
- *****************************************************************************/
+ */
 
 /** \file
  * Vendor specific over EtherCAT protocol handler functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,7 +34,7 @@
 #include "slave_config.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_voe_handler_clear(ec_voe_handler_t *voe)
 {
@@ -45,7 +44,7 @@ void ec_voe_handler_clear(ec_voe_handler_t *voe)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
         uint16_t vendor_type)
@@ -65,7 +64,7 @@ void ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
         uint32_t *vendor_id, uint16_t *vendor_type)
@@ -85,21 +84,21 @@ void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 uint8_t *ecrt_voe_handler_data(ec_voe_handler_t *voe)
 {
     return voe->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_voe_handler_data_size(const ec_voe_handler_t *voe)
 {
     return voe->data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_read(ec_voe_handler_t *voe)
 {
@@ -116,7 +115,7 @@ void ecrt_voe_handler_read(ec_voe_handler_t *voe)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
 {
@@ -133,7 +132,7 @@ void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
 {
@@ -152,7 +151,7 @@ void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_request_state_t ecrt_voe_handler_execute(ec_voe_handler_t *voe)
 {
@@ -190,4 +189,4 @@ ec_request_state_t ecrt_voe_handler_execute(ec_voe_handler_t *voe)
     return data.state;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

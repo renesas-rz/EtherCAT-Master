@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -31,14 +29,14 @@ using namespace std;
 #include "CommandCStruct.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandCStruct::CommandCStruct():
     Command("cstruct", "Generate slave PDO information in C language.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandCStruct::helpString(const string &binaryBaseName) const
 {
@@ -200,4 +198,4 @@ void CommandCStruct::generateSlaveCStruct(
         << endl;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

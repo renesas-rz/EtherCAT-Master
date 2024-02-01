@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT domain structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_DOMAIN_H__
 #define __EC_DOMAIN_H__
@@ -38,7 +36,7 @@
 #include "master.h"
 #include "fmmu_config.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT domain.
  *
@@ -68,7 +66,7 @@ struct ec_domain
     unsigned long notify_jiffies; /**< Time of last notification. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_domain_init(ec_domain_t *, ec_master_t *, unsigned int);
 void ec_domain_clear(ec_domain_t *);
@@ -79,6 +77,6 @@ int ec_domain_finish(ec_domain_t *, uint32_t);
 unsigned int ec_domain_fmmu_count(const ec_domain_t *);
 const ec_fmmu_config_t *ec_domain_find_fmmu(const ec_domain_t *, unsigned int);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif
