@@ -1,10 +1,8 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2009-2010  Moehwald GmbH B. Benner
  *                     2011  IgH Andreas Stewering-Bone
- *                     2012  Florian Pose <fp@igh-essen.com>
+ *                     2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master.
  *

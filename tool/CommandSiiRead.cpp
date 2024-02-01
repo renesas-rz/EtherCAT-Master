@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,14 +26,14 @@ using namespace std;
 #include "CommandSiiRead.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandSiiRead::CommandSiiRead():
     Command("sii_read", "Output a slave's SII contents.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandSiiRead::helpString(const string &binaryBaseName) const
 {
@@ -202,4 +200,4 @@ const char *CommandSiiRead::getCategoryName(uint16_t type)
     return "unknown";
 }
 
-/*****************************************************************************/
+/****************************************************************************/

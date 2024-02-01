@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -21,14 +19,14 @@
  *
  *  vim: noexpandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT driver for RTL8139-compatible NICs.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /*
   Former documentation:
@@ -659,7 +657,7 @@ struct rtl8139_private {
 	ec_device_t *ecdev;
 };
 
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("RealTek RTL-8139 EtherCAT driver");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(EC_MASTER_VERSION);

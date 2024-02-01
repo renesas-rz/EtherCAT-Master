@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,14 +26,14 @@ using namespace std;
 #include "CommandDomains.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandDomains::CommandDomains():
     Command("domains", "Show configured domains.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandDomains::helpString(const string &binaryBaseName) const
 {
@@ -208,4 +206,4 @@ void CommandDomains::showDomain(
     delete [] processData;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

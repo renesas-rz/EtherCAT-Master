@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT CANopen SDO request structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_SDO_REQUEST_H__
 #define __EC_SDO_REQUEST_H__
@@ -33,7 +33,7 @@
 
 #include "globals.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** CANopen SDO request.
  */
@@ -60,7 +60,7 @@ struct ec_sdo_request {
     uint32_t abort_code; /**< SDO request abort code. Zero on success. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_sdo_request_init(ec_sdo_request_t *);
 void ec_sdo_request_clear(ec_sdo_request_t *);
@@ -70,6 +70,6 @@ int ec_sdo_request_alloc(ec_sdo_request_t *, size_t);
 int ec_sdo_request_copy_data(ec_sdo_request_t *, const uint8_t *, size_t);
 int ec_sdo_request_timed_out(const ec_sdo_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

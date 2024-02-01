@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -29,14 +27,14 @@ using namespace std;
 #include "CommandPdos.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandPdos::CommandPdos():
     Command("pdos", "List Sync managers, PDO assignment and mapping.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandPdos::helpString(const string &binaryBaseName) const
 {
@@ -307,4 +305,4 @@ void CommandPdos::etherlabConfig(
     cout << "end" << endl;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

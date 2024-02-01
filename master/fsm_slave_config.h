@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -23,7 +23,7 @@
    EtherCAT slave configuration state machine.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_SLAVE_CONFIG_H__
 #define __EC_FSM_SLAVE_CONFIG_H__
@@ -35,7 +35,7 @@
 #include "fsm_coe.h"
 #include "fsm_pdo.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \see ec_fsm_slave_config */
 typedef struct ec_fsm_slave_config ec_fsm_slave_config_t;
@@ -62,7 +62,7 @@ struct ec_fsm_slave_config
     unsigned long wait_ms; /**< Wait time (used to wait before SAFEOP). */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_slave_config_init(ec_fsm_slave_config_t *, ec_datagram_t *,
         ec_fsm_change_t *, ec_fsm_coe_t *, ec_fsm_soe_t *, ec_fsm_pdo_t *);
@@ -73,6 +73,6 @@ void ec_fsm_slave_config_start(ec_fsm_slave_config_t *, ec_slave_t *);
 int ec_fsm_slave_config_exec(ec_fsm_slave_config_t *);
 int ec_fsm_slave_config_success(const ec_fsm_slave_config_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

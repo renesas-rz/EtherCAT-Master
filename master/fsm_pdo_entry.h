@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,13 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT PDO entry configuration state machine structures.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_PDO_ENTRY_H__
 #define __EC_FSM_PDO_ENTRY_H__
@@ -34,7 +32,7 @@
 #include "datagram.h"
 #include "fsm_coe.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * \see ec_fsm_pdo_entry
@@ -59,7 +57,7 @@ struct ec_fsm_pdo_entry
     unsigned int entry_pos; /**< Position in PDO mapping. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_pdo_entry_init(ec_fsm_pdo_entry_t *, ec_fsm_coe_t *);
 void ec_fsm_pdo_entry_clear(ec_fsm_pdo_entry_t *);
@@ -72,6 +70,6 @@ void ec_fsm_pdo_entry_start_configuration(ec_fsm_pdo_entry_t *, ec_slave_t *,
 int ec_fsm_pdo_entry_exec(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 int ec_fsm_pdo_entry_success(const ec_fsm_pdo_entry_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

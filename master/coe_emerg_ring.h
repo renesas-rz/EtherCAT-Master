@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,21 +17,21 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT CoE emergency ring buffer structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_COE_EMERG_RING_H__
 #define __EC_COE_EMERG_RING_H__
 
 #include "globals.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT CoE emergency message record.
  */
@@ -41,7 +39,7 @@ typedef struct {
     u8 data[EC_COE_EMERGENCY_MSG_SIZE]; /**< Message data. */
 } ec_coe_emerg_msg_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT CoE emergency ring buffer.
  */
@@ -56,7 +54,7 @@ typedef struct {
     unsigned int overruns; /**< Number of overruns since last reset. */
 } ec_coe_emerg_ring_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_coe_emerg_ring_init(ec_coe_emerg_ring_t *, ec_slave_config_t *);
 void ec_coe_emerg_ring_clear(ec_coe_emerg_ring_t *);
@@ -67,6 +65,6 @@ int ec_coe_emerg_ring_pop(ec_coe_emerg_ring_t *, u8 *);
 int ec_coe_emerg_ring_clear_ring(ec_coe_emerg_ring_t *);
 int ec_coe_emerg_ring_overruns(ec_coe_emerg_ring_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Abstract locks for realtime part of interface.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_LOCKS_H__
 #define __EC_LOCKS_H__
@@ -36,7 +34,7 @@
 
 #include <linux/semaphore.h>
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_USE_RTMUTEX
 
@@ -47,9 +45,13 @@ typedef struct rt_mutex ec_lock_t;
 static inline void ec_lock_init(ec_lock_t *sem) { rt_mutex_init(sem); }
 static inline void ec_lock_down(ec_lock_t *sem) { rt_mutex_lock(sem); }
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 34)
-static inline int ec_lock_down_interruptible(ec_lock_t *sem) { return rt_mutex_lock_interruptible(sem); }
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) {
+    return rt_mutex_lock_interruptible(sem);
+}
 #else
-static inline int ec_lock_down_interruptible(ec_lock_t *sem) { return rt_mutex_lock_interruptible(sem, 1); }
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) {
+    return rt_mutex_lock_interruptible(sem, 1);
+}
 #endif
 static inline void ec_lock_up(ec_lock_t *sem) { rt_mutex_unlock(sem); }
 
@@ -59,13 +61,15 @@ typedef struct semaphore ec_lock_t;
 
 static inline void ec_lock_init(ec_lock_t *sem) { sema_init(sem, 1); }
 static inline void ec_lock_down(ec_lock_t *sem) { down(sem); }
-static inline int ec_lock_down_interruptible(ec_lock_t *sem) { return down_interruptible(sem); }
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) {
+    return down_interruptible(sem);
+}
 static inline void ec_lock_up(ec_lock_t *sem) { up(sem); }
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/

@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave configuration structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_SLAVE_CONFIG_H__
 #define __EC_SLAVE_CONFIG_H__
@@ -38,7 +38,7 @@
 #include "coe_emerg_ring.h"
 #include "flag.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Convenience macro for printing configuration-specific information to
  * syslog.
@@ -104,7 +104,7 @@
         } \
     } while (0)
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT slave configuration.
  */
@@ -144,7 +144,7 @@ struct ec_slave_config {
     ec_coe_emerg_ring_t emerg_ring; /**< CoE emergency ring buffer. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_slave_config_init(ec_slave_config_t *, ec_master_t *, uint16_t,
         uint16_t, uint32_t, uint32_t);
@@ -183,6 +183,6 @@ ec_voe_handler_t *ecrt_slave_config_create_voe_handler_err(
 ec_reg_request_t *ecrt_slave_config_create_reg_request_err(
         ec_slave_config_t *, size_t);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

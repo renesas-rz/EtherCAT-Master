@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,14 +28,14 @@ using namespace std;
 #include "CommandSlaves.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandSlaves::CommandSlaves():
     Command("slaves", "Display slaves on the bus.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandSlaves::helpString(const string &binaryBaseName) const
 {
@@ -453,4 +451,4 @@ bool CommandSlaves::slaveInList(
     return false;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

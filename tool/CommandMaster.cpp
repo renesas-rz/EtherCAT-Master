@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,7 +28,7 @@ using namespace std;
 
 #define MAX_TIME_STR_SIZE 50
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandMaster::CommandMaster():
     Command("master", "Show master and Ethernet device information.")
@@ -270,4 +268,4 @@ void CommandMaster::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

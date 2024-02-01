@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,13 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Vendor specific over EtherCAT protocol handler functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 
@@ -42,7 +40,7 @@
  */
 #define EC_VOE_RESPONSE_TIMEOUT 500
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_voe_handler_state_write_start(ec_voe_handler_t *);
 void ec_voe_handler_state_write_response(ec_voe_handler_t *);
@@ -57,7 +55,7 @@ void ec_voe_handler_state_read_nosync_response(ec_voe_handler_t *);
 void ec_voe_handler_state_end(ec_voe_handler_t *);
 void ec_voe_handler_state_error(ec_voe_handler_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** VoE handler constructor.
  *
@@ -82,7 +80,7 @@ int ec_voe_handler_init(
             size + EC_MBOX_HEADER_SIZE + EC_VOE_HEADER_SIZE);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** VoE handler destructor.
  */
@@ -93,7 +91,7 @@ void ec_voe_handler_clear(
     ec_datagram_clear(&voe->datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get usable memory size.
  *
@@ -121,7 +119,7 @@ void ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
     voe->vendor_type = vendor_type;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
         uint32_t *vendor_id, uint16_t *vendor_type)
@@ -134,21 +132,21 @@ void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
         *vendor_type = EC_READ_U16(header + 4);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 uint8_t *ecrt_voe_handler_data(ec_voe_handler_t *voe)
 {
     return voe->datagram.data + EC_MBOX_HEADER_SIZE + EC_VOE_HEADER_SIZE;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_voe_handler_data_size(const ec_voe_handler_t *voe)
 {
     return voe->data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_read(ec_voe_handler_t *voe)
 {
@@ -157,7 +155,7 @@ void ecrt_voe_handler_read(ec_voe_handler_t *voe)
     voe->request_state = EC_INT_REQUEST_BUSY;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
 {
@@ -166,7 +164,7 @@ void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
     voe->request_state = EC_INT_REQUEST_BUSY;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
 {
@@ -176,7 +174,7 @@ void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
     voe->request_state = EC_INT_REQUEST_BUSY;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_request_state_t ecrt_voe_handler_execute(ec_voe_handler_t *voe)
 {
@@ -193,9 +191,9 @@ ec_request_state_t ecrt_voe_handler_execute(ec_voe_handler_t *voe)
     return ec_request_state_translation_table[voe->request_state];
 }
 
-/******************************************************************************
+/*****************************************************************************
  * State functions.
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Start writing VoE data.
  */
@@ -234,7 +232,7 @@ void ec_voe_handler_state_write_start(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_write_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Wait for the mailbox response.
  */
@@ -279,7 +277,7 @@ void ec_voe_handler_state_write_response(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_end;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start reading VoE data.
  */
@@ -304,7 +302,7 @@ void ec_voe_handler_state_read_start(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_read_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for new data in the mailbox.
  */
@@ -354,7 +352,7 @@ void ec_voe_handler_state_read_check(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_read_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read the pending mailbox data.
  */
@@ -419,7 +417,7 @@ void ec_voe_handler_state_read_response(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_end; // success
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start reading VoE data without sending a sync message before.
  */
@@ -444,7 +442,7 @@ void ec_voe_handler_state_read_nosync_start(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_read_nosync_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read the pending mailbox data without sending a sync message before. This
  *  might lead to an empty reponse from the client.
@@ -517,7 +515,7 @@ void ec_voe_handler_state_read_nosync_response(ec_voe_handler_t *voe)
     voe->state = ec_voe_handler_state_end; // success
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Successful termination state function.
  */
@@ -525,7 +523,7 @@ void ec_voe_handler_state_end(ec_voe_handler_t *voe)
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Failure termination state function.
  */
@@ -533,7 +531,7 @@ void ec_voe_handler_state_error(ec_voe_handler_t *voe)
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -547,4 +545,4 @@ EXPORT_SYMBOL(ecrt_voe_handler_execute);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

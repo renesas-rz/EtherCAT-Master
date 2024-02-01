@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,13 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT tty driver module.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/err.h>
@@ -46,7 +44,7 @@
 #include "../master/globals.h"
 #include "../include/ectty.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #define PFX "ec_tty: "
 
@@ -56,7 +54,7 @@
 
 #define EC_TTY_DEBUG 0
 
-/*****************************************************************************/
+/****************************************************************************/
 
 char *ec_master_version_str = EC_MASTER_VERSION; /**< Version string. */
 unsigned int debug_level = 0;
@@ -71,11 +69,11 @@ void ec_tty_wakeup(struct timer_list *);
 void ec_tty_wakeup(unsigned long);
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("EtherCAT TTY driver module");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(EC_MASTER_VERSION);
@@ -121,7 +119,7 @@ struct ec_tty {
 
 static const struct tty_operations ec_tty_ops; // see below
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Module initialization.
  *
@@ -182,7 +180,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Module cleanup.
  *
@@ -211,9 +209,9 @@ void __exit ec_tty_cleanup_module(void)
     printk(KERN_INFO PFX "Module unloading.\n");
 }
 
-/******************************************************************************
+/*****************************************************************************
  * ec_tty_t methods.
- *****************************************************************************/
+ ****************************************************************************/
 
 int ec_tty_init(ec_tty_t *t, int minor,
         const ec_tty_operations_t *ops, void *cb_data)
@@ -290,7 +288,7 @@ int ec_tty_init(ec_tty_t *t, int minor,
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_tty_clear(ec_tty_t *tty)
 {
@@ -298,7 +296,7 @@ void ec_tty_clear(ec_tty_t *tty)
     tty_unregister_device(tty_driver, tty->minor);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ec_tty_tx_size(ec_tty_t *tty)
 {
@@ -313,14 +311,14 @@ unsigned int ec_tty_tx_size(ec_tty_t *tty)
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ec_tty_tx_space(ec_tty_t *tty)
 {
     return EC_TTY_TX_BUFFER_SIZE - 1 - ec_tty_tx_size(tty);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ec_tty_rx_size(ec_tty_t *tty)
 {
@@ -335,14 +333,14 @@ unsigned int ec_tty_rx_size(ec_tty_t *tty)
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ec_tty_rx_space(ec_tty_t *tty)
 {
     return EC_TTY_RX_BUFFER_SIZE - 1 - ec_tty_rx_size(tty);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_tty_get_serial_info(ec_tty_t *tty, struct serial_struct *data)
 {
@@ -359,7 +357,7 @@ int ec_tty_get_serial_info(ec_tty_t *tty, struct serial_struct *data)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Timer function.
  */
@@ -432,9 +430,9 @@ void ec_tty_wakeup(unsigned long data)
     add_timer(&tty->timer);
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Device callbacks
- *****************************************************************************/
+ ****************************************************************************/
 
 static int ec_tty_open(struct tty_struct *tty, struct file *file)
 {
@@ -468,7 +466,7 @@ static int ec_tty_open(struct tty_struct *tty, struct file *file)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_close(struct tty_struct *tty, struct file *file)
 {
@@ -488,7 +486,7 @@ static void ec_tty_close(struct tty_struct *tty, struct file *file)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int ec_tty_write(
         struct tty_struct *tty,
@@ -519,7 +517,7 @@ static int ec_tty_write(
     return data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int ec_tty_put_char(struct tty_struct *tty, unsigned char ch)
 {
@@ -539,7 +537,7 @@ static int ec_tty_put_char(struct tty_struct *tty, unsigned char ch)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
 static unsigned int ec_tty_write_room(struct tty_struct *tty)
@@ -557,7 +555,7 @@ static int ec_tty_write_room(struct tty_struct *tty)
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
 static unsigned int ec_tty_chars_in_buffer(struct tty_struct *tty)
@@ -581,7 +579,7 @@ static int ec_tty_chars_in_buffer(struct tty_struct *tty)
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_flush_buffer(struct tty_struct *tty)
 {
@@ -592,7 +590,7 @@ static void ec_tty_flush_buffer(struct tty_struct *tty)
     // FIXME empty ring buffer
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int ec_tty_ioctl(struct tty_struct *tty,
         unsigned int cmd, unsigned long arg)
@@ -636,7 +634,7 @@ static int ec_tty_ioctl(struct tty_struct *tty,
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 static void ec_tty_set_termios(struct tty_struct *tty,
@@ -678,7 +676,7 @@ static void ec_tty_set_termios(struct tty_struct *tty,
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_stop(struct tty_struct *tty)
 {
@@ -687,7 +685,7 @@ static void ec_tty_stop(struct tty_struct *tty)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_start(struct tty_struct *tty)
 {
@@ -696,7 +694,7 @@ static void ec_tty_start(struct tty_struct *tty)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_hangup(struct tty_struct *tty)
 {
@@ -705,7 +703,7 @@ static void ec_tty_hangup(struct tty_struct *tty)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int ec_tty_break(struct tty_struct *tty, int break_state)
 {
@@ -716,7 +714,7 @@ static int ec_tty_break(struct tty_struct *tty, int break_state)
     return -EIO; // not implemented
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_send_xchar(struct tty_struct *tty, char ch)
 {
@@ -725,7 +723,7 @@ static void ec_tty_send_xchar(struct tty_struct *tty, char ch)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static void ec_tty_wait_until_sent(struct tty_struct *tty, int timeout)
 {
@@ -734,7 +732,7 @@ static void ec_tty_wait_until_sent(struct tty_struct *tty, int timeout)
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static const struct tty_operations ec_tty_ops = {
     .open = ec_tty_open,
@@ -754,9 +752,9 @@ static const struct tty_operations ec_tty_ops = {
     .wait_until_sent = ec_tty_wait_until_sent,
 };
 
-/******************************************************************************
+/*****************************************************************************
  * Public functions and methods
- *****************************************************************************/
+ ****************************************************************************/
 
 ec_tty_t *ectty_create(const ec_tty_operations_t *ops, void *cb_data)
 {
@@ -796,7 +794,7 @@ ec_tty_t *ectty_create(const ec_tty_operations_t *ops, void *cb_data)
     return ERR_PTR(-EBUSY);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ectty_free(ec_tty_t *tty)
 {
@@ -815,7 +813,7 @@ void ectty_free(ec_tty_t *tty)
     kfree(tty);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ectty_tx_data(ec_tty_t *tty, uint8_t *buffer, size_t size)
 {
@@ -839,7 +837,7 @@ unsigned int ectty_tx_data(ec_tty_t *tty, uint8_t *buffer, size_t size)
     return data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ectty_rx_data(ec_tty_t *tty, const uint8_t *buffer, size_t size)
 {
@@ -866,7 +864,7 @@ void ectty_rx_data(ec_tty_t *tty, const uint8_t *buffer, size_t size)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -880,4 +878,4 @@ EXPORT_SYMBOL(ectty_rx_data);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

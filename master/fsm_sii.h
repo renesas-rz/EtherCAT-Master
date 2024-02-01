@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave information interface FSM structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_SII_H__
 #define __EC_FSM_SII_H__
@@ -35,7 +33,7 @@
 #include "datagram.h"
 #include "slave.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SII access addressing mode.
  */
@@ -44,7 +42,7 @@ typedef enum {
     EC_FSM_SII_USE_CONFIGURED_ADDRESS /**< Use configured addresses. */
 } ec_fsm_sii_addressing_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_fsm_sii ec_fsm_sii_t; /**< \see ec_fsm_sii */
 
@@ -66,7 +64,7 @@ struct ec_fsm_sii
     uint8_t check_once_more; /**< one more try after timeout */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_sii_init(ec_fsm_sii_t *, ec_datagram_t *);
 void ec_fsm_sii_clear(ec_fsm_sii_t *);
@@ -79,6 +77,6 @@ void ec_fsm_sii_write(ec_fsm_sii_t *, ec_slave_t *, uint16_t,
 int ec_fsm_sii_exec(ec_fsm_sii_t *);
 int ec_fsm_sii_success(ec_fsm_sii_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

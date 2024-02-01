@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -29,14 +27,14 @@ using namespace std;
 #include "CommandGraph.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandGraph::CommandGraph():
     Command("graph", "Output the bus topology as a graph.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandGraph::helpString(const string &binaryBaseName) const
 {
@@ -281,4 +279,4 @@ void CommandGraph::execute(const StringVector &args)
     cout << "}" << endl;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

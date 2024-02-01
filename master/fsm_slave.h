@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave request state machine.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_SLAVE_H__
 #define __EC_FSM_SLAVE_H__
@@ -39,7 +37,7 @@
 #include "fsm_foe.h"
 #include "fsm_soe.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_fsm_slave ec_fsm_slave_t; /**< \see ec_fsm_slave */
 
@@ -62,7 +60,7 @@ struct ec_fsm_slave {
     ec_fsm_soe_t fsm_soe; /**< SoE state machine. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_slave_init(ec_fsm_slave_t *, ec_slave_t *);
 void ec_fsm_slave_clear(ec_fsm_slave_t *);
@@ -71,7 +69,7 @@ int ec_fsm_slave_exec(ec_fsm_slave_t *, ec_datagram_t *);
 void ec_fsm_slave_set_ready(ec_fsm_slave_t *);
 int ec_fsm_slave_is_ready(const ec_fsm_slave_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 
 #endif // __EC_FSM_SLAVE_H__

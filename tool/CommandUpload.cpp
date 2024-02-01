@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,14 +26,14 @@ using namespace std;
 #include "CommandUpload.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandUpload::CommandUpload():
     SdoCommand("upload", "Read an SDO entry from a slave.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandUpload::helpString(const string &binaryBaseName) const
 {
@@ -172,4 +170,4 @@ void CommandUpload::execute(const StringVector &args)
     delete [] data.target;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

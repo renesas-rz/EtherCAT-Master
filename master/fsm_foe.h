@@ -1,9 +1,7 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2008       Olav Zarges, imc Messsysteme GmbH
- *                2009-2012  Florian Pose <fp@igh-essen.com>
+ *                2009-2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -20,14 +18,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT FoE state machines.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_FOE_H__
 #define __EC_FSM_FOE_H__
@@ -38,7 +36,7 @@
 #include "slave.h"
 #include "foe_request.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_fsm_foe ec_fsm_foe_t; /**< \see ec_fsm_foe */
 
@@ -48,7 +46,8 @@ struct ec_fsm_foe {
     ec_slave_t *slave; /**< Slave the FSM runs on. */
     unsigned int retries; /**< Retries upon datagram timeout */
 
-    void (*state)(ec_fsm_foe_t *, ec_datagram_t *); /**< FoE state function. */
+    void (*state)(ec_fsm_foe_t *, ec_datagram_t *); /**< FoE state function.
+                                                     */
     ec_datagram_t *datagram; /**< Datagram used in previous step. */
     unsigned long jiffies_start; /**< FoE timestamp. */
     uint8_t subindex; /**< Current subindex. */
@@ -73,7 +72,7 @@ struct ec_fsm_foe {
     uint32_t rx_filename_len; /**< Length of the receive file name. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_foe_init(ec_fsm_foe_t *);
 void ec_fsm_foe_clear(ec_fsm_foe_t *);
@@ -83,6 +82,6 @@ int ec_fsm_foe_success(const ec_fsm_foe_t *);
 
 void ec_fsm_foe_transfer(ec_fsm_foe_t *, ec_slave_t *, ec_foe_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

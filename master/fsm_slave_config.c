@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -23,7 +23,7 @@
  * EtherCAT slave configuration state machine.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <asm/div64.h>
 
@@ -33,7 +33,7 @@
 #include "slave_config.h"
 #include "fsm_slave_config.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Maximum clock difference (in ns) before going to SAFEOP.
  *
@@ -50,7 +50,7 @@
  */
 #define EC_DC_START_OFFSET 100000000ULL
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_slave_config_state_start(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_init(ec_fsm_slave_config_t *);
@@ -107,7 +107,7 @@ void ec_fsm_slave_config_state_error(ec_fsm_slave_config_t *);
 
 void ec_fsm_slave_config_reconfigure(ec_fsm_slave_config_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  */
@@ -132,7 +132,7 @@ void ec_fsm_slave_config_init(
     fsm->wait_ms = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -144,7 +144,7 @@ void ec_fsm_slave_config_clear(
     ec_soe_request_clear(&fsm->soe_request_copy);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start slave configuration state machine.
  */
@@ -157,7 +157,7 @@ void ec_fsm_slave_config_start(
     fsm->state = ec_fsm_slave_config_state_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * \return false, if state machine has terminated
@@ -170,7 +170,7 @@ int ec_fsm_slave_config_running(
         && fsm->state != ec_fsm_slave_config_state_error;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Executes the current state of the state machine.
  *
@@ -193,7 +193,7 @@ int ec_fsm_slave_config_exec(
     return ec_fsm_slave_config_running(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * \return true, if the state machine terminated gracefully
@@ -205,9 +205,9 @@ int ec_fsm_slave_config_success(
     return fsm->state == ec_fsm_slave_config_state_end;
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Slave configuration state machine
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Slave configuration state: START.
  */
@@ -219,7 +219,7 @@ void ec_fsm_slave_config_state_start(
     ec_fsm_slave_config_enter_init(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start state change to INIT.
  */
@@ -232,7 +232,7 @@ void ec_fsm_slave_config_enter_init(
     fsm->state = ec_fsm_slave_config_state_init;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: INIT.
  */
@@ -269,7 +269,7 @@ void ec_fsm_slave_config_state_init(
     fsm->state = ec_fsm_slave_config_state_clear_fmmus;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: CLEAR FMMU.
  */
@@ -299,7 +299,7 @@ void ec_fsm_slave_config_state_clear_fmmus(
     ec_fsm_slave_config_enter_clear_sync(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the sync manager configurations.
  */
@@ -328,7 +328,7 @@ void ec_fsm_slave_config_enter_clear_sync(
     fsm->state = ec_fsm_slave_config_state_clear_sync;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: CLEAR SYNC.
  */
@@ -360,7 +360,7 @@ void ec_fsm_slave_config_state_clear_sync(
     ec_fsm_slave_config_enter_dc_clear_assign(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the DC assignment.
  */
@@ -384,7 +384,7 @@ void ec_fsm_slave_config_enter_dc_clear_assign(
     fsm->state = ec_fsm_slave_config_state_dc_clear_assign;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: CLEAR DC ASSIGN.
  */
@@ -413,7 +413,7 @@ void ec_fsm_slave_config_state_dc_clear_assign(
     ec_fsm_slave_config_enter_mbox_sync(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for mailbox sync managers to be configured.
  */
@@ -543,7 +543,7 @@ void ec_fsm_slave_config_enter_mbox_sync(
     fsm->state = ec_fsm_slave_config_state_mbox_sync;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: SYNC.
  *
@@ -610,7 +610,7 @@ void ec_fsm_slave_config_state_mbox_sync(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_SII_ASSIGN
 
@@ -636,7 +636,7 @@ void ec_fsm_slave_config_enter_assign_pdi(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: ASSIGN_PDI.
  */
@@ -668,7 +668,7 @@ cont_preop:
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request PREOP state.
  */
@@ -689,7 +689,7 @@ void ec_fsm_slave_config_enter_boot_preop(
     ec_fsm_change_exec(fsm->fsm_change); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: BOOT/PREOP.
  */
@@ -760,7 +760,7 @@ void ec_fsm_slave_config_state_boot_preop(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_SII_ASSIGN
 
@@ -800,7 +800,7 @@ cont_sdo_conf:
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for SDO configurations to be applied.
  */
@@ -831,7 +831,7 @@ void ec_fsm_slave_config_enter_sdo_conf(
     ec_fsm_coe_exec(fsm->fsm_coe, fsm->datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: SDO_CONF.
  */
@@ -870,7 +870,7 @@ void ec_fsm_slave_config_state_sdo_conf(
     ec_fsm_slave_config_enter_soe_conf_preop(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for SoE configurations to be applied.
  */
@@ -904,7 +904,7 @@ void ec_fsm_slave_config_enter_soe_conf_preop(
     ec_fsm_slave_config_enter_pdo_conf(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: SOE_CONF.
  */
@@ -948,7 +948,7 @@ void ec_fsm_slave_config_state_soe_conf_preop(
     ec_fsm_slave_config_enter_pdo_conf(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** PDO_CONF entry function.
  */
@@ -962,7 +962,7 @@ void ec_fsm_slave_config_enter_pdo_conf(
     fsm->state(fsm); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: PDO_CONF.
  */
@@ -988,7 +988,7 @@ void ec_fsm_slave_config_state_pdo_conf(
     ec_fsm_slave_config_enter_watchdog_divider(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** WATCHDOG_DIVIDER entry function.
  */
@@ -1013,7 +1013,7 @@ void ec_fsm_slave_config_enter_watchdog_divider(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: WATCHDOG_DIVIDER.
  */
@@ -1045,7 +1045,7 @@ void ec_fsm_slave_config_state_watchdog_divider(
     ec_fsm_slave_config_enter_watchdog(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** WATCHDOG entry function
  */
@@ -1071,7 +1071,7 @@ void ec_fsm_slave_config_enter_watchdog(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: WATCHDOG.
  */
@@ -1103,7 +1103,7 @@ void ec_fsm_slave_config_state_watchdog(
     ec_fsm_slave_config_enter_pdo_sync(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for PDO sync managers to be configured.
  */
@@ -1171,7 +1171,7 @@ void ec_fsm_slave_config_enter_pdo_sync(
     fsm->state = ec_fsm_slave_config_state_pdo_sync;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configure PDO sync managers.
  */
@@ -1204,7 +1204,7 @@ void ec_fsm_slave_config_state_pdo_sync(
     ec_fsm_slave_config_enter_fmmu(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for FMMUs to be configured.
  */
@@ -1258,7 +1258,7 @@ void ec_fsm_slave_config_enter_fmmu(
     fsm->state = ec_fsm_slave_config_state_fmmu;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: FMMU.
  */
@@ -1290,7 +1290,7 @@ void ec_fsm_slave_config_state_fmmu(
     ec_fsm_slave_config_enter_dc_cycle(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for DC to be configured.
  */
@@ -1328,7 +1328,7 @@ void ec_fsm_slave_config_enter_dc_cycle(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: DC CYCLE.
  */
@@ -1371,7 +1371,7 @@ void ec_fsm_slave_config_state_dc_cycle(
     fsm->state = ec_fsm_slave_config_state_dc_sync_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: DC SYNC CHECK.
  */
@@ -1472,7 +1472,7 @@ void ec_fsm_slave_config_state_dc_sync_check(
     fsm->state = ec_fsm_slave_config_state_dc_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: DC START.
  */
@@ -1517,7 +1517,7 @@ void ec_fsm_slave_config_state_dc_start(
     fsm->state = ec_fsm_slave_config_state_dc_assign;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: DC ASSIGN.
  */
@@ -1549,7 +1549,7 @@ void ec_fsm_slave_config_state_dc_assign(
     ec_fsm_slave_config_enter_wait_safeop(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Wait before SAFEOP transition.
  *
@@ -1585,7 +1585,7 @@ void ec_fsm_slave_config_enter_wait_safeop(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: WAIT SAFEOP.
  */
@@ -1602,7 +1602,7 @@ void ec_fsm_slave_config_state_wait_safeop(
     ec_fsm_slave_config_enter_safeop(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request SAFEOP state.
  */
@@ -1615,7 +1615,7 @@ void ec_fsm_slave_config_enter_safeop(
     ec_fsm_change_exec(fsm->fsm_change); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: SAFEOP.
  */
@@ -1647,7 +1647,7 @@ void ec_fsm_slave_config_state_safeop(
     ec_fsm_slave_config_enter_soe_conf_safeop(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check for SoE configurations to be applied in SAFEOP.
  */
@@ -1681,7 +1681,7 @@ void ec_fsm_slave_config_enter_soe_conf_safeop(
     ec_fsm_slave_config_enter_op(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: SOE_CONF.
  */
@@ -1725,7 +1725,7 @@ void ec_fsm_slave_config_state_soe_conf_safeop(
     ec_fsm_slave_config_enter_op(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Bring slave to OP.
  */
@@ -1739,7 +1739,7 @@ void ec_fsm_slave_config_enter_op(
     ec_fsm_change_exec(fsm->fsm_change); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave configuration state: OP
  */
@@ -1765,7 +1765,7 @@ void ec_fsm_slave_config_state_op(
     fsm->state = ec_fsm_slave_config_state_end; // successful
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Reconfigure the slave starting at INIT.
  */
@@ -1779,9 +1779,9 @@ void ec_fsm_slave_config_reconfigure(
     ec_fsm_slave_config_enter_init(fsm); // reconfigure
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  Common state functions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** State: ERROR.
  */
@@ -1791,7 +1791,7 @@ void ec_fsm_slave_config_state_error(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: END.
  */
@@ -1801,4 +1801,4 @@ void ec_fsm_slave_config_state_end(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/

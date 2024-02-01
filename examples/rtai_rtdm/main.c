@@ -1,9 +1,7 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C)      2011  IgH Andreas Stewering-Bone
- *                     2012  Florian Pose <fp@igh-essen.com>
+ *                     2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master
  *
@@ -19,7 +17,7 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <sched.h>
 #include <stdio.h>
