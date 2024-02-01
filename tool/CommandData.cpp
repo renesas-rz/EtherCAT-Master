@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -29,14 +27,14 @@ using namespace std;
 #include "CommandData.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandData::CommandData():
     Command("data", "Output binary domain process data.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandData::helpString(const string &binaryBaseName) const
 {

@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,7 +26,7 @@ using namespace std;
 
 extern const ec_code_msg_t soe_error_codes[];
 
-/*****************************************************************************/
+/****************************************************************************/
 
 uint16_t SoeCommand::parseIdn(const string &str)
 {
@@ -94,7 +92,7 @@ uint16_t SoeCommand::parseIdn(const string &str)
     return idn;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string SoeCommand::outputIdn(uint16_t idn)
 {
@@ -107,7 +105,7 @@ string SoeCommand::outputIdn(uint16_t idn)
     return str.str();
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Outputs an SoE error code.
 */

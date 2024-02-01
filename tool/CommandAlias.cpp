@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,14 +28,14 @@ using namespace std;
 #include "sii_crc.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandAlias::CommandAlias():
     Command("alias", "Write alias addresses.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandAlias::helpString(const string &binaryBaseName) const
 {
@@ -66,7 +64,7 @@ string CommandAlias::helpString(const string &binaryBaseName) const
     return str.str();
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Writes the Secondary slave address (alias) to the slave's SII.
  */
@@ -113,7 +111,7 @@ void CommandAlias::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Writes the Secondary slave address (alias) to the slave's SII.
  */
@@ -168,4 +166,4 @@ void CommandAlias::writeSlaveAlias(
     delete [] data.words;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

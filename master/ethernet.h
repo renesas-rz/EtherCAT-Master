@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Ethernet over EtherCAT (EoE)
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_ETHERNET_H__
 #define __EC_ETHERNET_H__
@@ -34,13 +32,11 @@
 #include <linux/list.h>
 #include <linux/netdevice.h>
 
-#include <linux/semaphore.h>
-
 #include "globals.h"
 #include "slave.h"
 #include "datagram.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Queued frame structure.
@@ -53,7 +49,7 @@ typedef struct
 }
 ec_eoe_frame_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_eoe ec_eoe_t; /**< \see ec_eoe */
 
@@ -87,7 +83,6 @@ struct ec_eoe
     unsigned int tx_queue_size; /**< Transmit queue size. */
     unsigned int tx_queue_active; /**< kernel netif queue started */
     unsigned int tx_queued_frames; /**< number of frames in the queue */
-    struct semaphore tx_queue_sem; /**< Semaphore for the send queue. */
     ec_eoe_frame_t *tx_frame; /**< current TX frame */
     uint8_t tx_frame_number; /**< number of the transmitted frame */
     uint8_t tx_fragment_number; /**< number of the fragment */
@@ -99,7 +94,7 @@ struct ec_eoe
     unsigned int tries; /**< Tries. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_eoe_init(ec_eoe_t *, ec_slave_t *);
 void ec_eoe_clear(ec_eoe_t *);
@@ -108,8 +103,8 @@ void ec_eoe_queue(ec_eoe_t *);
 int ec_eoe_is_open(const ec_eoe_t *);
 int ec_eoe_is_idle(const ec_eoe_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/

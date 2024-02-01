@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -16,15 +16,14 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
+ */
+
 /**
    \file
    EtherCAT slave configuration state machine.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_SLAVE_CONFIG_H__
 #define __EC_FSM_SLAVE_CONFIG_H__
@@ -36,7 +35,7 @@
 #include "fsm_coe.h"
 #include "fsm_pdo.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \see ec_fsm_slave_config */
 typedef struct ec_fsm_slave_config ec_fsm_slave_config_t;
@@ -63,7 +62,7 @@ struct ec_fsm_slave_config
     unsigned long wait_ms; /**< Wait time (used to wait before SAFEOP). */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_slave_config_init(ec_fsm_slave_config_t *, ec_datagram_t *,
         ec_fsm_change_t *, ec_fsm_coe_t *, ec_fsm_soe_t *, ec_fsm_pdo_t *);
@@ -74,6 +73,6 @@ void ec_fsm_slave_config_start(ec_fsm_slave_config_t *, ec_slave_t *);
 int ec_fsm_slave_config_exec(ec_fsm_slave_config_t *);
 int ec_fsm_slave_config_success(const ec_fsm_slave_config_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

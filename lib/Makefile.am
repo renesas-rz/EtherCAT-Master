@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT master userspace library.
 #
@@ -44,7 +44,9 @@ noinst_HEADERS = \
 	soe_request.h \
 	voe_handler.h
 
-libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir)
+libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir) \
+	-Dethercat_EXPORTS \
+	-fvisibility=hidden
 
 #
 # http://www.gnu.org/software/libtool/manual/html_node/ ...
@@ -67,7 +69,8 @@ libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir)
 #   SoE requests added
 # 3:0:2
 #
-libethercat_la_LDFLAGS = -version-info 3:0:2
+libethercat_la_LDFLAGS = -version-info 3:0:2 \
+	-fvisibility=hidden
 
 pkgconfig_DATA = libethercat.pc
 

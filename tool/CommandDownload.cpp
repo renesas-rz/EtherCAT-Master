@@ -26,14 +26,14 @@ using namespace std;
 #include "CommandDownload.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandDownload::CommandDownload():
     SdoCommand("download", "Write an SDO entry to a slave.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandDownload::helpString(const string &binaryBaseName) const
 {
@@ -218,4 +218,4 @@ void CommandDownload::execute(const StringVector &args)
     delete [] data.data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

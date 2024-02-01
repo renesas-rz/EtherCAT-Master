@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,14 +28,14 @@ using namespace std;
 #include "sii_crc.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandSiiWrite::CommandSiiWrite():
     Command("sii_write", "Write SII contents to a slave.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandSiiWrite::helpString(const string &binaryBaseName) const
 {
@@ -135,7 +133,7 @@ void CommandSiiWrite::execute(const StringVector &args)
     delete [] data.words;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandSiiWrite::loadSiiData(
         ec_ioctl_slave_sii_t *data,
@@ -164,7 +162,7 @@ void CommandSiiWrite::loadSiiData(
     contents.copy((char *) data->words, contents.size());
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandSiiWrite::checkSiiData(
         const ec_ioctl_slave_sii_t *data
@@ -211,4 +209,4 @@ void CommandSiiWrite::checkSiiData(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

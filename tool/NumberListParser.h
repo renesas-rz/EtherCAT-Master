@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -24,7 +22,7 @@
 #include <list>
 using namespace std;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 class NumberListParser
 {

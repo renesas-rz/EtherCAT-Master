@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,13 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT master driver module.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/device.h>
@@ -35,25 +33,27 @@
 #include "master.h"
 #include "device.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #define MAX_MASTERS 32 /**< Maximum number of masters. */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int __init ec_init_module(void);
 void __exit ec_cleanup_module(void);
 
 static int ec_mac_parse(uint8_t *, const char *, int);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static char *main_devices[MAX_MASTERS]; /**< Main devices parameter. */
 static unsigned int master_count; /**< Number of masters. */
 static char *backup_devices[MAX_MASTERS]; /**< Backup devices parameter. */
 static unsigned int backup_count; /**< Number of backup devices. */
 static unsigned int debug_level;  /**< Debug level parameter. */
-static unsigned int run_on_cpu = 0xffffffff; /**< Bind created kernel threads to a cpu. Default do not bind*/
+static unsigned int run_on_cpu = 0xffffffff; /**< Bind created kernel threads
+                                               to a cpu. Default do not bind.
+                                              */
 
 static ec_master_t *masters; /**< Array of masters. */
 static struct semaphore master_sem; /**< Master semaphore. */
@@ -65,11 +65,11 @@ static uint8_t macs[MAX_MASTERS][2][ETH_ALEN]; /**< MAC addresses. */
 
 char *ec_master_version_str = EC_MASTER_VERSION; /**< Version string. */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("EtherCAT master driver module");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(EC_MASTER_VERSION);
@@ -85,7 +85,7 @@ MODULE_PARM_DESC(run_on_cpu, "Bind kthreads to a specific cpu");
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Module initialization.
  *
@@ -173,7 +173,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Module cleanup.
  *
@@ -198,7 +198,7 @@ void __exit ec_cleanup_module(void)
     EC_INFO("Master module cleaned up.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the number of masters.
  */
@@ -228,7 +228,7 @@ int ec_mac_equal(
     return 1;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Maximum MAC string size.
  */
@@ -256,7 +256,7 @@ ssize_t ec_mac_print(
     return off;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * \return true, if the MAC address is all-zero.
@@ -274,7 +274,7 @@ int ec_mac_is_zero(
     return 1;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * \return true, if the given MAC address is the broadcast address.
@@ -292,7 +292,7 @@ int ec_mac_is_broadcast(
     return 1;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Parse a MAC address from a string.
  *
@@ -333,7 +333,7 @@ static int ec_mac_parse(uint8_t *mac, const char *src, int allow_empty)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Outputs frame contents for debugging purposes.
  * If the data block is larger than 256 bytes, only the first 128
@@ -363,7 +363,7 @@ void ec_print_data(const uint8_t *data, /**< pointer to data */
     printk(KERN_CONT "\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Outputs frame contents and differences for debugging purposes.
  */
@@ -390,7 +390,7 @@ void ec_print_data_diff(const uint8_t *d1, /**< first data */
     printk(KERN_CONT "\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prints slave states in clear text.
  *
@@ -454,9 +454,9 @@ size_t ec_state_string(uint8_t states, /**< slave states */
     return off;
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  Device interface
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Device names.
  */
@@ -522,9 +522,9 @@ ec_device_t *ecdev_offer(
     return NULL; // offer declined
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Application interface
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Request a master.
  *
@@ -606,7 +606,7 @@ ec_master_t *ecrt_request_master_err(
     return errptr;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_master_t *ecrt_request_master(unsigned int master_index)
 {
@@ -614,7 +614,7 @@ ec_master_t *ecrt_request_master(unsigned int master_index)
     return IS_ERR(master) ? NULL : master;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_release_master(ec_master_t *master)
 {
@@ -640,14 +640,14 @@ void ecrt_release_master(ec_master_t *master)
     EC_MASTER_INFO(master, "Released.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ecrt_version_magic(void)
 {
     return ECRT_VERSION_MAGIC;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Global request state type translation table.
  *
@@ -661,7 +661,7 @@ const ec_request_state_t ec_request_state_translation_table[] = {
     EC_REQUEST_ERROR    // EC_INT_REQUEST_FAILURE
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -676,4 +676,4 @@ EXPORT_SYMBOL(ecrt_version_magic);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

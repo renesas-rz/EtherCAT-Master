@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,14 +28,14 @@ using namespace std;
 #include "CommandDebug.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandDebug::CommandDebug():
     Command("debug", "Set the master's debug level.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandDebug::helpString(const string &binaryBaseName) const
 {
@@ -94,4 +92,4 @@ void CommandDebug::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -16,15 +16,14 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
+ */
+
 /**
    \file
    EtherCAT master character device.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/vmalloc.h>
@@ -49,7 +48,20 @@
 #define ATTRIBUTES
 #endif
 
-/*****************************************************************************/
+#ifdef EC_IOCTL_RTDM
+/* RTDM does not support locking yet,
+ * therefore no send/receive callbacks are set too. */
+# define ec_ioctl_lock(lock) do {} while(0)
+# define ec_ioctl_unlock(lock) do {} while(0)
+# define ec_ioctl_lock_interruptible(lock) (0)
+#else
+# define ec_ioctl_lock(lock)   rt_mutex_lock(lock)
+# define ec_ioctl_unlock(lock) rt_mutex_unlock(lock)
+# define ec_ioctl_lock_interruptible(lock) \
+         rt_mutex_lock_interruptible(lock)
+#endif  // EC_IOCTL_RTDM
+
+/****************************************************************************/
 
 /** Copies a string to an ioctl structure.
  */
@@ -66,7 +78,7 @@ static void ec_ioctl_strcpy(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get module information.
  *
@@ -87,7 +99,7 @@ static ATTRIBUTES int ec_ioctl_module(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get master information.
  *
@@ -186,7 +198,7 @@ static ATTRIBUTES int ec_ioctl_master(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave information.
  *
@@ -273,7 +285,7 @@ static ATTRIBUTES int ec_ioctl_slave(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave sync manager information.
  *
@@ -326,7 +338,7 @@ static ATTRIBUTES int ec_ioctl_slave_sync(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave sync manager PDO information.
  *
@@ -385,7 +397,7 @@ static ATTRIBUTES int ec_ioctl_slave_sync_pdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave sync manager PDO entry information.
  *
@@ -454,7 +466,7 @@ static ATTRIBUTES int ec_ioctl_slave_sync_pdo_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get domain information.
  *
@@ -499,7 +511,7 @@ static ATTRIBUTES int ec_ioctl_domain(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get domain FMMU information.
  *
@@ -551,7 +563,7 @@ static ATTRIBUTES int ec_ioctl_domain_fmmu(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get domain data.
  *
@@ -596,7 +608,7 @@ static ATTRIBUTES int ec_ioctl_domain_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set master debug level.
  *
@@ -610,7 +622,7 @@ static ATTRIBUTES int ec_ioctl_master_debug(
     return ec_master_debug_level(master, (unsigned long) arg);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Issue a bus scan.
  *
@@ -625,7 +637,7 @@ static ATTRIBUTES int ec_ioctl_master_rescan(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set slave state.
  *
@@ -660,7 +672,7 @@ static ATTRIBUTES int ec_ioctl_slave_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave SDO information.
  *
@@ -709,7 +721,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave SDO entry information.
  *
@@ -789,7 +801,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Upload SDO.
  *
@@ -835,7 +847,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo_upload(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Download SDO.
  *
@@ -883,7 +895,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo_download(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read a slave's SII.
  *
@@ -931,7 +943,7 @@ static ATTRIBUTES int ec_ioctl_slave_sii_read(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write a slave's SII.
  *
@@ -1019,7 +1031,7 @@ static ATTRIBUTES int ec_ioctl_slave_sii_write(
     return request.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read a slave's registers.
  *
@@ -1098,7 +1110,7 @@ static ATTRIBUTES int ec_ioctl_slave_reg_read(
     return request.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write a slave's registers.
  *
@@ -1183,7 +1195,7 @@ static ATTRIBUTES int ec_ioctl_slave_reg_write(
     return request.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration information.
  *
@@ -1242,7 +1254,7 @@ static ATTRIBUTES int ec_ioctl_config(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration PDO information.
  *
@@ -1298,7 +1310,7 @@ static ATTRIBUTES int ec_ioctl_config_pdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration PDO entry information.
  *
@@ -1363,7 +1375,7 @@ static ATTRIBUTES int ec_ioctl_config_pdo_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration SDO information.
  *
@@ -1427,7 +1439,7 @@ static ATTRIBUTES int ec_ioctl_config_sdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration IDN information.
  *
@@ -1491,7 +1503,7 @@ static ATTRIBUTES int ec_ioctl_config_idn(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration feature flag information.
  *
@@ -1554,7 +1566,7 @@ static ATTRIBUTES int ec_ioctl_config_flag(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_EOE
 
@@ -1608,7 +1620,7 @@ static ATTRIBUTES int ec_ioctl_eoe_handler(
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request the master from userspace.
  *
@@ -1633,7 +1645,7 @@ static ATTRIBUTES int ec_ioctl_request(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a domain.
  *
@@ -1657,7 +1669,7 @@ static ATTRIBUTES int ec_ioctl_create_domain(
     return domain->index;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a slave configuration.
  *
@@ -1703,7 +1715,7 @@ static ATTRIBUTES int ec_ioctl_create_slave_config(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Select the DC reference clock.
  *
@@ -1744,7 +1756,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Activates the master.
  *
@@ -1812,6 +1824,7 @@ static ATTRIBUTES int ec_ioctl_activate(
     io.process_data_size = ctx->process_data_size;
 
 #ifndef EC_IOCTL_RTDM
+    /* RTDM does not support locking yet. */
     ecrt_master_callbacks(master, ec_master_internal_send_cb,
             ec_master_internal_receive_cb, master);
 #endif
@@ -1827,7 +1840,7 @@ static ATTRIBUTES int ec_ioctl_activate(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Deactivates the master.
  *
@@ -1846,7 +1859,7 @@ static ATTRIBUTES int ec_ioctl_deactivate(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set max. number of databytes in a cycle
  *
@@ -1878,7 +1891,7 @@ static ATTRIBUTES int ec_ioctl_set_send_interval(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Send frames.
  *
@@ -1894,13 +1907,14 @@ static ATTRIBUTES int ec_ioctl_send(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_send(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Receive frames.
  *
@@ -1916,13 +1930,14 @@ static ATTRIBUTES int ec_ioctl_receive(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_receive(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the master state.
  *
@@ -1944,7 +1959,7 @@ static ATTRIBUTES int ec_ioctl_master_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the link state.
  *
@@ -1976,7 +1991,7 @@ static ATTRIBUTES int ec_ioctl_master_link_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the master DC application time.
  *
@@ -2001,7 +2016,7 @@ static ATTRIBUTES int ec_ioctl_app_time(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync the reference clock.
  *
@@ -2017,13 +2032,14 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_reference_clock(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync the reference clock.
  *
@@ -2044,13 +2060,14 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
         return -EFAULT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_reference_clock_to(master, time);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync the slave clocks.
  *
@@ -2066,13 +2083,14 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_slave_clocks(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the system time of the reference clock.
  *
@@ -2103,7 +2121,7 @@ static ATTRIBUTES int ec_ioctl_ref_clock_time(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Queue the sync monitoring datagram.
  *
@@ -2119,13 +2137,14 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
         return -EPERM;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_master_sync_monitor_queue(master);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Processes the sync monitoring datagram.
  *
@@ -2150,7 +2169,7 @@ static ATTRIBUTES int ec_ioctl_sync_mon_process(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Reset configuration.
  *
@@ -2168,7 +2187,7 @@ static ATTRIBUTES int ec_ioctl_reset(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configure a sync manager.
  *
@@ -2221,7 +2240,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configure a slave's watchdogs.
  *
@@ -2266,7 +2285,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add a PDO to the assignment.
  *
@@ -2300,7 +2319,7 @@ static ATTRIBUTES int ec_ioctl_sc_add_pdo(
     return ecrt_slave_config_pdo_assign_add(sc, data.sync_index, data.index);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clears the PDO assignment.
  *
@@ -2335,7 +2354,7 @@ static ATTRIBUTES int ec_ioctl_sc_clear_pdos(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add an entry to a PDO's mapping.
  *
@@ -2370,7 +2389,7 @@ static ATTRIBUTES int ec_ioctl_sc_add_entry(
             data.entry_index, data.entry_subindex, data.entry_bit_length);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clears the mapping of a PDO.
  *
@@ -2405,7 +2424,7 @@ static ATTRIBUTES int ec_ioctl_sc_clear_entries(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Registers a PDO entry.
  *
@@ -2452,7 +2471,7 @@ static ATTRIBUTES int ec_ioctl_sc_reg_pdo_entry(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Registers a PDO entry by its position.
  *
@@ -2502,7 +2521,7 @@ static ATTRIBUTES int ec_ioctl_sc_reg_pdo_pos(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets the DC AssignActivate word and the sync signal times.
  *
@@ -2542,7 +2561,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configures an SDO.
  *
@@ -2601,7 +2620,7 @@ static ATTRIBUTES int ec_ioctl_sc_sdo(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the emergency ring buffer size.
  *
@@ -2639,7 +2658,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_size(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get an emergency message from the ring.
  *
@@ -2683,7 +2702,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_pop(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the emergency ring.
  *
@@ -2716,7 +2735,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_clear(
     return ecrt_slave_config_emerg_clear(sc);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the number of emergency overruns.
  *
@@ -2761,7 +2780,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_overruns(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create an SDO request.
  *
@@ -2812,7 +2831,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_sdo_request(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create an SoE request.
  *
@@ -2865,7 +2884,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_soe_request(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a register request.
  *
@@ -2919,7 +2938,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_reg_request(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a VoE handler.
  *
@@ -2969,7 +2988,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_voe_handler(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the slave configuration's state.
  *
@@ -3007,7 +3026,7 @@ static ATTRIBUTES int ec_ioctl_sc_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configures an IDN.
  *
@@ -3061,7 +3080,7 @@ static ATTRIBUTES int ec_ioctl_sc_idn(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configures a feature flag.
  *
@@ -3118,7 +3137,7 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets the domain's data size.
  *
@@ -3152,7 +3171,7 @@ static ATTRIBUTES int ec_ioctl_domain_size(
     return -ENOENT;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets the domain's offset in the total process data.
  *
@@ -3186,7 +3205,7 @@ static ATTRIBUTES int ec_ioctl_domain_offset(
     return -ENOENT;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Process the domain.
  *
@@ -3214,7 +3233,7 @@ static ATTRIBUTES int ec_ioctl_domain_process(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Queue the domain.
  *
@@ -3238,13 +3257,14 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
         return -ENOENT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     ecrt_domain_queue(domain);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the domain state.
  *
@@ -3282,7 +3302,7 @@ static ATTRIBUTES int ec_ioctl_domain_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an SDO request's SDO index and subindex.
  *
@@ -3319,7 +3339,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_index(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an SDO request's timeout.
  *
@@ -3356,7 +3376,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets an SDO request's state.
  *
@@ -3401,7 +3421,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SDO read operation.
  *
@@ -3438,7 +3458,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_read(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SDO write operation.
  *
@@ -3489,7 +3509,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read SDO data.
  *
@@ -3529,7 +3549,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an SoE request's drive number and IDN.
  *
@@ -3566,7 +3586,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_index(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an CoE request's timeout.
  *
@@ -3603,7 +3623,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_timeout(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets an SoE request's state.
  *
@@ -3650,7 +3670,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SoE IDN read operation.
  *
@@ -3687,7 +3707,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_read(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SoE IDN write operation.
  *
@@ -3738,7 +3758,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read SoE IDN data.
  *
@@ -3778,7 +3798,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read register data.
  *
@@ -3825,7 +3845,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets an register request's state.
  *
@@ -3870,7 +3890,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an register write operation.
  *
@@ -3918,7 +3938,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an register read operation.
  *
@@ -3961,7 +3981,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets the VoE send header.
  *
@@ -4006,7 +4026,7 @@ static ATTRIBUTES int ec_ioctl_voe_send_header(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets the received VoE header.
  *
@@ -4054,7 +4074,7 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts a VoE read operation.
  *
@@ -4091,7 +4111,7 @@ static ATTRIBUTES int ec_ioctl_voe_read(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts a VoE read operation without sending a sync message first.
  *
@@ -4128,7 +4148,7 @@ static ATTRIBUTES int ec_ioctl_voe_read_nosync(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts a VoE write operation.
  *
@@ -4174,7 +4194,7 @@ static ATTRIBUTES int ec_ioctl_voe_write(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Executes the VoE state machine.
  *
@@ -4207,9 +4227,10 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
         return -ENOENT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
     data.state = ecrt_voe_handler_execute(voe);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     if (data.state == EC_REQUEST_SUCCESS && voe->dir == EC_DIR_INPUT)
         data.size = ecrt_voe_handler_data_size(voe);
     else
@@ -4221,7 +4242,7 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Reads the received VoE data.
  *
@@ -4261,7 +4282,7 @@ static ATTRIBUTES int ec_ioctl_voe_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read a file from a slave via FoE.
  *
@@ -4357,7 +4378,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_read(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write a file to a slave via FoE
  *
@@ -4445,7 +4466,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_write(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read an SoE IDN.
  *
@@ -4494,7 +4515,7 @@ static ATTRIBUTES int ec_ioctl_slave_soe_read(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write an IDN to a slave via SoE.
  *
@@ -4540,7 +4561,7 @@ static ATTRIBUTES int ec_ioctl_slave_soe_write(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** ioctl() function to use.
  */
@@ -5128,4 +5149,4 @@ long EC_IOCTL(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

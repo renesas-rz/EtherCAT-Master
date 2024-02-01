@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Vendor specific over EtherCAT protocol handler.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_VOE_HANDLER_H__
 #define __EC_VOE_HANDLER_H__
@@ -36,7 +34,7 @@
 #include "globals.h"
 #include "datagram.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Vendor specific over EtherCAT handler.
  */
@@ -56,12 +54,12 @@ struct ec_voe_handler {
     unsigned long jiffies_start; /**< Timestamp for timeout calculation. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_voe_handler_init(ec_voe_handler_t *, ec_slave_config_t *, size_t);
 void ec_voe_handler_clear(ec_voe_handler_t *);
 size_t ec_voe_handler_mem_size(const ec_voe_handler_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

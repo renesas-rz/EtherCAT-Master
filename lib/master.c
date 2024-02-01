@@ -197,7 +197,7 @@ ec_slave_config_t *ecrt_master_slave_config(ec_master_t *master,
     return sc;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_select_reference_clock(ec_master_t *master,
         ec_slave_config_t *sc)
@@ -740,7 +740,7 @@ void ecrt_master_sync_slave_clocks(ec_master_t *master)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_master_reference_clock_time(ec_master_t *master, uint32_t *time)
 {

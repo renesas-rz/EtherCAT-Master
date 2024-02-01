@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,14 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT master structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_MASTER_H__
 #define __EC_MASTER_H__
@@ -34,8 +34,7 @@
 #include <linux/timer.h>
 #include <linux/wait.h>
 #include <linux/kthread.h>
-
-#include <linux/semaphore.h>
+#include <linux/rtmutex.h>
 
 #include "device.h"
 #include "domain.h"
@@ -47,7 +46,7 @@
 #include "rtdm.h"
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Convenience macro for printing master-specific information to syslog.
  *
@@ -111,7 +110,7 @@
  */
 #define EC_EXT_RING_SIZE 32
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT master phase.
  */
@@ -124,7 +123,7 @@ typedef enum {
                    application. */
 } ec_master_phase_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Cyclic statistics.
  */
@@ -136,7 +135,7 @@ typedef struct {
     unsigned long output_jiffies; /**< time of last output */
 } ec_stats_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Device statistics.
  */
@@ -167,13 +166,13 @@ typedef struct {
     unsigned long jiffies; /**< Jiffies of last statistic cycle. */
 } ec_device_stats_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if EC_MAX_NUM_DEVICES < 1
 #error Invalid number of devices
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT master.
  *
@@ -278,7 +277,7 @@ struct ec_master {
     struct list_head eoe_handlers; /**< Ethernet over EtherCAT handlers. */
 #endif
 
-    struct semaphore io_sem; /**< Semaphore used in \a IDLE phase. */
+    struct rt_mutex io_mutex;  /**< Mutex used in \a IDLE and \a OP phase. */
 
     void (*send_cb)(void *); /**< Current send datagrams callback. */
     void (*receive_cb)(void *); /**< Current receive datagrams callback. */
@@ -297,7 +296,7 @@ struct ec_master {
                                        from user space. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // static funtions
 void ec_master_init_static(void);
@@ -373,6 +372,6 @@ void ec_master_internal_receive_cb(void *);
 
 extern const unsigned int rate_intervals[EC_RATE_COUNT]; // see master.c
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

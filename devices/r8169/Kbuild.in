@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -21,16 +19,9 @@
 #
 #  ---
 #
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#  ---
-#
 #  vim: syntax=make
 #
-#------------------------------------------------------------------------------
-
+#-----------------------------------------------------------------------------
 
 TOPDIR := $(src)/../..
 
@@ -57,3 +48,5 @@ endif
 KBUILD_EXTRA_SYMBOLS := \
 	@abs_top_builddir@/$(LINUX_SYMVERS) \
 	@abs_top_builddir@/master/$(LINUX_SYMVERS)
+
+#-----------------------------------------------------------------------------

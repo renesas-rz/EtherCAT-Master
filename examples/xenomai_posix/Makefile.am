@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -15,11 +13,11 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
 #  Public License for more details.
 #
-#  You should have received a copy of the GNU General Public License along with
-#  the IgH EtherCAT Master; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#  You should have received a copy of the GNU General Public License along
+#  with the IgH EtherCAT Master; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 noinst_PROGRAMS = ec_xenomai_posix_example
 
@@ -36,4 +34,4 @@ ec_xenomai_posix_example_LDFLAGS = \
 	$(XENOMAI_POSIX_LDFLAGS) \
 	$(XENOMAI_RTDM_LDFLAGS)
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

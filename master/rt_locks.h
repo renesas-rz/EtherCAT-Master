@@ -21,47 +21,55 @@
 
 /**
    \file
-   EtherCAT Process data object structure.
+   Abstract locks for realtime part of interface.
 */
 
 /****************************************************************************/
 
-#ifndef __EC_PDO_H__
-#define __EC_PDO_H__
-
-#include <linux/list.h>
+#ifndef __EC_LOCKS_H__
+#define __EC_LOCKS_H__
 
 #include "globals.h"
-#include "pdo_entry.h"
+#include <linux/version.h>
+
+#include <linux/semaphore.h>
 
 /****************************************************************************/
 
-/** PDO description.
- */
-typedef struct {
-    struct list_head list; /**< List item. */
-    uint16_t index; /**< PDO index. */
-    int8_t sync_index; /**< Assigned sync manager. \todo remove? */
-    char *name; /**< PDO name. */
-    struct list_head entries; /**< List of PDO entries. */
-} ec_pdo_t;
+#ifdef EC_USE_RTMUTEX
 
-/****************************************************************************/
+#include <linux/rtmutex.h>
 
-void ec_pdo_init(ec_pdo_t *);
-int ec_pdo_init_copy(ec_pdo_t *, const ec_pdo_t *);
-void ec_pdo_clear(ec_pdo_t *);
-void ec_pdo_clear_entries(ec_pdo_t *);
-int ec_pdo_set_name(ec_pdo_t *, const char *);
-ec_pdo_entry_t *ec_pdo_add_entry(ec_pdo_t *, uint16_t, uint8_t, uint8_t);
-int ec_pdo_copy_entries(ec_pdo_t *, const ec_pdo_t *);
-int ec_pdo_equal_entries(const ec_pdo_t *, const ec_pdo_t *);
-unsigned int ec_pdo_entry_count(const ec_pdo_t *);
-const ec_pdo_entry_t *ec_pdo_find_entry_by_pos_const(
-        const ec_pdo_t *, unsigned int);
+typedef struct rt_mutex ec_lock_t;
 
-void ec_pdo_print_entries(const ec_pdo_t *);
+static inline void ec_lock_init(ec_lock_t *sem) { rt_mutex_init(sem); }
+static inline void ec_lock_down(ec_lock_t *sem) { rt_mutex_lock(sem); }
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 34)
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) {
+    return rt_mutex_lock_interruptible(sem);
+}
+#else
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) {
+    return rt_mutex_lock_interruptible(sem, 1);
+}
+#endif
+static inline void ec_lock_up(ec_lock_t *sem) { rt_mutex_unlock(sem); }
+
+#else
+
+typedef struct semaphore ec_lock_t;
+
+static inline void ec_lock_init(ec_lock_t *sem) { sema_init(sem, 1); }
+static inline void ec_lock_down(ec_lock_t *sem) { down(sem); }
+static inline int ec_lock_down_interruptible(ec_lock_t *sem) {
+    return down_interruptible(sem);
+}
+static inline void ec_lock_up(ec_lock_t *sem) { up(sem); }
+
+#endif
 
 /****************************************************************************/
 
 #endif
+
+/****************************************************************************/

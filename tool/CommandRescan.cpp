@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -30,14 +28,14 @@ using namespace std;
 #include "CommandRescan.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandRescan::CommandRescan():
     Command("rescan", "Rescan the bus.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandRescan::helpString(const string &binaryBaseName) const
 {
@@ -76,4 +74,4 @@ void CommandRescan::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

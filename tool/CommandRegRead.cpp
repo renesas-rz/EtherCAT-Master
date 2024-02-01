@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -28,14 +26,14 @@ using namespace std;
 #include "CommandRegRead.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandRegRead::CommandRegRead():
     Command("reg_read", "Output a slave's register contents.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandRegRead::helpString(const string &binaryBaseName) const
 {
@@ -164,4 +162,4 @@ void CommandRegRead::execute(const StringVector &args)
     delete [] io.data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

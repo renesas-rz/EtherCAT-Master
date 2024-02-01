@@ -1,5 +1,3 @@
-$Id$
-
 vim700: spelllang=en spell
 
 Virtual TTY interface driver for EtherCAT slave supporting serial comm

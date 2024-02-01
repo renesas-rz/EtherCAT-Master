@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -19,7 +17,8 @@
 #  with the IgH EtherCAT Master; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
 include $(top_srcdir)/Makefile.kbuild
 
 # using HEADERS to enable tags target
@@ -70,4 +69,4 @@ noinst_HEADERS = \
 	sync_config.c sync_config.h \
 	voe_handler.c voe_handler.h
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
