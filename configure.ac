@@ -203,7 +203,7 @@ AC_ARG_ENABLE([8139too],
                 ;;
         esac
     ],
-    [enable8139too=$enablekernel]
+    [enable8139too=0] # disabled by default
 )
 
 AM_CONDITIONAL(ENABLE_8139TOO, test "x$enable8139too" = "x1")
@@ -608,16 +608,25 @@ if test "x${enable_r8169}" = "x1"; then
     AC_MSG_CHECKING([for kernel for r8169 driver])
 
     kernels=`ls -1 ${srcdir}/devices/ | grep -oE "^r8169-.*-" | cut -d "-" -f 2 | uniq`
+    kernels_subdir=`ls -1 ${srcdir}/devices/r8169/ | grep -oE "^r8169_main-.*-" | cut -d "-" -f 2 | uniq`
     found=0
+    found_subdir=0
     for k in $kernels; do
         if test "$kernel_r8169" = "$k"; then
             found=1
+        fi
+    done
+    for k in $kernels_subdir; do
+        if test "$kernel_r8169" = "$k"; then
+            found=1
+            found_subdir=1
         fi
     done
     if test $found -ne 1; then
         AC_MSG_ERROR([kernel $kernel_r8169 not available for r8169 driver!])
     fi
 
+    AC_SUBST(R8169_IN_SUBDIR, [$found_subdir])
     AC_MSG_RESULT([$kernel_r8169])
 fi
 
@@ -1216,6 +1225,8 @@ AC_CONFIG_FILES([
         devices/igb/Makefile
         devices/igc/Kbuild
         devices/igc/Makefile
+        devices/r8169/Kbuild
+        devices/r8169/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile

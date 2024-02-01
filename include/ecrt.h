@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT master userspace library.
  *
@@ -48,6 +46,13 @@
  *
  * - Added the ecrt_slave_config_flag() method and the EC_HAVE_FLAGS
  *   definition to check for its existence.
+ * - Added SoE IDN requests, including the datatype ec_soe_request_t and the
+ *   methods ecrt_slave_config_create_soe_request(),
+ *   ecrt_soe_request_object(), ecrt_soe_request_timeout(),
+ *   ecrt_soe_request_data(), ecrt_soe_request_data_size(),
+ *   ecrt_soe_request_state(), ecrt_soe_request_write() and
+ *   ecrt_soe_request_read(). Use the EC_HAVE_SOE_REQUESTS to check, if the
+ *   functionality is available.
  *
  * Changes in version 1.5.2:
  *
@@ -57,7 +62,7 @@
  * - Added the EC_HAVE_REDUNDANCY define, to check, if the interface contains
  *   redundancy features.
  * - Added ecrt_sdo_request_index() to change SDO index and subindex after
- *   handler creation.
+ *   request creation.
  * - Added interface for retrieving CoE emergency messages, i. e.
  *   ecrt_slave_config_emerg_size(), ecrt_slave_config_emerg_pop(),
  *   ecrt_slave_config_emerg_clear(), ecrt_slave_config_emerg_overruns() and
@@ -219,6 +224,14 @@
  */
 #define EC_HAVE_FLAGS
 
+/** Defined if the methods ecrt_slave_config_create_soe_request(),
+ * ecrt_soe_request_object(), ecrt_soe_request_timeout(),
+ * ecrt_soe_request_data(), ecrt_soe_request_data_size(),
+ * ecrt_soe_request_state(), ecrt_soe_request_write() and
+ * ecrt_soe_request_read() and the datatype ec_soe_request_t are available.
+ */
+#define EC_HAVE_SOE_REQUESTS
+
 /*****************************************************************************/
 
 /** Symbol visibility control macro.
@@ -285,11 +298,14 @@ typedef struct ec_domain ec_domain_t; /**< \see ec_domain */
 struct ec_sdo_request;
 typedef struct ec_sdo_request ec_sdo_request_t; /**< \see ec_sdo_request. */
 
+struct ec_soe_request;
+typedef struct ec_soe_request ec_soe_request_t; /**< \see ec_soe_request. */
+
 struct ec_voe_handler;
 typedef struct ec_voe_handler ec_voe_handler_t; /**< \see ec_voe_handler. */
 
 struct ec_reg_request;
-typedef struct ec_reg_request ec_reg_request_t; /**< \see ec_sdo_request. */
+typedef struct ec_reg_request ec_reg_request_t; /**< \see ec_reg_request. */
 
 /*****************************************************************************/
 
@@ -1606,6 +1622,23 @@ EC_PUBLIC_API ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
         size_t size /**< Data size to reserve. */
         );
 
+/** Create an SoE request to exchange SoE IDNs during realtime operation.
+ *
+ * The created SoE request object is freed automatically when the master is
+ * released.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \return New SoE request, or NULL on error.
+ */
+ec_soe_request_t *ecrt_slave_config_create_soe_request(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        uint8_t drive_no, /**< Drive number. */
+        uint16_t idn, /**< Sercos ID-Number. */
+        size_t size /**< Data size to reserve. */
+        );
+
 /** Create an VoE handler to exchange vendor-specific data during realtime
  * operation.
  *
@@ -1928,6 +1961,105 @@ EC_PUBLIC_API void ecrt_sdo_request_write(
  */
 EC_PUBLIC_API void ecrt_sdo_request_read(
         ec_sdo_request_t *req /**< SDO request. */
+        );
+
+/*****************************************************************************
+ * SoE request methods.
+ ****************************************************************************/
+
+/** Set the request's drive and Sercos ID numbers.
+ *
+ * \attention If the drive number and/or IDN is changed while
+ * ecrt_soe_request_state() returns EC_REQUEST_BUSY, this may lead to
+ * unexpected results.
+ */
+void ecrt_soe_request_idn(
+        ec_soe_request_t *req, /**< IDN request. */
+        uint8_t drive_no, /**< SDO index. */
+        uint16_t idn /**< SoE IDN. */
+        );
+
+/** Set the timeout for an SoE request.
+ *
+ * If the request cannot be processed in the specified time, if will be marked
+ * as failed.
+ *
+ * The timeout is permanently stored in the request object and is valid until
+ * the next call of this method.
+ */
+void ecrt_soe_request_timeout(
+        ec_soe_request_t *req, /**< SoE request. */
+        uint32_t timeout /**< Timeout in milliseconds. Zero means no
+                           timeout. */
+        );
+
+/** Access to the SoE request's data.
+ *
+ * This function returns a pointer to the request's internal IDN data memory.
+ *
+ * - After a read operation was successful, integer data can be evaluated
+ *   using the EC_READ_*() macros as usual. Example:
+ *   \code
+ *   uint16_t value = EC_READ_U16(ecrt_soe_request_data(idn_req)));
+ *   \endcode
+ * - If a write operation shall be triggered, the data have to be written to
+ *   the internal memory. Use the EC_WRITE_*() macros, if you are writing
+ *   integer data. Be sure, that the data fit into the memory. The memory size
+ *   is a parameter of ecrt_slave_config_create_soe_request().
+ *   \code
+ *   EC_WRITE_U16(ecrt_soe_request_data(idn_req), 0xFFFF);
+ *   \endcode
+ *
+ * \attention The return value can be invalidated during a read operation,
+ * because the internal IDN data memory could be re-allocated if the read IDN
+ * data do not fit inside.
+ *
+ * \return Pointer to the internal IDN data memory.
+ */
+uint8_t *ecrt_soe_request_data(
+        ec_soe_request_t *req /**< SoE request. */
+        );
+
+/** Returns the current IDN data size.
+ *
+ * When the SoE request is created, the data size is set to the size of the
+ * reserved memory. After a read operation the size is set to the size of the
+ * read data. The size is not modified in any other situation.
+ *
+ * \return IDN data size in bytes.
+ */
+size_t ecrt_soe_request_data_size(
+        const ec_soe_request_t *req /**< SoE request. */
+        );
+
+/** Get the current state of the SoE request.
+ *
+ * \return Request state.
+ */
+ec_request_state_t ecrt_soe_request_state(
+        ec_soe_request_t *req /**< SoE request. */
+    );
+
+/** Schedule an SoE IDN write operation.
+ *
+ * \attention This method may not be called while ecrt_soe_request_state()
+ * returns EC_REQUEST_BUSY.
+ */
+void ecrt_soe_request_write(
+        ec_soe_request_t *req /**< SoE request. */
+        );
+
+/** Schedule an SoE IDN read operation.
+ *
+ * \attention This method may not be called while ecrt_soe_request_state()
+ * returns EC_REQUEST_BUSY.
+ *
+ * \attention After calling this function, the return value of
+ * ecrt_soe_request_data() must be considered as invalid while
+ * ecrt_soe_request_state() returns EC_REQUEST_BUSY.
+ */
+void ecrt_soe_request_read(
+        ec_soe_request_t *req /**< SoE request. */
         );
 
 /*****************************************************************************

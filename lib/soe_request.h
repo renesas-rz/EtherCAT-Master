@@ -18,26 +18,31 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
+ *  ---
+ *
+ *  The license mentioned above concerns the source code only. Using the
+ *  EtherCAT technology and brand is only permitted in compliance with the
+ *  industrial property and similar rights of Beckhoff Automation GmbH.
+ *
  *****************************************************************************/
 
 #include "include/ecrt.h"
 
 /*****************************************************************************/
 
-struct ec_slave_config {
-    ec_slave_config_t *next;
-    ec_master_t *master;
-    unsigned int index;
-    uint16_t alias;
-    uint16_t position;
-    ec_sdo_request_t *first_sdo_request;
-    ec_soe_request_t *first_soe_request;
-    ec_reg_request_t *first_reg_request;
-    ec_voe_handler_t *first_voe_handler;
+struct ec_soe_request {
+    ec_soe_request_t *next; /**< List header. */
+    ec_slave_config_t *config; /**< Parent slave configuration. */
+    unsigned int index; /**< Request index (identifier). */
+    uint8_t drive_no; /**< SoE drive number. */
+    uint16_t idn; /**< SoE ID number. */
+    uint8_t *data; /**< Pointer to SoE data. */
+    size_t mem_size; /**< Size of SoE data memory. */
+    size_t data_size; /**< Size of SoE data. */
 };
 
 /*****************************************************************************/
 
-void ec_slave_config_clear(ec_slave_config_t *);
+void ec_soe_request_clear(ec_soe_request_t *);
 
 /*****************************************************************************/
