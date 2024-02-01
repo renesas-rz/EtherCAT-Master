@@ -4665,11 +4665,16 @@ static ATTRIBUTES int ec_ioctl_slave_soe_write(
 /****************************************************************************/
 
 /** ioctl() function to use.
+ *
+ * For RTDM, there will be ec_ioctl_rtdm_rt and ec_ioctl_rtdm_nrt.
+ * For "normal" cdev, there will be ec_ioctl_rt only.
  */
-#ifdef EC_IOCTL_RTDM
-#define EC_IOCTL(x) ec_ioctl_rtdm_ ## x
-#else
-#define EC_IOCTL(x) ec_ioctl_ ## x
+#ifndef EC_IOCTL_RTDM
+static long ec_ioctl_nrt(
+        ec_master_t *master, /**< EtherCAT master. */
+        ec_ioctl_context_t *ctx, /**< Device context. */
+        unsigned int cmd, /**< ioctl() command identifier. */
+        void *arg /**< ioctl() argument. */);
 #endif
 
 /** Called when an ioctl() command is issued.
@@ -4677,7 +4682,7 @@ static ATTRIBUTES int ec_ioctl_slave_soe_write(
  *
  * \return ioctl() return code.
  */
-static long EC_IOCTL(both)(
+static long ec_ioctl_both(
         ec_master_t *master, /**< EtherCAT master. */
         ec_ioctl_context_t *ctx, /**< Device context. */
         unsigned int cmd, /**< ioctl() command identifier. */
@@ -4870,7 +4875,12 @@ static long EC_IOCTL(both)(
             ret = ec_ioctl_voe_data(master, arg, ctx);
             break;
         default:
+#ifdef EC_IOCTL_RTDM
             ret = -ENOTTY;
+#else
+            /* chain non-rt commands for normal cdev */
+            ret = ec_ioctl_nrt(master, ctx, cmd, arg);
+#endif
             break;
     }
 
@@ -4878,11 +4888,16 @@ static long EC_IOCTL(both)(
 }
 
 /** Called when an ioctl() command is issued.
- * RT only.
+ * RTDM: RT only.
  *
  * \return ioctl() return code.
  */
-long EC_IOCTL(rt)(
+#ifdef EC_IOCTL_RTDM
+long ec_ioctl_rtdm_rt
+#else
+long ec_ioctl
+#endif
+        (
         ec_master_t *master, /**< EtherCAT master. */
         ec_ioctl_context_t *ctx, /**< Device context. */
         unsigned int cmd, /**< ioctl() command identifier. */
@@ -4967,7 +4982,7 @@ long EC_IOCTL(rt)(
             ret = ec_ioctl_voe_exec(master, arg, ctx);
             break;
         default:
-            ret = EC_IOCTL(both)(master, ctx, cmd, arg);
+            ret = ec_ioctl_both(master, ctx, cmd, arg);
             break;
     }
 
@@ -4988,14 +5003,19 @@ long EC_IOCTL(rt)(
  *
  * \return ioctl() return code.
  */
-long EC_IOCTL(nrt)(
+#ifdef EC_IOCTL_RTDM
+long ec_ioctl_rtdm_nrt
+#else
+static long ec_ioctl_nrt
+#endif
+        (
         ec_master_t *master, /**< EtherCAT master. */
         ec_ioctl_context_t *ctx, /**< Device context. */
         unsigned int cmd, /**< ioctl() command identifier. */
         void *arg /**< ioctl() argument. */
         )
 {
-#if DEBUG_LATENCY
+#if DEBUG_LATENCY && !defined(EC_IOCTL_RTDM)
     cycles_t a = get_cycles(), b;
     unsigned int t;
 #endif
@@ -5303,11 +5323,15 @@ long EC_IOCTL(nrt)(
             ret = ec_ioctl_set_send_interval(master, arg, ctx);
             break;
         default:
-            ret = EC_IOCTL(both)(master, ctx, cmd, arg);
+#ifdef EC_IOCTL_RTDM
+            ret = ec_ioctl_both(master, ctx, cmd, arg);
+#else
+            ret = -ENOTTY;
+#endif
             break;
     }
 
-#if DEBUG_LATENCY
+#if DEBUG_LATENCY && !defined(EC_IOCTL_RTDM)
     b = get_cycles();
     t = (unsigned int) ((b - a) * 1000LL) / cpu_khz;
     if (t > 50) {
