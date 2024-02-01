@@ -48,6 +48,15 @@
 
 #include "e1000-4.4-ethercat.h"
 
+static inline int check_arbiter_wa_flag(const struct e1000_adapter *adapter)
+{
+#ifdef EC_DISABLE_E1000E_WORKAROUND
+	return !adapter->ecdev && (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA);
+#else
+	return adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA;
+#endif
+}
+
 #define DRV_EXTRAVERSION "-k-EtherCAT"
 
 #define DRV_VERSION "3.2.6" DRV_EXTRAVERSION
@@ -710,7 +719,7 @@ map_skb:
 			 * such as IA-64).
 			 */
 			wmb();
-			if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA)
+			if (check_arbiter_wa_flag(adapter))
 				e1000e_update_rdt_wa(rx_ring, i);
 			else
 				writel(i, rx_ring->tail);
@@ -810,7 +819,7 @@ static void e1000_alloc_rx_buffers_ps(struct e1000_ring *rx_ring,
 			 * such as IA-64).
 			 */
 			wmb();
-			if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA)
+			if (check_arbiter_wa_flag(adapter))
 				e1000e_update_rdt_wa(rx_ring, i << 1);
 			else
 				writel(i << 1, rx_ring->tail);
@@ -902,7 +911,7 @@ check_page:
 		 * such as IA-64).
 		 */
 		wmb();
-		if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA)
+		if (check_arbiter_wa_flag(adapter))
 			e1000e_update_rdt_wa(rx_ring, i);
 		else
 			writel(i, rx_ring->tail);
@@ -4229,7 +4238,7 @@ void e1000e_reset(struct e1000_adapter *adapter)
 
 /**
  * e1000e_trigger_lsc - trigger an LSC interrupt
- * @adapter: 
+ * @adapter:
  *
  * Fire a link status change interrupt to start the watchdog.
  **/
@@ -4303,7 +4312,12 @@ void e1000e_down(struct e1000_adapter *adapter, bool reset)
 	 */
 	set_bit(__E1000_DOWN, &adapter->state);
 
-	netif_carrier_off(netdev);
+	if (adapter->ecdev) {
+		ecdev_set_link(adapter->ecdev, 0);
+	}
+	else {
+		netif_carrier_off(netdev);
+	}
 
 	/* disable receives in the hardware */
 	rctl = er32(RCTL);
@@ -4323,10 +4337,7 @@ void e1000e_down(struct e1000_adapter *adapter, bool reset)
 	e1e_flush();
 	usleep_range(10000, 20000);
 
-	if (adapter->ecdev) {
-		ecdev_set_link(adapter->ecdev, 0);
-	}
-	else {
+	if (!adapter->ecdev) {
 		e1000_irq_disable(adapter);
 
 		napi_synchronize(&adapter->napi);
@@ -5381,7 +5392,7 @@ link_up:
 	 * if there is queued Tx work it cannot be done.  So
 	 * reset the controller to flush the Tx packet buffers.
 	 */
-	if (!netif_carrier_ok(netdev) &&
+	if (!adapter->ecdev && !netif_carrier_ok(netdev) &&
 	    (e1000_desc_unused(tx_ring) + 1 < tx_ring->count))
 		adapter->flags |= FLAG_RESTART_NOW;
 
@@ -5945,21 +5956,21 @@ static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
 					(MAX_SKB_FRAGS *
 					 DIV_ROUND_UP(PAGE_SIZE,
 						 adapter->tx_fifo_limit) + 2));
+		}
 
-			if (!skb->xmit_more ||
-					netif_xmit_stopped(netdev_get_tx_queue(netdev, 0))) {
-				if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA)
-					e1000e_update_tdt_wa(tx_ring,
-							tx_ring->next_to_use);
-				else
-					writel(tx_ring->next_to_use, tx_ring->tail);
+		if (!skb->xmit_more ||
+				netif_xmit_stopped(netdev_get_tx_queue(netdev, 0))) {
+			if (check_arbiter_wa_flag(adapter))
+				e1000e_update_tdt_wa(tx_ring,
+						tx_ring->next_to_use);
+			else
+				writel(tx_ring->next_to_use, tx_ring->tail);
 
-				/* we need this if more than one processor can write
-				 * to our tail at a time, it synchronizes IO on
-				 *IA64/Altix systems
-				 */
-				mmiowb();
-			}
+			/* we need this if more than one processor can write
+			 * to our tail at a time, it synchronizes IO on
+			 *IA64/Altix systems
+			 */
+			mmiowb();
 		}
 	} else {
 		if (!adapter->ecdev) {
@@ -7429,6 +7440,13 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 			goto err_register;
 		}
 		adapter->ec_watchdog_jiffies = jiffies;
+		if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA) {
+			e_warn("Driver uses Workaround with busy wait "
+				"which causes a lot of jitter! Compile with "
+				"-DEC_DISABLE_E1000E_WORKAROUND do disable the "
+				"workaround for EtherCAT operations."
+			);
+		}
 	} else {
 		strlcpy(netdev->name, "eth%d", sizeof(netdev->name));
 		err = register_netdev(netdev);
