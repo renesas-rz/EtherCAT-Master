@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT master userspace library.
  *
@@ -30,6 +30,12 @@
  * for realtime modules that want to use EtherCAT. There are functions to
  * request a master, to map process data, to communicate with slaves via CoE
  * and to configure and activate the bus.
+ *
+ * Changes in version 1.6.0:
+ *
+ * - Added the ecrt_master_scan_progress() method, the
+ *   ec_master_scan_progress_t structure and the EC_HAVE_SCAN_PROGRESS
+ *   definition to check for its existence.
  *
  * Changes since version 1.5.2:
  *
@@ -207,6 +213,11 @@
  */
 #define EC_HAVE_SOE_REQUESTS
 
+/** Defined, if the method ecrt_master_scan_progress() and the
+ * ec_master_scan_progress_t sttucture are available.
+ */
+#define EC_HAVE_SCAN_PROGRESS
+
 /*****************************************************************************/
 
 /** End of list marker.
@@ -354,6 +365,21 @@ typedef struct {
    uint8_t scan_busy; /**< \a true, while the master is scanning the bus */
    uint64_t app_time; /**< Application time. */
 } ec_master_info_t;
+
+/*****************************************************************************/
+
+/** Master scan progress information.
+ *
+ * This is used as an output parameter of ecrt_master_scan_progress().
+ *
+ * \see ecrt_master_scan_progress().
+ */
+typedef struct {
+   unsigned int slave_count; /**< Number of slaves detected. */
+   unsigned int scan_index; /**< Index of the slave that is currently scanned.
+                              If it is less than the \a slave_count, the
+                              network scan is in progress. */
+} ec_master_scan_progress_t;
 
 /*****************************************************************************/
 
@@ -750,6 +776,20 @@ int ecrt_master(
         ec_master_t *master, /**< EtherCAT master */
         ec_master_info_t *master_info /**< Structure that will output the
                                         information */
+        );
+
+/** Obtains network scan progress information.
+ *
+ * No memory is allocated on the heap in this function.
+ *
+ * \attention The pointer to this structure must point to a valid variable.
+ *
+ * \return 0 in case of success, else < 0
+ */
+int ecrt_master_scan_progress(
+        ec_master_t *master, /**< EtherCAT master */
+        ec_master_scan_progress_t *progress /**< Structure that will output
+                                              the progress information. */
         );
 
 /** Obtains slave information.

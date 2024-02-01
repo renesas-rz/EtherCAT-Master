@@ -245,6 +245,26 @@ int ecrt_master(ec_master_t *master, ec_master_info_t *master_info)
 
 /****************************************************************************/
 
+int ecrt_master_scan_progress(ec_master_t *master,
+        ec_master_scan_progress_t *progress)
+{
+    ec_ioctl_master_t data;
+    int ret;
+
+    ret = ioctl(master->fd, EC_IOCTL_MASTER, &data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to get master info: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    progress->slave_count = data.slave_count;
+    progress->scan_index = data.scan_index;
+    return 0;
+}
+
+/****************************************************************************/
+
 int ecrt_master_get_slave(ec_master_t *master, uint16_t slave_position,
         ec_slave_info_t *slave_info)
 {
