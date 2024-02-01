@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Ethernet-over-EtherCAT request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -39,7 +31,7 @@
 
 #include "eoe_request.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EoE request constructor.
  */
@@ -68,4 +60,4 @@ void ec_eoe_request_init(
     req->result = 0x0000;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

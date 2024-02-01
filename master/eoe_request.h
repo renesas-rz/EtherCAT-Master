@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT EoE request structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_EOE_REQUEST_H__
 #define __EC_EOE_REQUEST_H__
@@ -42,7 +34,7 @@
 
 #include "globals.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Ethernet-over-EtherCAT set IP parameter request.
  */
@@ -68,10 +60,10 @@ typedef struct {
     uint16_t result;
 } ec_eoe_request_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_eoe_request_init(ec_eoe_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *  vim: expandtab
  *
  ****************************************************************************/
@@ -40,14 +32,14 @@ using namespace std;
 #include "CommandIp.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandIp::CommandIp():
     Command("ip", "Set EoE IP parameters.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandIp::helpString(const string &binaryBaseName) const
 {
@@ -155,7 +147,7 @@ void CommandIp::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandIp::parseMac(unsigned char mac[EC_ETH_ALEN], const string &str)
 {
@@ -188,7 +180,7 @@ void CommandIp::parseMac(unsigned char mac[EC_ETH_ALEN], const string &str)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandIp::parseIpv4Prefix(ec_ioctl_slave_eoe_ip_t *io,
         const string &str)
@@ -223,7 +215,7 @@ void CommandIp::parseIpv4Prefix(ec_ioctl_slave_eoe_ip_t *io,
     resolveIpv4(&io->ip_address, host);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandIp::resolveIpv4(uint32_t *addr, const string &str)
 {
