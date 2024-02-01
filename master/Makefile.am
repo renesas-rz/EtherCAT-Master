@@ -33,6 +33,7 @@ noinst_HEADERS = \
 	domain.c domain.h \
 	doxygen.c \
 	ethernet.c ethernet.h \
+	flag.c flag.h \
 	fmmu_config.c fmmu_config.h \
 	foe.h \
 	foe_request.c foe_request.h \

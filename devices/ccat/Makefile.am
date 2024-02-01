@@ -23,8 +23,14 @@
 include $(top_srcdir)/Makefile.kbuild
 
 EXTRA_DIST = \
+	gpio.c \
+	module.c \
 	module.h \
+	netdev.c \
 	netdev.h \
-	update.h
+	sram.c \
+	update.h \
+	update.c
+
 
 #------------------------------------------------------------------------------

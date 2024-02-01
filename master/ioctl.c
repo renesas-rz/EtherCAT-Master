@@ -16,8 +16,6 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
  */
 
 /**
@@ -120,6 +118,7 @@ static ATTRIBUTES int ec_ioctl_master(
     }
 
     io.slave_count = master->slave_count;
+    io.scan_index = master->scan_index;
     io.config_count = ec_master_config_count(master);
     io.domain_count = ec_master_domain_count(master);
 #ifdef EC_EOE

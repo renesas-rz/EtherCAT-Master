@@ -186,6 +186,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     master->dc_ref_time = 0ULL;
 
     master->scan_busy = 0;
+    master->scan_index = 0;
     master->allow_scan = 1;
     sema_init(&master->scan_sem, 1);
     init_waitqueue_head(&master->scan_queue);
@@ -2629,6 +2630,19 @@ int ecrt_master(ec_master_t *master, ec_master_info_t *master_info)
 
 /*****************************************************************************/
 
+int ecrt_master_scan_progress(ec_master_t *master,
+        ec_master_scan_progress_t *progress)
+{
+    EC_MASTER_DBG(master, 1, "ecrt_master_scan_progress(master = 0x%p,"
+            " progress = 0x%p)\n", master, progress);
+
+    progress->slave_count = master->slave_count;
+    progress->scan_index = master->scan_index;
+    return 0;
+}
+
+/*****************************************************************************/
+
 int ecrt_master_get_slave(ec_master_t *master, uint16_t slave_position,
         ec_slave_info_t *slave_info)
 {
@@ -3252,6 +3266,7 @@ EXPORT_SYMBOL(ecrt_master_send_ext);
 EXPORT_SYMBOL(ecrt_master_receive);
 EXPORT_SYMBOL(ecrt_master_callbacks);
 EXPORT_SYMBOL(ecrt_master);
+EXPORT_SYMBOL(ecrt_master_scan_progress);
 EXPORT_SYMBOL(ecrt_master_get_slave);
 EXPORT_SYMBOL(ecrt_master_slave_config);
 EXPORT_SYMBOL(ecrt_master_select_reference_clock);

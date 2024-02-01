@@ -3,7 +3,7 @@
 # ```
 # include $(top_srcdir)/Makefile.kbuild
 # ```
-KBUILD = $(MAKE) -C "$(LINUX_SOURCE_DIR)" M="$(abs_srcdir)" INSTALL_MOD_DIR="$(INSTALL_MOD_DIR)"
+KBUILD = $(MAKE) -C "$(LINUX_SOURCE_DIR)" M="$(abs_builddir)" INSTALL_MOD_DIR="$(INSTALL_MOD_DIR)"
 
 
 modules:

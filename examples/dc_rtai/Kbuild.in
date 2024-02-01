@@ -25,6 +25,9 @@
 #
 #------------------------------------------------------------------------------
 
+src := @abs_srcdir@
+ccflags-y := -I@abs_top_builddir@
+
 obj-m := ec_dc_rtai_sample.o
 
 ec_dc_rtai_sample-objs := dc_rtai_sample.o

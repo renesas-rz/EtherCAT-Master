@@ -26,6 +26,9 @@
 #
 #------------------------------------------------------------------------------
 
+src := @abs_srcdir@
+ccflags-y := -I@abs_top_builddir@
+
 obj-m := ec_tty.o
 
 ec_tty-objs := \
