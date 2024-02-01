@@ -47,8 +47,10 @@
  * - Added the ecrt_master_scan_progress() method, the
  *   ec_master_scan_progress_t structure and the EC_HAVE_SCAN_PROGRESS
  *   definition to check for its existence.
- * - Added the ecrt_slave_config_set_ip() method, the
- *   ec_slave_config_ip_param_t structure and the EC_HAVE_SET_IP
+ * - Added the EoE configuration methods ecrt_slave_config_eoe_mac(),
+ *   ecrt_slave_config_eoe_ip(), ecrt_slave_config_eoe_subnet(),
+ *   ecrt_slave_config_eoe_gateway(), ecrt_slave_config_eoe_dns(),
+ *   ecrt_slave_config_eoe_hostname() and the EC_HAVE_SET_IP
  *   definition to check for its existence.
  *
  * Changes since version 1.5.2:
@@ -246,8 +248,10 @@
  */
 #define EC_HAVE_SCAN_PROGRESS
 
-/** Defined, if the method ecrt_slave_config_set_ip() and the
- * ec_slave_config_ip_param_t sttucture are available.
+/** Defined, if the methods ecrt_slave_config_eoe_mac(),
+ *  ecrt_slave_config_eoe_ip(), ecrt_slave_config_eoe_subnet(),
+ *  ecrt_slave_config_eoe_gateway(), ecrt_slave_config_eoe_dns(),
+ *  ecrt_slave_config_eoe_hostname() are available.
  */
 #define EC_HAVE_SET_IP
 
@@ -625,31 +629,6 @@ typedef enum {
     EC_AL_STATE_SAFEOP = 4, /**< Safe-operational. */
     EC_AL_STATE_OP = 8, /**< Operational. */
 } ec_al_state_t;
-
-/****************************************************************************/
-
-/** Internet protocol (IP) parameters for Ethernet-over-EtherCAT (EoE).
- *
- * This type is used for the input parameter of ecrt_slave_config_set_ip().
- */
-typedef struct {
-    uint8_t mac_address_included;
-    uint8_t ip_address_included;
-    uint8_t subnet_mask_included;
-    uint8_t gateway_included;
-    uint8_t dns_included;
-    uint8_t name_included;
-
-    unsigned char mac_address[EC_ETH_ALEN];
-    uint32_t ip_address;
-    uint32_t subnet_mask;
-    uint32_t gateway;
-    uint32_t dns;
-    char name[EC_MAX_HOSTNAME_SIZE];
-
-	// output
-	uint16_t result;
-} ec_slave_config_ip_param_t;
 
 /*****************************************************************************
  * Global functions
@@ -1825,7 +1804,7 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
         int32_t value /**< Value to store. */
         );
 
-/** Sets IP parameters vor Ethernet-over-EtherCAT (EoE) operation.
+/** Sets the MAC address for Ethernet-over-EtherCAT (EoE) operation.
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
@@ -1833,9 +1812,74 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_set_ip(
+EC_PUBLIC_API int ecrt_slave_config_eoe_mac(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        const ec_slave_config_ip_param_t *ip, /**< IP parameters. */
+        unsigned char *mac_address /**< MAC address. */
+        );
+
+/** Sets the IP address for Ethernet-over-EtherCAT (EoE) operation.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_eoe_ip(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        uint32_t ip_address /**< IPv4 address. */
+        );
+
+/** Sets the subnet mask for Ethernet-over-EtherCAT (EoE) operation.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_eoe_subnet(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        uint32_t subnet_mask /**< IPv4 subnet mask. */
+        );
+
+/** Sets the gateway address for Ethernet-over-EtherCAT (EoE) operation.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_eoe_gateway(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        uint32_t gateway_address /**< Gateway's IPv4 address. */
+        );
+
+/** Sets the DNS server address for Ethernet-over-EtherCAT (EoE) operation.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_eoe_dns(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        uint32_t dns_address /**< IPv4 address of the DNS server. */
+        );
+
+/** Sets the host name for Ethernet-over-EtherCAT (EoE) operation.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        unsigned char *name /**< Zero-terminated hostname. */
         );
 
 /*****************************************************************************
