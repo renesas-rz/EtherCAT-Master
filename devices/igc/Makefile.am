@@ -117,5 +117,3 @@ EXTRiA_DIST = igc-6.6-ethercat.h \
 	igc_phy-6.4-ethercat.h \
 	igc_regs-6.4-ethercat.h \
 	igc_tsn-6.4-orig.h
-
-

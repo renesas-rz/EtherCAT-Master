@@ -48,7 +48,7 @@ ifeq (@ENABLE_IGC@,1)
 		igc_mac-@KERNEL_IGC@-ethercat.o \
 		igc_phy-@KERNEL_IGC@-ethercat.o \
 		igc_ethtool-@KERNEL_IGC@-ethercat.o \
-		igc_nvm-@KERNEL_IGC@-ethercat.o 
+		igc_nvm-@KERNEL_IGC@-ethercat.o
 
 	CFLAGS_igc_main-@KERNEL_IGC@-ethercat.o = -DREV=$(REV)
 endif
