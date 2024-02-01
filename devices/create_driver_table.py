@@ -37,11 +37,16 @@ DRIVER_MAP=(
     (".", "e100", "e100"),
     ("e1000", "e1000", "e1000_main"),
     ("e1000e", "e1000e", "netdev"),
+    ("genet", "bcmgenet", "bcmgenet"),
     ("igb", "igb", "igb_main"),
+    ("igc", "igc", "igc_main"),
     (".", "r8169", "r8169"),
+    ("r8169", "r8169", "r8169_main"),
 )
 
-DRIVERS = tuple([x[1] for x in DRIVER_MAP])
+
+DRIVERS = sorted(set([x[1] for x in DRIVER_MAP]))
+
 
 def compile_regex(prefix, file_extension):
     """

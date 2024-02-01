@@ -45,7 +45,7 @@
 
 /** Sercos-over-EtherCAT request.
  */
-typedef struct {
+struct ec_soe_request {
     struct list_head list; /**< List item. */
     uint8_t drive_no; /**< Drive number. */
     uint16_t idn; /**< Sercos ID-Number. */
@@ -53,13 +53,16 @@ typedef struct {
     uint8_t *data; /**< Pointer to SDO data. */
     size_t mem_size; /**< Size of SDO data memory. */
     size_t data_size; /**< Size of SDO data. */
+    uint32_t issue_timeout; /**< Maximum time in ms, the processing of the
+                              request may take. */
     ec_direction_t dir; /**< Direction. EC_DIR_OUTPUT means writing to the
                           slave, EC_DIR_INPUT means reading from the slave. */
     ec_internal_request_state_t state; /**< Request state. */
+    unsigned long jiffies_start; /**< Jiffies, when the request was issued. */
     unsigned long jiffies_sent; /**< Jiffies, when the upload/download
                                      request was sent. */
     uint16_t error_code; /**< SoE error code. */
-} ec_soe_request_t;
+};
 
 /*****************************************************************************/
 
@@ -74,6 +77,7 @@ int ec_soe_request_copy_data(ec_soe_request_t *, const uint8_t *, size_t);
 int ec_soe_request_append_data(ec_soe_request_t *, const uint8_t *, size_t);
 void ec_soe_request_read(ec_soe_request_t *);
 void ec_soe_request_write(ec_soe_request_t *);
+int ec_soe_request_timed_out(const ec_soe_request_t *);
 
 /*****************************************************************************/
 

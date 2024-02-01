@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT master userspace library.
  *
@@ -39,6 +37,7 @@ struct ec_slave_config {
     uint16_t alias;
     uint16_t position;
     ec_sdo_request_t *first_sdo_request;
+    ec_soe_request_t *first_soe_request;
     ec_reg_request_t *first_reg_request;
     ec_voe_handler_t *first_voe_handler;
 };

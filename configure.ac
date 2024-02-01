@@ -209,7 +209,7 @@ AC_ARG_ENABLE([8139too],
                 ;;
         esac
     ],
-    [enable8139too=$enablekernel]
+    [enable8139too=0] # disabled by default
 )
 
 AM_CONDITIONAL(ENABLE_8139TOO, test "x$enable8139too" = "x1")
@@ -433,6 +433,54 @@ AC_SUBST(KERNEL_E1000E,[$kernele1000e])
 AC_SUBST(E1000E_LAYOUT, [$e1000elayout])
 
 #------------------------------------------------------------------------------
+# genet driver
+#------------------------------------------------------------------------------
+
+AC_ARG_ENABLE([genet],
+    AS_HELP_STRING([--enable-genet],
+                   [Enable genet driver (for Raspi 4)]),
+    [
+        case "${enableval}" in
+            yes) enablegenet=1
+                ;;
+            no) enablegenet=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-genet])
+                ;;
+        esac
+    ],
+    [enablegenet=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_GENET, test "x$enablegenet" = "x1")
+AC_SUBST(ENABLE_GENET,[$enablegenet])
+
+AC_ARG_WITH([genet-kernel],
+    AC_HELP_STRING(
+        [--with-genet-kernel=<X.Y.Z>],
+        [genet kernel (only if differing)]
+    ),
+    [
+        kernelgenet=[$withval]
+    ],
+    [
+        kernelgenet=$linuxversion
+    ]
+)
+
+if test "x${enablegenet}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for genet driver])
+
+    if test ! -f "${srcdir}/devices/genet/bcmgenet-${kernelgenet}-orig.c"; then
+        AC_MSG_ERROR([kernel $kernelgenet not available for genet driver!])
+    fi
+
+    AC_MSG_RESULT([$kernelgenet])
+fi
+
+AC_SUBST(KERNEL_GENET,[$kernelgenet])
+
+#------------------------------------------------------------------------------
 # igb driver
 #------------------------------------------------------------------------------
 
@@ -479,6 +527,52 @@ if test "x${enableigb}" = "x1"; then
 fi
 
 AC_SUBST(KERNEL_IGB,[$kerneligb])
+#------------------------------------------------------------------------------
+# igc driver
+#------------------------------------------------------------------------------
+
+AC_ARG_ENABLE([igc],
+    AS_HELP_STRING([--enable-igc],
+                   [Enable igc driver]),
+    [
+        case "${enableval}" in
+            yes) enableigc=1
+                ;;
+            no) enableigc=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-igc])
+                ;;
+        esac
+    ],
+    [enableigc=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_IGC, test "x$enableigc" = "x1")
+AC_SUBST(ENABLE_IGC,[$enableigc])
+
+AC_ARG_WITH([igc-kernel],
+    AS_HELP_STRING([--with-igc-kernel=<X.Y.Z>],
+                   [igc kernel (only if differing)]
+    ),
+    [
+        kerneligc=[$withval]
+    ],
+    [
+        kerneligc=$linuxversion
+    ]
+)
+
+if test "x${enableigc}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for igc driver])
+
+    if test ! -f "${srcdir}/devices/igc/igc_main-${kerneligc}-orig.c"; then
+        AC_MSG_ERROR([kernel $kerneligc not available for igc driver!])
+    fi
+
+    AC_MSG_RESULT([$kerneligc])
+fi
+
+AC_SUBST(KERNEL_IGC,[$kerneligc])
 
 #------------------------------------------------------------------------------
 # r8169 driver
@@ -520,16 +614,25 @@ if test "x${enable_r8169}" = "x1"; then
     AC_MSG_CHECKING([for kernel for r8169 driver])
 
     kernels=`ls -1 ${srcdir}/devices/ | grep -oE "^r8169-.*-" | cut -d "-" -f 2 | uniq`
+    kernels_subdir=`ls -1 ${srcdir}/devices/r8169/ | grep -oE "^r8169_main-.*-" | cut -d "-" -f 2 | uniq`
     found=0
+    found_subdir=0
     for k in $kernels; do
         if test "$kernel_r8169" = "$k"; then
             found=1
+        fi
+    done
+    for k in $kernels_subdir; do
+        if test "$kernel_r8169" = "$k"; then
+            found=1
+            found_subdir=1
         fi
     done
     if test $found -ne 1; then
         AC_MSG_ERROR([kernel $kernel_r8169 not available for r8169 driver!])
     fi
 
+    AC_SUBST(R8169_IN_SUBDIR, [$found_subdir])
     AC_MSG_RESULT([$kernel_r8169])
 fi
 
@@ -1122,8 +1225,14 @@ AC_CONFIG_FILES([
         devices/e1000/Makefile
         devices/e1000e/Kbuild
         devices/e1000e/Makefile
+        devices/genet/Kbuild
+        devices/genet/Makefile
         devices/igb/Kbuild
         devices/igb/Makefile
+        devices/igc/Kbuild
+        devices/igc/Makefile
+        devices/r8169/Kbuild
+        devices/r8169/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile

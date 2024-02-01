@@ -12,7 +12,7 @@ build:
 
     script:
         - ./bootstrap
-        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
+        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat
         - make -j8 all modules
         - make DISTCHECK_CONFIGURE_FLAGS="--with-linux-dir=/usr/src/linux-obj/$(uname -i)/default" distcheck
 
@@ -54,7 +54,7 @@ doxygen:
         GIT_SUBMODULE_STRATEGY: recursive
     script:
         - ./bootstrap
-        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
+        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat
         - make doc
         - mv doxygen-output/html/ html/
     artifacts:
@@ -83,7 +83,7 @@ pdf:
 update docs server:
     stage: deploy
     rules:
-        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_NAMESPACE == "etherlab.org"
+        - if: $CI_COMMIT_BRANCH == "stable-1.5" && $CI_PROJECT_NAMESPACE == "etherlab.org"
     trigger: etherlab.org/docs
 
 # from 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml', but on all branches

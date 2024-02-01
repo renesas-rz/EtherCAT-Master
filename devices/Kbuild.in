@@ -70,15 +70,27 @@ ifeq (@ENABLE_E1000E@,1)
 	obj-m += e1000e/
 endif
 
+ifeq (@ENABLE_GENET@,1)
+	obj-m += genet/
+endif
+
 ifeq (@ENABLE_IGB@,1)
 	obj-m += igb/
 endif
 
+ifeq (@ENABLE_IGC@,1)
+	obj-m += igc/
+endif
+
 ifeq (@ENABLE_R8169@,1)
+ifeq (@R8169_IN_SUBDIR@,1)
+	obj-m += r8169/
+else
 	EC_R8169_OBJ := r8169-@KERNEL_R8169@-ethercat.o
 	obj-m += ec_r8169.o
 	ec_r8169-objs := $(EC_R8169_OBJ)
 	CFLAGS_$(EC_R8169_OBJ) = -DREV=$(REV)
+endif
 endif
 
 KBUILD_EXTRA_SYMBOLS := \
