@@ -47,6 +47,9 @@
  * - Added the ecrt_master_scan_progress() method, the
  *   ec_master_scan_progress_t structure and the EC_HAVE_SCAN_PROGRESS
  *   definition to check for its existence.
+ * - Added the ecrt_slave_config_set_ip() method, the
+ *   ec_slave_config_ip_param_t structure and the EC_HAVE_SET_IP
+ *   definition to check for its existence.
  *
  * Changes since version 1.5.2:
  *
@@ -242,6 +245,11 @@
  * ec_master_scan_progress_t sttucture are available.
  */
 #define EC_HAVE_SCAN_PROGRESS
+
+/** Defined, if the method ecrt_slave_config_set_ip() and the
+ * ec_slave_config_ip_param_t sttucture are available.
+ */
+#define EC_HAVE_SET_IP
 
 /****************************************************************************/
 
@@ -617,6 +625,31 @@ typedef enum {
     EC_AL_STATE_SAFEOP = 4, /**< Safe-operational. */
     EC_AL_STATE_OP = 8, /**< Operational. */
 } ec_al_state_t;
+
+/****************************************************************************/
+
+/** Internet protocol (IP) parameters for Ethernet-over-EtherCAT (EoE).
+ *
+ * This type is used for the input parameter of ecrt_slave_config_set_ip().
+ */
+typedef struct {
+    uint8_t mac_address_included;
+    uint8_t ip_address_included;
+    uint8_t subnet_mask_included;
+    uint8_t gateway_included;
+    uint8_t dns_included;
+    uint8_t name_included;
+
+    unsigned char mac_address[EC_ETH_ALEN];
+    uint32_t ip_address;
+    uint32_t subnet_mask;
+    uint32_t gateway;
+    uint32_t dns;
+    char name[EC_MAX_HOSTNAME_SIZE];
+
+	// output
+	uint16_t result;
+} ec_slave_config_ip_param_t;
 
 /*****************************************************************************
  * Global functions
@@ -1790,6 +1823,19 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
         ec_slave_config_t *sc, /**< Slave configuration. */
         const char *key, /**< Key as null-terminated ascii string. */
         int32_t value /**< Value to store. */
+        );
+
+/** Sets IP parameters vor Ethernet-over-EtherCAT (EoE) operation.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_set_ip(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        const ec_slave_config_ip_param_t *ip, /**< IP parameters. */
         );
 
 /*****************************************************************************
