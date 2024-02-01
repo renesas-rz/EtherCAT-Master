@@ -6482,6 +6482,9 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 			goto err_register;
 		}
 		adapter->ec_watchdog_jiffies = jiffies;
+		if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA) {
+			e_warn("Driver uses Workaround with busy wait which causes a lot of jitter!");
+		}
 	} else {
 		strlcpy(netdev->name, "eth%d", sizeof(netdev->name));
 		err = register_netdev(netdev);

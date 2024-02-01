@@ -5201,7 +5201,7 @@ link_up:
 	 * if there is queued Tx work it cannot be done.  So
 	 * reset the controller to flush the Tx packet buffers.
 	 */
-	if (!netif_carrier_ok(netdev) &&
+	if (!adapter->ecdev && !netif_carrier_ok(netdev) &&
 	    (e1000_desc_unused(tx_ring) + 1 < tx_ring->count))
 		adapter->flags |= FLAG_RESTART_NOW;
 
@@ -7143,6 +7143,9 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 			goto err_register;
 		}
 		adapter->ec_watchdog_jiffies = jiffies;
+		if (adapter->flags2 & FLAG2_PCIM2PCI_ARBITER_WA) {
+			e_warn("Driver uses Workaround with busy wait which causes a lot of jitter!");
+		}
 	} else {
 		strlcpy(netdev->name, "eth%d", sizeof(netdev->name));
 		err = register_netdev(netdev);
