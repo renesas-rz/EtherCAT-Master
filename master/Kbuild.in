@@ -69,7 +69,7 @@ ec_master-objs := \
 	voe_handler.o
 
 ifeq (@ENABLE_EOE@,1)
-ec_master-objs += ethernet.o
+ec_master-objs += eoe_request.o ethernet.o fsm_eoe.o
 endif
 
 ifeq (@ENABLE_DEBUG_IF@,1)

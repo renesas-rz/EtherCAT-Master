@@ -103,6 +103,12 @@
  **/
 #define EC_DATAGRAM_NAME_SIZE 20
 
+/** Maximum hostname size.
+ *
+ * Used inside the EoE set IP parameter request.
+ */
+#define EC_MAX_HOSTNAME_SIZE 32
+
 /** Slave state mask.
  *
  * Apply this mask to a slave state byte to get the slave state without
@@ -130,6 +136,9 @@ typedef enum {
 } ec_slave_state_t;
 
 /** Supported mailbox protocols.
+ *
+ * Not to mix up with the mailbox type field in the mailbox header defined in
+ * master/mailbox.h.
  */
 enum {
     EC_MBOX_AOE = 0x01, /**< ADS over EtherCAT */

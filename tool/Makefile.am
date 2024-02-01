@@ -66,9 +66,9 @@ ethercat_SOURCES = \
 	sii_crc.cpp
 
 if ENABLE_EOE
-ethercat_SOURCES += CommandEoe.cpp
+ethercat_SOURCES += CommandEoe.cpp CommandIp.cpp
 else
-EXTRA_DIST += CommandEoe.cpp
+EXTRA_DIST += CommandEoe.cpp CommandIp.cpp
 endif
 
 noinst_HEADERS = \
@@ -108,9 +108,9 @@ noinst_HEADERS = \
 	sii_crc.h
 
 if ENABLE_EOE
-noinst_HEADERS += CommandEoe.h
+noinst_HEADERS += CommandEoe.h CommandIp.h
 else
-EXTRA_DIST += CommandEoe.h
+EXTRA_DIST += CommandEoe.h CommandIp.h
 endif
 
 REV = `if test -s $(top_srcdir)/revision; then \

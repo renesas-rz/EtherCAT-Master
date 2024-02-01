@@ -21,6 +21,7 @@ COMMANDS := \
 	foe_read \
 	foe_write \
 	graph \
+	ip \
 	master \
 	pdos \
 	reg_read \

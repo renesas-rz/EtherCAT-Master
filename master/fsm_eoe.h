@@ -1,6 +1,8 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+ *  $Id$
+ *
+ *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -17,47 +19,55 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ *  ---
+ *
+ *  The license mentioned above concerns the source code only. Using the
+ *  EtherCAT technology and brand is only permitted in compliance with the
+ *  industrial property and similar rights of Beckhoff Automation GmbH.
+ *
  ****************************************************************************/
 
 /**
    \file
-   Mailbox functionality.
+   EtherCAT EoE set IP parameter state machines.
 */
 
 /****************************************************************************/
 
-#ifndef __EC_MAILBOX_H__
-#define __EC_MAILBOX_H__
+#ifndef __EC_FSM_EOE_H__
+#define __EC_FSM_EOE_H__
 
+#include "globals.h"
+#include "datagram.h"
 #include "slave.h"
+#include "eoe_request.h"
 
 /****************************************************************************/
 
-/** Size of the mailbox header.
- */
-#define EC_MBOX_HEADER_SIZE 6
+typedef struct ec_fsm_eoe ec_fsm_eoe_t; /**< \see ec_fsm_eoe */
 
-/** Mailbox types.
- *
- * These are used in the 'Type' field of the mailbox header.
+/** Finite state machines for the Ethernet over EtherCAT protocol.
  */
-enum {
-    EC_MBOX_TYPE_EOE = 0x02,
-    EC_MBOX_TYPE_COE = 0x03,
-    EC_MBOX_TYPE_FOE = 0x04,
-    EC_MBOX_TYPE_SOE = 0x05,
-    EC_MBOX_TYPE_VOE = 0x0f,
+struct ec_fsm_eoe {
+    ec_slave_t *slave; /**< slave the FSM runs on */
+    unsigned int retries; /**< retries upon datagram timeout */
+
+    void (*state)(ec_fsm_eoe_t *, ec_datagram_t *); /**< EoE state function */
+    ec_datagram_t *datagram; /**< Datagram used in the previous step. */
+    unsigned long jiffies_start; /**< Timestamp. */
+    ec_eoe_request_t *request; /**< EoE request */
 };
 
 /****************************************************************************/
 
-uint8_t *ec_slave_mbox_prepare_send(const ec_slave_t *, ec_datagram_t *,
-                                    uint8_t, size_t);
-int      ec_slave_mbox_prepare_check(const ec_slave_t *, ec_datagram_t *);
-int      ec_slave_mbox_check(const ec_datagram_t *);
-int      ec_slave_mbox_prepare_fetch(const ec_slave_t *, ec_datagram_t *);
-uint8_t *ec_slave_mbox_fetch(const ec_slave_t *, const ec_datagram_t *,
-                             uint8_t *, size_t *);
+void ec_fsm_eoe_init(ec_fsm_eoe_t *);
+void ec_fsm_eoe_clear(ec_fsm_eoe_t *);
+
+void ec_fsm_eoe_set_ip_param(ec_fsm_eoe_t *, ec_slave_t *,
+        ec_eoe_request_t *);
+
+int ec_fsm_eoe_exec(ec_fsm_eoe_t *, ec_datagram_t *);
+int ec_fsm_eoe_success(const ec_fsm_eoe_t *);
 
 /****************************************************************************/
 

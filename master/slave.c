@@ -147,6 +147,7 @@ void ec_slave_init(
     INIT_LIST_HEAD(&slave->reg_requests);
     INIT_LIST_HEAD(&slave->foe_requests);
     INIT_LIST_HEAD(&slave->soe_requests);
+    INIT_LIST_HEAD(&slave->eoe_requests);
 
     // create state machine object
     ec_fsm_slave_init(&slave->fsm, slave);
@@ -202,6 +203,17 @@ void ec_slave_clear(ec_slave_t *slave /**< EtherCAT slave */)
                 " slave about to be deleted.\n");
         request->state = EC_INT_REQUEST_FAILURE;
     }
+
+#ifdef EC_EOE
+    while (!list_empty(&slave->eoe_requests)) {
+        ec_eoe_request_t *request =
+            list_entry(slave->eoe_requests.next, ec_eoe_request_t, list);
+        list_del_init(&request->list); // dequeue
+        EC_SLAVE_WARN(slave, "Discarding EoE request,"
+                " slave about to be deleted.\n");
+        request->state = EC_INT_REQUEST_FAILURE;
+    }
+#endif
 
     wake_up_all(&slave->master->request_queue);
 
