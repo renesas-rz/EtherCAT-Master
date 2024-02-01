@@ -19,12 +19,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *****************************************************************************/
 
 /** \file
@@ -126,13 +120,11 @@ void ec_gen_poll(struct net_device *dev)
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 static const struct net_device_ops ec_gen_netdev_ops = {
     .ndo_open       = ec_gen_netdev_open,
     .ndo_stop       = ec_gen_netdev_stop,
     .ndo_start_xmit = ec_gen_netdev_start_xmit,
 };
-#endif
 
 /*****************************************************************************/
 
@@ -159,13 +151,7 @@ int ec_gen_device_init(
         return -ENOMEM;
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     dev->netdev->netdev_ops = &ec_gen_netdev_ops;
-#else
-    dev->netdev->open = ec_gen_netdev_open;
-    dev->netdev->stop = ec_gen_netdev_stop;
-    dev->netdev->hard_start_xmit = ec_gen_netdev_start_xmit;
-#endif
 
     priv = netdev_priv(dev->netdev);
     *priv = dev;

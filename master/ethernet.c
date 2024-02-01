@@ -19,12 +19,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *****************************************************************************/
 
 /**
@@ -82,7 +76,6 @@ struct net_device_stats *ec_eoedev_stats(struct net_device *);
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 /** Device operations for EoE interfaces.
  */
 static const struct net_device_ops ec_eoedev_ops = {
@@ -91,7 +84,6 @@ static const struct net_device_ops ec_eoedev_ops = {
     .ndo_start_xmit = ec_eoedev_tx,
     .ndo_get_stats = ec_eoedev_stats,
 };
-#endif
 
 /*****************************************************************************/
 
@@ -163,14 +155,7 @@ int ec_eoe_init(
     }
 
     // initialize net_device
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     eoe->dev->netdev_ops = &ec_eoedev_ops;
-#else
-    eoe->dev->open = ec_eoedev_open;
-    eoe->dev->stop = ec_eoedev_stop;
-    eoe->dev->hard_start_xmit = ec_eoedev_tx;
-    eoe->dev->get_stats = ec_eoedev_stats;
-#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
     eth_hw_addr_set(eoe->dev, mac_addr);

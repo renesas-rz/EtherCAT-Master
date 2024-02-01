@@ -17,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *  vim: expandtab
  *
  *****************************************************************************/
@@ -192,6 +186,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     master->dc_ref_time = 0ULL;
 
     master->scan_busy = 0;
+    master->scan_index = 0;
     master->allow_scan = 1;
     sema_init(&master->scan_sem, 1);
     init_waitqueue_head(&master->scan_queue);
@@ -326,23 +321,9 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     if (ret)
         goto out_clear_sync_mon;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
     master->class_device = device_create(class, NULL,
             MKDEV(MAJOR(device_number), master->index), NULL,
             "EtherCAT%u", master->index);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
-    master->class_device = device_create(class, NULL,
-            MKDEV(MAJOR(device_number), master->index),
-            "EtherCAT%u", master->index);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15)
-    master->class_device = class_device_create(class, NULL,
-            MKDEV(MAJOR(device_number), master->index), NULL,
-            "EtherCAT%u", master->index);
-#else
-    master->class_device = class_device_create(class,
-            MKDEV(MAJOR(device_number), master->index), NULL,
-            "EtherCAT%u", master->index);
-#endif
     if (IS_ERR(master->class_device)) {
         EC_MASTER_ERR(master, "Failed to create class device!\n");
         ret = PTR_ERR(master->class_device);
@@ -361,11 +342,7 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
 
 #ifdef EC_RTDM
 out_unregister_class_device:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     device_unregister(master->class_device);
-#else
-    class_device_unregister(master->class_device);
-#endif
 #endif
 out_clear_cdev:
     ec_cdev_clear(&master->cdev);
@@ -402,11 +379,7 @@ void ec_master_clear(
     ec_rtdm_dev_clear(&master->rtdm_dev);
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     device_unregister(master->class_device);
-#else
-    class_device_unregister(master->class_device);
-#endif
 
     ec_cdev_clear(&master->cdev);
 
@@ -1404,22 +1377,6 @@ static enum hrtimer_restart ec_master_nanosleep_wakeup(struct hrtimer *timer)
 
 /*****************************************************************************/
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
-
-/* compatibility with new hrtimer interface */
-static inline ktime_t hrtimer_get_expires(const struct hrtimer *timer)
-{
-    return timer->expires;
-}
-
-/*****************************************************************************/
-
-static inline void hrtimer_set_expires(struct hrtimer *timer, ktime_t time)
-{
-    timer->expires = time;
-}
-
-#endif
 
 /*****************************************************************************/
 
@@ -1431,15 +1388,6 @@ void ec_master_nanosleep(const unsigned long nsecs)
     hrtimer_init(&t.timer, CLOCK_MONOTONIC, mode);
     t.timer.function = ec_master_nanosleep_wakeup;
     t.task = current;
-#ifdef CONFIG_HIGH_RES_TIMERS
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
-    t.timer.cb_mode = HRTIMER_CB_IRQSAFE_NO_RESTART;
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 26)
-    t.timer.cb_mode = HRTIMER_CB_IRQSAFE_NO_SOFTIRQ;
-#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 28)
-    t.timer.cb_mode = HRTIMER_CB_IRQSAFE_UNLOCKED;
-#endif
-#endif
     hrtimer_set_expires(&t.timer, ktime_set(0, nsecs));
 
     do {
@@ -2678,6 +2626,19 @@ int ecrt_master(ec_master_t *master, ec_master_info_t *master_info)
 
 /*****************************************************************************/
 
+int ecrt_master_scan_progress(ec_master_t *master,
+        ec_master_scan_progress_t *progress)
+{
+    EC_MASTER_DBG(master, 1, "ecrt_master_scan_progress(master = 0x%p,"
+            " progress = 0x%p)\n", master, progress);
+
+    progress->slave_count = master->slave_count;
+    progress->scan_index = master->scan_index;
+    return 0;
+}
+
+/*****************************************************************************/
+
 int ecrt_master_get_slave(ec_master_t *master, uint16_t slave_position,
         ec_slave_info_t *slave_info)
 {
@@ -3301,6 +3262,7 @@ EXPORT_SYMBOL(ecrt_master_send_ext);
 EXPORT_SYMBOL(ecrt_master_receive);
 EXPORT_SYMBOL(ecrt_master_callbacks);
 EXPORT_SYMBOL(ecrt_master);
+EXPORT_SYMBOL(ecrt_master_scan_progress);
 EXPORT_SYMBOL(ecrt_master_get_slave);
 EXPORT_SYMBOL(ecrt_master_slave_config);
 EXPORT_SYMBOL(ecrt_master_select_reference_clock);

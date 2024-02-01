@@ -19,12 +19,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *****************************************************************************/
 
 /**
@@ -264,11 +258,7 @@ int ec_device_open(
 
     ec_device_clear_stats(device);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     ret = device->dev->netdev_ops->ndo_open(device->dev);
-#else
-    ret = device->dev->open(device->dev);
-#endif
     if (!ret)
         device->open = 1;
 
@@ -297,11 +287,7 @@ int ec_device_close(
         return 0;
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     ret = device->dev->netdev_ops->ndo_stop(device->dev);
-#else
-    ret = device->dev->stop(device->dev);
-#endif
     if (!ret)
         device->open = 0;
 
@@ -349,12 +335,8 @@ void ec_device_send(
     }
 
     // start sending
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     if (device->dev->netdev_ops->ndo_start_xmit(skb, device->dev) ==
             NETDEV_TX_OK)
-#else
-    if (device->dev->hard_start_xmit(skb, device->dev) == NETDEV_TX_OK)
-#endif
     {
         device->tx_count++;
         device->master->device_stats.tx_count++;

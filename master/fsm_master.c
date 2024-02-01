@@ -17,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *****************************************************************************/
 
 /** \file
@@ -339,6 +333,7 @@ void ec_fsm_master_state_broadcast(
             ec_device_index_t dev_idx;
 
             master->scan_busy = 1;
+            master->scan_index = 0;
             up(&master->scan_sem);
 
             // clear all slaves and scan the bus
@@ -842,6 +837,7 @@ void ec_fsm_master_state_clear_addresses(
                 ec_device_names[fsm->dev_idx != 0]);
         ec_datagram_print_state(datagram);
         master->scan_busy = 0;
+        master->scan_index = master->slave_count;
         wake_up_interruptible(&master->scan_queue);
         ec_fsm_master_restart(fsm);
         return;
@@ -885,6 +881,7 @@ void ec_fsm_master_state_dc_measure_delays(
                 " on %s link: ", ec_device_names[fsm->dev_idx != 0]);
         ec_datagram_print_state(datagram);
         master->scan_busy = 0;
+        master->scan_index = master->slave_count;
         wake_up_interruptible(&master->scan_queue);
         ec_fsm_master_restart(fsm);
         return;
@@ -907,6 +904,7 @@ void ec_fsm_master_state_dc_measure_delays(
 
     // begin scanning of slaves
     fsm->slave = master->slaves;
+    master->scan_index = 0;
     EC_MASTER_DBG(master, 1, "Scanning slave %u on %s link.\n",
             fsm->slave->ring_position,
             ec_device_names[fsm->slave->device_index != 0]);
@@ -952,6 +950,7 @@ void ec_fsm_master_state_scan_slave(
 
     // another slave to fetch?
     fsm->slave++;
+    master->scan_index++;
     if (fsm->slave < master->slaves + master->slave_count) {
         EC_MASTER_DBG(master, 1, "Scanning slave %u on %s link.\n",
                 fsm->slave->ring_position,
@@ -966,6 +965,7 @@ void ec_fsm_master_state_scan_slave(
             (jiffies - fsm->scan_jiffies) * 1000 / HZ);
 
     master->scan_busy = 0;
+    master->scan_index = master->slave_count;
     wake_up_interruptible(&master->scan_queue);
 
     ec_master_calc_dc(master);

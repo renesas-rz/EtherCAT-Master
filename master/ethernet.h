@@ -19,12 +19,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *****************************************************************************/
 
 /**
@@ -40,11 +34,7 @@
 #include <linux/list.h>
 #include <linux/netdevice.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
 #include <linux/semaphore.h>
-#else
-#include <asm/semaphore.h>
-#endif
 
 #include "globals.h"
 #include "slave.h"

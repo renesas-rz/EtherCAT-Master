@@ -18,12 +18,6 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <unistd.h> /* close() */
@@ -246,6 +240,26 @@ int ecrt_master(ec_master_t *master, ec_master_info_t *master_info)
     master_info->link_up = data.devices[0].link_state;
     master_info->scan_busy = data.scan_busy;
     master_info->app_time = data.app_time;
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_master_scan_progress(ec_master_t *master,
+        ec_master_scan_progress_t *progress)
+{
+    ec_ioctl_master_t data;
+    int ret;
+
+    ret = ioctl(master->fd, EC_IOCTL_MASTER, &data);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to get master info: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    progress->slave_count = data.slave_count;
+    progress->scan_index = data.scan_index;
     return 0;
 }
 

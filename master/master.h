@@ -1,8 +1,6 @@
 /******************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -18,12 +16,6 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
  *
  *****************************************************************************/
 
@@ -43,11 +35,7 @@
 #include <linux/wait.h>
 #include <linux/kthread.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
 #include <linux/semaphore.h>
-#else
-#include <asm/semaphore.h>
-#endif
 
 #include "device.h"
 #include "domain.h"
@@ -196,11 +184,7 @@ struct ec_master {
     unsigned int reserved; /**< \a True, if the master is in use. */
 
     ec_cdev_t cdev; /**< Master character device. */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     struct device *class_device; /**< Master class device. */
-#else
-    struct class_device *class_device; /**< Master class device. */
-#endif
 
 #ifdef EC_RTDM
     ec_rtdm_dev_t rtdm_dev; /**< RTDM device. */
@@ -248,6 +232,7 @@ struct ec_master {
     ec_slave_t *dc_ref_clock; /**< DC reference clock slave. */
 
     unsigned int scan_busy; /**< Current scan state. */
+    unsigned int scan_index; /**< Index of slave currently scanned. */
     unsigned int allow_scan; /**< \a True, if slave scanning is allowed. */
     struct semaphore scan_sem; /**< Semaphore protecting the \a scan_busy
                                  variable and the \a allow_scan flag. */

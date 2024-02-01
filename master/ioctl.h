@@ -172,6 +172,7 @@ typedef struct {
 
 typedef struct {
     uint32_t slave_count;
+    uint32_t scan_index;
     uint32_t config_count;
     uint32_t domain_count;
     uint32_t eoe_handler_count;
