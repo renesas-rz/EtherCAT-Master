@@ -823,7 +823,7 @@ EC_PUBLIC_API int ecrt_master(
  *
  * \return 0 in case of success, else < 0
  */
-int ecrt_master_scan_progress(
+EC_PUBLIC_API int ecrt_master_scan_progress(
         ec_master_t *master, /**< EtherCAT master */
         ec_master_scan_progress_t *progress /**< Structure that will output
                                               the progress information. */
@@ -1672,7 +1672,7 @@ EC_PUBLIC_API ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
  *
  * \return New SoE request, or NULL on error.
  */
-ec_soe_request_t *ecrt_slave_config_create_soe_request(
+EC_PUBLIC_API ec_soe_request_t *ecrt_slave_config_create_soe_request(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t drive_no, /**< Drive number. */
         uint16_t idn, /**< Sercos ID-Number. */
@@ -2056,7 +2056,7 @@ void ecrt_soe_request_timeout(
  *
  * \return Pointer to the internal IDN data memory.
  */
-uint8_t *ecrt_soe_request_data(
+EC_PUBLIC_API uint8_t *ecrt_soe_request_data(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2068,7 +2068,7 @@ uint8_t *ecrt_soe_request_data(
  *
  * \return IDN data size in bytes.
  */
-size_t ecrt_soe_request_data_size(
+EC_PUBLIC_API size_t ecrt_soe_request_data_size(
         const ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2076,7 +2076,7 @@ size_t ecrt_soe_request_data_size(
  *
  * \return Request state.
  */
-ec_request_state_t ecrt_soe_request_state(
+EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
         ec_soe_request_t *req /**< SoE request. */
     );
 
@@ -2085,7 +2085,7 @@ ec_request_state_t ecrt_soe_request_state(
  * \attention This method may not be called while ecrt_soe_request_state()
  * returns EC_REQUEST_BUSY.
  */
-void ecrt_soe_request_write(
+EC_PUBLIC_API void ecrt_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2098,7 +2098,7 @@ void ecrt_soe_request_write(
  * ecrt_soe_request_data() must be considered as invalid while
  * ecrt_soe_request_state() returns EC_REQUEST_BUSY.
  */
-void ecrt_soe_request_read(
+EC_PUBLIC_API void ecrt_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
         );
 
