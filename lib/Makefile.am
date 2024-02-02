@@ -70,7 +70,10 @@ libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir) \
 # 3:0:2
 #
 libethercat_la_LDFLAGS = -version-info 3:0:2 \
+	-Wl,--version-script=$(srcdir)/libethercat.map \
 	-fvisibility=hidden
+
+libethercat_la_DEPENDENCIES = libethercat.map
 
 pkgconfig_DATA = libethercat.pc
 
