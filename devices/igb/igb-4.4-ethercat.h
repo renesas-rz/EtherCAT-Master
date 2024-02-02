@@ -41,6 +41,7 @@
 #include <linux/if_vlan.h>
 #include <linux/i2c.h>
 #include <linux/i2c-algo-bit.h>
+#include <linux/irq_work.h>
 #include <linux/pci.h>
 #include <linux/mdio.h>
 
@@ -474,6 +475,7 @@ struct igb_adapter {
 	/* EtherCAT device variables */
 	ec_device_t *ecdev;
 	unsigned long ec_watchdog_jiffies;
+	struct irq_work ec_watchdog_kicker;
 };
 
 #define IGB_FLAG_HAS_MSI		(1 << 0)
