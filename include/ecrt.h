@@ -548,9 +548,9 @@ typedef struct {
                               Zero means, that the default mapping shall be
                               used (this can only be done if the slave is
                               present at bus configuration time). */
-    ec_pdo_entry_info_t const *entries; /**< Array of PDO entries to map. Can either
-                                    be \a NULL, or must contain at
-                                    least \a n_entries values. */
+    ec_pdo_entry_info_t const *entries; /**< Array of PDO entries to map. Can
+                                          either be \a NULL, or must contain
+                                          at least \a n_entries values. */
 } ec_pdo_info_t;
 
 /****************************************************************************/
@@ -567,8 +567,8 @@ typedef struct {
                      but can also be \a 0xff to mark the end of the list. */
     ec_direction_t dir; /**< Sync manager direction. */
     unsigned int n_pdos; /**< Number of PDOs in \a pdos. */
-    ec_pdo_info_t const *pdos; /**< Array with PDOs to assign. This must contain
-                            at least \a n_pdos PDOs. */
+    ec_pdo_info_t const *pdos; /**< Array with PDOs to assign. This must
+                                 contain at least \a n_pdos PDOs. */
     ec_watchdog_mode_t watchdog_mode; /**< Watchdog mode. */
 } ec_sync_info_t;
 
@@ -1933,8 +1933,8 @@ EC_PUBLIC_API void ecrt_sdo_request_timeout(
  *
  * This function returns a pointer to the request's internal SDO data memory.
  *
- * - After a read operation was successful, integer data can be evaluated using
- *   the EC_READ_*() macros as usual. Example:
+ * - After a read operation was successful, integer data can be evaluated
+ *   using the EC_READ_*() macros as usual. Example:
  *   \code
  *   uint16_t value = EC_READ_U16(ecrt_sdo_request_data(sdo)));
  *   \endcode
