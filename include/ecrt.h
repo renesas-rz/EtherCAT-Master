@@ -2016,7 +2016,7 @@ EC_PUBLIC_API void ecrt_sdo_request_read(
  * ecrt_soe_request_state() returns EC_REQUEST_BUSY, this may lead to
  * unexpected results.
  */
-void ecrt_soe_request_idn(
+EC_PUBLIC_API void ecrt_soe_request_idn(
         ec_soe_request_t *req, /**< IDN request. */
         uint8_t drive_no, /**< SDO index. */
         uint16_t idn /**< SoE IDN. */
@@ -2030,7 +2030,7 @@ void ecrt_soe_request_idn(
  * The timeout is permanently stored in the request object and is valid until
  * the next call of this method.
  */
-void ecrt_soe_request_timeout(
+EC_PUBLIC_API void ecrt_soe_request_timeout(
         ec_soe_request_t *req, /**< SoE request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
