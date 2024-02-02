@@ -114,3 +114,17 @@ endif
 
 ethercat-config.cmake: $(srcdir)/ethercat-config.cmake.in Makefile
 	$(SED) -e 's,%libdir%,$(libdir),' -e 's,%includedir%,$(includedir),' $< > $@
+
+
+#-----------------------------------------------------------------------------
+
+.PHONY: symbol-version-check
+
+# check whether all symbols marked with EC_PUBLIC_API are listed in
+# libethercat.map
+
+symbol-version-check: libethercat.la
+	readelf --dyn-syms --wide $(builddir)/.libs/libethercat.so | \
+		awk '$$4 == "FUNC" && $$7 != "UND" && $$8 !~ /@LIBETHERCAT/ { print "Unversioned symbol: " $$8; err = 1; } END { exit err; }'
+
+#-----------------------------------------------------------------------------

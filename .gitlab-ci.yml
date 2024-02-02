@@ -18,6 +18,7 @@ build:
         - ./bootstrap
         - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat
         - make -j8 all modules
+        - make -C lib symbol-version-check
         - make DISTCHECK_CONFIGURE_FLAGS="--with-linux-dir=/usr/src/linux-obj/$(uname -i)/default" distcheck
         - make dist
         - mkdir test_dist && cd test_dist && tar xzf ../ethercat-*.tar.gz && cd ethercat-*/
