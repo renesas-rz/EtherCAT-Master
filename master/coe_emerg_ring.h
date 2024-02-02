@@ -63,7 +63,7 @@ int ec_coe_emerg_ring_size(ec_coe_emerg_ring_t *, size_t);
 void ec_coe_emerg_ring_push(ec_coe_emerg_ring_t *, const u8 *);
 int ec_coe_emerg_ring_pop(ec_coe_emerg_ring_t *, u8 *);
 int ec_coe_emerg_ring_clear_ring(ec_coe_emerg_ring_t *);
-int ec_coe_emerg_ring_overruns(ec_coe_emerg_ring_t *);
+int ec_coe_emerg_ring_overruns(const ec_coe_emerg_ring_t *);
 
 /****************************************************************************/
 

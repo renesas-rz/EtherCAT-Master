@@ -523,7 +523,7 @@ int ecrt_slave_config_emerg_clear(ec_slave_config_t *sc)
 
 /****************************************************************************/
 
-int ecrt_slave_config_emerg_overruns(ec_slave_config_t *sc)
+int ecrt_slave_config_emerg_overruns(const ec_slave_config_t *sc)
 {
     ec_ioctl_sc_emerg_t io;
     int ret;

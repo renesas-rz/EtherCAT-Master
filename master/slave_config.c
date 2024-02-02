@@ -1121,7 +1121,7 @@ int ecrt_slave_config_emerg_clear(ec_slave_config_t *sc)
 
 /****************************************************************************/
 
-int ecrt_slave_config_emerg_overruns(ec_slave_config_t *sc)
+int ecrt_slave_config_emerg_overruns(const ec_slave_config_t *sc)
 {
     return ec_coe_emerg_ring_overruns(&sc->emerg_ring);
 }

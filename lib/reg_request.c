@@ -48,14 +48,14 @@ void ec_reg_request_clear(ec_reg_request_t *reg)
  * Application interface.
  ****************************************************************************/
 
-uint8_t *ecrt_reg_request_data(ec_reg_request_t *reg)
+uint8_t *ecrt_reg_request_data(const ec_reg_request_t *reg)
 {
     return reg->data;
 }
 
 /****************************************************************************/
 
-ec_request_state_t ecrt_reg_request_state(ec_reg_request_t *reg)
+ec_request_state_t ecrt_reg_request_state(const ec_reg_request_t *reg)
 {
     ec_ioctl_reg_request_t io;
     int ret;
