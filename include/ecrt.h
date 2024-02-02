@@ -397,10 +397,10 @@ typedef struct  {
  * \see ecrt_master().
  */
 typedef struct {
-   unsigned int slave_count; /**< Number of slaves in the bus. */
-   unsigned int link_up : 1; /**< \a true, if the network link is up. */
-   uint8_t scan_busy; /**< \a true, while the master is scanning the bus */
-   uint64_t app_time; /**< Application time. */
+    unsigned int slave_count; /**< Number of slaves in the bus. */
+    unsigned int link_up : 1; /**< \a true, if the network link is up. */
+    uint8_t scan_busy; /**< \a true, while the master is scanning the bus */
+    uint64_t app_time; /**< Application time. */
 } ec_master_info_t;
 
 /****************************************************************************/
@@ -412,10 +412,11 @@ typedef struct {
  * \see ecrt_master_scan_progress().
  */
 typedef struct {
-   unsigned int slave_count; /**< Number of slaves detected. */
-   unsigned int scan_index; /**< Index of the slave that is currently scanned.
-                              If it is less than the \a slave_count, the
-                              network scan is in progress. */
+    unsigned int slave_count; /**< Number of slaves detected. */
+    unsigned int scan_index; /**< Index of the slave that is currently
+                               scanned.  If it is less than the \a
+                               slave_count, the network scan is in progress.
+                              */
 } ec_master_scan_progress_t;
 
 /****************************************************************************/
@@ -589,8 +590,8 @@ typedef struct {
                        (byte-)offset in the process data. */
     unsigned int *bit_position; /**< Pointer to a variable to store a bit
                                   position (0-7) within the \a offset. Can be
-                                  NULL, in which case an error is raised if the
-                                  PDO entry does not byte-align. */
+                                  NULL, in which case an error is raised if
+                                  the PDO entry does not byte-align. */
 } ec_pdo_entry_reg_t;
 
 /****************************************************************************/
