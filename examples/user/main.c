@@ -100,7 +100,7 @@ static unsigned int blink = 0;
 
 // Analog in --------------------------
 
-static ec_pdo_entry_info_t el3102_pdo_entries[] = {
+static const ec_pdo_entry_info_t el3102_pdo_entries[] = {
     {0x3101, 1,  8}, // channel 1 status
     {0x3101, 2, 16}, // channel 1 value
     {0x3102, 1,  8}, // channel 2 status
@@ -109,12 +109,12 @@ static ec_pdo_entry_info_t el3102_pdo_entries[] = {
     {0x6401, 2, 16}  // channel 2 value (alt.)
 };
 
-static ec_pdo_info_t el3102_pdos[] = {
+static const ec_pdo_info_t el3102_pdos[] = {
     {0x1A00, 2, el3102_pdo_entries},
     {0x1A01, 2, el3102_pdo_entries + 2}
 };
 
-static ec_sync_info_t el3102_syncs[] = {
+static const ec_sync_info_t el3102_syncs[] = {
     {2, EC_DIR_OUTPUT},
     {3, EC_DIR_INPUT, 2, el3102_pdos},
     {0xff}
@@ -122,17 +122,17 @@ static ec_sync_info_t el3102_syncs[] = {
 
 // Analog out -------------------------
 
-static ec_pdo_entry_info_t el4102_pdo_entries[] = {
+static const ec_pdo_entry_info_t el4102_pdo_entries[] = {
     {0x3001, 1, 16}, // channel 1 value
     {0x3002, 1, 16}, // channel 2 value
 };
 
-static ec_pdo_info_t el4102_pdos[] = {
+static const ec_pdo_info_t el4102_pdos[] = {
     {0x1600, 1, el4102_pdo_entries},
     {0x1601, 1, el4102_pdo_entries + 1}
 };
 
-static ec_sync_info_t el4102_syncs[] = {
+static const ec_sync_info_t el4102_syncs[] = {
     {2, EC_DIR_OUTPUT, 2, el4102_pdos},
     {3, EC_DIR_INPUT},
     {0xff}
@@ -140,21 +140,21 @@ static ec_sync_info_t el4102_syncs[] = {
 
 // Digital out ------------------------
 
-static ec_pdo_entry_info_t el2004_channels[] = {
+static const ec_pdo_entry_info_t el2004_channels[] = {
     {0x3001, 1, 1}, // Value 1
     {0x3001, 2, 1}, // Value 2
     {0x3001, 3, 1}, // Value 3
     {0x3001, 4, 1}  // Value 4
 };
 
-static ec_pdo_info_t el2004_pdos[] = {
+static const ec_pdo_info_t el2004_pdos[] = {
     {0x1600, 1, &el2004_channels[0]},
     {0x1601, 1, &el2004_channels[1]},
     {0x1602, 1, &el2004_channels[2]},
     {0x1603, 1, &el2004_channels[3]}
 };
 
-static ec_sync_info_t el2004_syncs[] = {
+static const ec_sync_info_t el2004_syncs[] = {
     {0, EC_DIR_OUTPUT, 4, el2004_pdos},
     {1, EC_DIR_INPUT},
     {0xff}

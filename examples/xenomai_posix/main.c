@@ -86,21 +86,21 @@ const static ec_pdo_entry_reg_t domain1_regs[] = {
  * Revision number: 0x00100000
  */
 
-ec_pdo_entry_info_t slave_1_pdo_entries[] = {
+const ec_pdo_entry_info_t slave_1_pdo_entries[] = {
    {0x7000, 0x01, 1}, /* Output */
    {0x7010, 0x01, 1}, /* Output */
    {0x7020, 0x01, 1}, /* Output */
    {0x7030, 0x01, 1}, /* Output */
 };
 
-ec_pdo_info_t slave_1_pdos[] = {
+const ec_pdo_info_t slave_1_pdos[] = {
    {0x1600, 1, slave_1_pdo_entries + 0}, /* Channel 1 */
    {0x1601, 1, slave_1_pdo_entries + 1}, /* Channel 2 */
    {0x1602, 1, slave_1_pdo_entries + 2}, /* Channel 3 */
    {0x1603, 1, slave_1_pdo_entries + 3}, /* Channel 4 */
 };
 
-ec_sync_info_t slave_1_syncs[] = {
+const ec_sync_info_t slave_1_syncs[] = {
    {0, EC_DIR_OUTPUT, 4, slave_1_pdos + 0, EC_WD_ENABLE},
    {0xff}
 };

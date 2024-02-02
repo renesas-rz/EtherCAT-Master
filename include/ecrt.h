@@ -547,7 +547,7 @@ typedef struct {
                               Zero means, that the default mapping shall be
                               used (this can only be done if the slave is
                               present at bus configuration time). */
-    ec_pdo_entry_info_t *entries; /**< Array of PDO entries to map. Can either
+    ec_pdo_entry_info_t const *entries; /**< Array of PDO entries to map. Can either
                                     be \a NULL, or must contain at
                                     least \a n_entries values. */
 } ec_pdo_info_t;
@@ -566,7 +566,7 @@ typedef struct {
                      but can also be \a 0xff to mark the end of the list. */
     ec_direction_t dir; /**< Sync manager direction. */
     unsigned int n_pdos; /**< Number of PDOs in \a pdos. */
-    ec_pdo_info_t *pdos; /**< Array with PDOs to assign. This must contain
+    ec_pdo_info_t const *pdos; /**< Array with PDOs to assign. This must contain
                             at least \a n_pdos PDOs. */
     ec_watchdog_mode_t watchdog_mode; /**< Watchdog mode. */
 } ec_sync_info_t;
