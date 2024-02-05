@@ -3593,9 +3593,8 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
         return -ENOENT;
     }
 
-    ret = ec_sdo_request_alloc(req, data.size);
-    if (ret)
-        return ret;
+    if (data.size > req->mem_size)
+        return -ENOMEM;
 
     if (ec_copy_from_user(req->data, (void __user *) data.data,
                           data.size, ctx))
@@ -3843,9 +3842,8 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
         return -ENOENT;
     }
 
-    ret = ec_soe_request_alloc(req, data.size);
-    if (ret)
-        return ret;
+    if (data.size > req->mem_size)
+        return -ENOMEM;
 
     if (ec_copy_from_user(req->data, (void __user *) data.data,
                           data.size, ctx))
