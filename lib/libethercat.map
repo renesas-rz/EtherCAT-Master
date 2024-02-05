@@ -104,4 +104,10 @@ LIBETHERCAT_1.5.3 {
 LIBETHERCAT_1.6 {
 	global:
 		ecrt_master_scan_progress;
+		ecrt_slave_config_eoe_link;
+		ecrt_slave_config_eoe_addr;
+		ecrt_slave_config_eoe_subnet;
+		ecrt_slave_config_eoe_default;
+		ecrt_slave_config_eoe_dns;
+		ecrt_slave_config_eoe_name;
 } LIBETHERCAT_1.5.3;

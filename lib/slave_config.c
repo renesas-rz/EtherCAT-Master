@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2019  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT master userspace library.
  *
@@ -881,6 +881,135 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
     ret = ioctl(sc->master->fd, EC_IOCTL_SC_FLAG, &io);
     if (EC_IOCTL_IS_ERROR(ret)) {
         fprintf(stderr, "Failed to configure feature flag: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
+        const unsigned char *mac_address)
+{
+    ec_ioctl_eoe_ip_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    memcpy(io.mac_address, mac_address, EC_ETH_ALEN);
+    io.mac_address_included = 1;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_EOE_IP_PARAM, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure EoE MAC address: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_addr(ec_slave_config_t *sc, uint32_t ip_address)
+{
+    ec_ioctl_eoe_ip_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    io.ip_address = ip_address;
+    io.ip_address_included = 1;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_EOE_IP_PARAM, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure EoE IP address: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_subnet(ec_slave_config_t *sc, uint32_t subnet_mask)
+{
+    ec_ioctl_eoe_ip_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    io.subnet_mask = subnet_mask;
+    io.subnet_mask_included = 1;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_EOE_IP_PARAM, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure EoE subnet mask: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_default(ec_slave_config_t *sc,
+        uint32_t gateway_address)
+{
+    ec_ioctl_eoe_ip_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    io.gateway = gateway_address;
+    io.gateway_included = 1;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_EOE_IP_PARAM, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure EoE default gateway: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_dns(ec_slave_config_t *sc, uint32_t dns_address)
+{
+    ec_ioctl_eoe_ip_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    io.dns = dns_address;
+    io.dns_included = 1;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_EOE_IP_PARAM, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure EoE DNS address: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_name(ec_slave_config_t *sc,
+        const unsigned char *name)
+{
+    ec_ioctl_eoe_ip_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    strncpy(io.name, (const char *) name, EC_MAX_HOSTNAME_SIZE - 1);
+    io.name_included = 1;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_EOE_IP_PARAM, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure EoE hostname: %s\n",
                 strerror(EC_IOCTL_ERRNO(ret)));
         return -EC_IOCTL_ERRNO(ret);
     }

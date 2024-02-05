@@ -88,7 +88,7 @@ void CommandIp::execute(const StringVector &args)
         throwInvalidUsageException(err);
     }
 
-    ec_ioctl_slave_eoe_ip_t io = {};
+    ec_ioctl_eoe_ip_t io = {};
 
     for (unsigned int argIdx = 0; argIdx < args.size(); argIdx += 2) {
         string arg = args[argIdx];
@@ -182,7 +182,7 @@ void CommandIp::parseMac(unsigned char mac[EC_ETH_ALEN], const string &str)
 
 /****************************************************************************/
 
-void CommandIp::parseIpv4Prefix(ec_ioctl_slave_eoe_ip_t *io,
+void CommandIp::parseIpv4Prefix(ec_ioctl_eoe_ip_t *io,
         const string &str)
 {
     size_t pos = str.find('/');

@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -28,15 +28,20 @@
 
 /****************************************************************************/
 
-#include <linux/module.h>
-#include <linux/slab.h>
+#include "slave_config.h"
 
 #include "globals.h"
 #include "master.h"
 #include "voe_handler.h"
 #include "flag.h"
+#include "ioctl.h"
 
-#include "slave_config.h"
+#ifdef EC_EOE
+#include "eoe_request.h"
+#endif
+
+#include <linux/module.h>
+#include <linux/slab.h>
 
 /****************************************************************************/
 
@@ -84,6 +89,10 @@ void ec_slave_config_init(
     INIT_LIST_HEAD(&sc->voe_handlers);
     INIT_LIST_HEAD(&sc->soe_configs);
     INIT_LIST_HEAD(&sc->flags);
+
+#ifdef EC_EOE
+    ec_eoe_request_init(&sc->eoe_ip_param_request);
+#endif
 
     ec_coe_emerg_ring_init(&sc->emerg_ring, sc);
 }
@@ -1425,6 +1434,63 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
 
 /****************************************************************************/
 
+int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
+        const unsigned char *mac_address)
+{
+    memcpy(sc->eoe_ip_param_request.mac_address, mac_address, EC_ETH_ALEN);
+    sc->eoe_ip_param_request.mac_address_included = 1;
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_addr(ec_slave_config_t *sc, uint32_t ip_address)
+{
+    sc->eoe_ip_param_request.ip_address = ip_address;
+    sc->eoe_ip_param_request.ip_address_included = 1;
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_subnet(ec_slave_config_t *sc, uint32_t subnet_mask)
+{
+    sc->eoe_ip_param_request.subnet_mask = subnet_mask;
+    sc->eoe_ip_param_request.subnet_mask_included = 1;
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_default(ec_slave_config_t *sc,
+        uint32_t gateway_address)
+{
+    sc->eoe_ip_param_request.gateway = gateway_address;
+    sc->eoe_ip_param_request.gateway_included = 1;
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_dns(ec_slave_config_t *sc, uint32_t dns_address)
+{
+    sc->eoe_ip_param_request.dns = dns_address;
+    sc->eoe_ip_param_request.dns_included = 1;
+    return 0;
+}
+
+/****************************************************************************/
+
+int ecrt_slave_config_eoe_name(ec_slave_config_t *sc,
+        const unsigned char *name)
+{
+    strncpy(sc->eoe_ip_param_request.name, name, EC_MAX_HOSTNAME_SIZE);
+    sc->eoe_ip_param_request.name_included = 1;
+    return 0;
+}
+
+/****************************************************************************/
+
 /** \cond */
 
 EXPORT_SYMBOL(ecrt_slave_config_sync_manager);
@@ -1453,6 +1519,12 @@ EXPORT_SYMBOL(ecrt_slave_config_create_reg_request);
 EXPORT_SYMBOL(ecrt_slave_config_state);
 EXPORT_SYMBOL(ecrt_slave_config_idn);
 EXPORT_SYMBOL(ecrt_slave_config_flag);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_link);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_addr);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_subnet);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_default);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_dns);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_name);
 
 /** \endcond */
 

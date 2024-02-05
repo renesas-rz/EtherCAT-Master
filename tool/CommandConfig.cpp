@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -147,6 +147,7 @@ void CommandConfig::showDetailedConfigs(
     ec_ioctl_config_sdo_t sdo;
     ec_ioctl_config_idn_t idn;
     ec_ioctl_config_flag_t flag;
+    ec_ioctl_eoe_ip_t ip;
     string indent(doIndent ? "  " : "");
 
     for (configIter = configList.begin();
@@ -297,6 +298,58 @@ void CommandConfig::showDetailedConfigs(
             }
         } else {
             cout << indent << "  None." << endl;
+        }
+
+        m.getIpParam(&ip, configIter->config_index);
+        if (ip.mac_address_included or ip.ip_address_included or
+                ip.subnet_mask_included or ip.gateway_included or
+                ip.dns_included or ip.name_included) {
+            cout << indent << "EoE IP parameters:" << endl;
+            if (ip.mac_address_included) {
+                cout << indent << "  MAC address: "
+                    << hex << setfill('0') << setw(2)
+                    << ip.mac_address[0] << ":"
+                    << ip.mac_address[1] << ":"
+                    << ip.mac_address[2] << ":"
+                    << ip.mac_address[3] << ":"
+                    << ip.mac_address[4] << ":"
+                    << ip.mac_address[5] << dec << endl;
+            }
+            if (ip.ip_address_included) {
+                const uint8_t *addr = (const uint8_t *) &ip.ip_address;
+                cout << indent << "  IP address: "
+                    << (unsigned int) addr[0] << "."
+                    << (unsigned int) addr[1] << "."
+                    << (unsigned int) addr[2] << "."
+                    << (unsigned int) addr[3] << endl;
+            }
+            if (ip.subnet_mask_included) {
+                const uint8_t *addr = (const uint8_t *) &ip.subnet_mask;
+                cout << indent << "  Subnet mask: "
+                    << (unsigned int) addr[0] << "."
+                    << (unsigned int) addr[1] << "."
+                    << (unsigned int) addr[2] << "."
+                    << (unsigned int) addr[3] << endl;
+            }
+            if (ip.gateway_included) {
+                const uint8_t *addr = (const uint8_t *) &ip.gateway;
+                cout << indent << "  Default gateway: "
+                    << (unsigned int) addr[0] << "."
+                    << (unsigned int) addr[1] << "."
+                    << (unsigned int) addr[2] << "."
+                    << (unsigned int) addr[3] << endl;
+            }
+            if (ip.dns_included) {
+                const uint8_t *addr = (const uint8_t *) &ip.dns;
+                cout << indent << "  DNS server address: "
+                    << (unsigned int) addr[0] << "."
+                    << (unsigned int) addr[1] << "."
+                    << (unsigned int) addr[2] << "."
+                    << (unsigned int) addr[3] << endl;
+            }
+            if (ip.name_included) {
+                cout << indent << "  Hostname:" << ip.name << endl;
+            }
         }
 
         if (configIter->dc_assign_activate) {

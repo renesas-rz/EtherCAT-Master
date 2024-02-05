@@ -37,8 +37,7 @@ class CommandIp:
 
     protected:
         void parseMac(unsigned char [6], const string &);
-        void parseIpv4Prefix(ec_ioctl_slave_eoe_ip_t *,
-                const string &);
+        void parseIpv4Prefix(ec_ioctl_eoe_ip_t *, const string &);
         void resolveIpv4(uint32_t *, const string &);
 };
 

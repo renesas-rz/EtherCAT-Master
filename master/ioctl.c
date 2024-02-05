@@ -1578,6 +1578,74 @@ static ATTRIBUTES int ec_ioctl_config_flag(
 
 #ifdef EC_EOE
 
+/** Get configured EoE IP parameters for a given slave configuration.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_config_ip(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg /**< ioctl() argument. */
+        )
+{
+    ec_ioctl_eoe_ip_t *ioctl;
+    const ec_slave_config_t *sc;
+
+    if (!(ioctl = kmalloc(sizeof(*ioctl), GFP_KERNEL))) {
+        return -ENOMEM;
+    }
+
+    if (copy_from_user(ioctl, (void __user *) arg, sizeof(*ioctl))) {
+        kfree(ioctl);
+        return -EFAULT;
+    }
+
+    if (down_interruptible(&master->master_sem)) {
+        kfree(ioctl);
+        return -EINTR;
+    }
+
+    if (!(sc = ec_master_get_config_const(
+                    master, ioctl->config_index))) {
+        up(&master->master_sem);
+        EC_MASTER_ERR(master, "Slave config %u does not exist!\n",
+                ioctl->config_index);
+        kfree(ioctl);
+        return -EINVAL;
+    }
+
+    const ec_eoe_request_t *req = &sc->eoe_ip_param_request;
+
+    ioctl->mac_address_included = req->mac_address_included;
+    ioctl->ip_address_included = req->ip_address_included;
+    ioctl->subnet_mask_included = req->subnet_mask_included;
+    ioctl->gateway_included = req->gateway_included;
+    ioctl->dns_included = req->dns_included;
+    ioctl->name_included = req->name_included;
+
+    memcpy(ioctl->mac_address, req->mac_address, EC_ETH_ALEN);
+    ioctl->ip_address = req->ip_address;
+    ioctl->subnet_mask = req->subnet_mask;
+    ioctl->gateway = req->gateway;
+    ioctl->dns = req->dns;
+    strncpy(ioctl->name, req->name, EC_MAX_HOSTNAME_SIZE);
+
+    up(&master->master_sem);
+
+    if (copy_to_user((void __user *) arg, ioctl, sizeof(*ioctl))) {
+        kfree(ioctl);
+        return -EFAULT;
+    }
+
+    kfree(ioctl);
+    return 0;
+}
+
+#endif
+
+/****************************************************************************/
+
+#ifdef EC_EOE
+
 /** Get EoE handler information.
  *
  * \return Zero on success, otherwise a negative error code.
@@ -1640,7 +1708,7 @@ static ATTRIBUTES int ec_ioctl_slave_eoe_ip_param(
         void *arg /**< ioctl() argument. */
         )
 {
-    ec_ioctl_slave_eoe_ip_t io;
+    ec_ioctl_eoe_ip_t io;
     ec_eoe_request_t req;
     ec_slave_t *slave;
 
@@ -1658,7 +1726,7 @@ static ATTRIBUTES int ec_ioctl_slave_eoe_ip_param(
     req.dns_included = io.dns_included;
     req.name_included = io.name_included;
 
-    memcpy(req.mac_address, io.mac_address, ETH_ALEN);
+    memcpy(req.mac_address, io.mac_address, EC_ETH_ALEN);
     req.ip_address = io.ip_address;
     req.subnet_mask = io.subnet_mask;
     req.gateway = io.gateway;
@@ -3230,6 +3298,67 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
 
     ret = ecrt_slave_config_flag(sc, key, ioctl.value);
     kfree(key);
+    return ret;
+}
+
+/****************************************************************************/
+
+/** Configures EoE IP parameters.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_sc_ip(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg, /**< ioctl() argument. */
+        ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
+        )
+{
+    ec_ioctl_eoe_ip_t io;
+    ec_slave_config_t *sc;
+    uint8_t *key;
+    int ret;
+
+    if (unlikely(!ctx->requested)) {
+        return -EPERM;
+    }
+
+    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+        return -EFAULT;
+    }
+
+    if (down_interruptible(&master->master_sem)) {
+        kfree(key);
+        return -EINTR;
+    }
+
+    if (!(sc = ec_master_get_config(master, io.config_index))) {
+        up(&master->master_sem);
+        kfree(key);
+        return -ENOENT;
+    }
+
+    up(&master->master_sem); /** \todo sc could be invalidated */
+
+    /* the kernel versions of the EoE set IP methods never fail. */
+    if (io.mac_address_included) {
+        ecrt_slave_config_eoe_link(sc, io.mac_address);
+    }
+    if (io.ip_address_included) {
+        ecrt_slave_config_eoe_addr(sc, io.ip_address);
+    }
+    if (io.subnet_mask_included) {
+        ecrt_slave_config_eoe_subnet(sc, io.subnet_mask);
+    }
+    if (io.gateway_included) {
+        ecrt_slave_config_eoe_default(sc, io.gateway);
+    }
+    if (io.dns_included) {
+        ecrt_slave_config_eoe_dns(sc, io.dns);
+    }
+    if (io.name_included) {
+        ecrt_slave_config_eoe_name(sc, io.name);
+    }
+
     return ret;
 }
 
@@ -5137,6 +5266,9 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_config_flag(master, arg);
             break;
 #ifdef EC_EOE
+        case EC_IOCTL_CONFIG_EOE_IP_PARAM:
+            ret = ec_ioctl_config_ip(master, arg);
+            break;
         case EC_IOCTL_EOE_HANDLER:
             ret = ec_ioctl_eoe_handler(master, arg);
             break;
@@ -5309,6 +5441,15 @@ static long ec_ioctl_nrt
             }
             ret = ec_ioctl_sc_flag(master, arg, ctx);
             break;
+#ifdef EC_EOE
+        case EC_IOCTL_SC_EOE_IP_PARAM:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_ip(master, arg, ctx);
+            break;
+#endif
         case EC_IOCTL_DOMAIN_SIZE:
             ret = ec_ioctl_domain_size(master, arg, ctx);
             break;
