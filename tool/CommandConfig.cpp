@@ -147,7 +147,9 @@ void CommandConfig::showDetailedConfigs(
     ec_ioctl_config_sdo_t sdo;
     ec_ioctl_config_idn_t idn;
     ec_ioctl_config_flag_t flag;
+#ifdef EC_EOE
     ec_ioctl_eoe_ip_t ip;
+#endif
     string indent(doIndent ? "  " : "");
 
     for (configIter = configList.begin();
@@ -300,6 +302,7 @@ void CommandConfig::showDetailedConfigs(
             cout << indent << "  None." << endl;
         }
 
+#ifdef EC_EOE
         m.getIpParam(&ip, configIter->config_index);
         if (ip.mac_address_included or ip.ip_address_included or
                 ip.subnet_mask_included or ip.gateway_included or
@@ -351,6 +354,7 @@ void CommandConfig::showDetailedConfigs(
                 cout << indent << "  Hostname:" << ip.name << endl;
             }
         }
+#endif
 
         if (configIter->dc_assign_activate) {
             int i;

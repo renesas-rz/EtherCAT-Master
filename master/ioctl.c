@@ -3303,6 +3303,8 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
 
 /****************************************************************************/
 
+#ifdef EC_EOE
+
 /** Configures EoE IP parameters.
  *
  * \return Zero on success, otherwise a negative error code.
@@ -3361,6 +3363,8 @@ static ATTRIBUTES int ec_ioctl_sc_ip(
 
     return ret;
 }
+
+#endif
 
 /****************************************************************************/
 

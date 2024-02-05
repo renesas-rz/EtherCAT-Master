@@ -890,6 +890,8 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
 
 /****************************************************************************/
 
+#ifdef EC_EOE
+
 int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
         const unsigned char *mac_address)
 {
@@ -1016,5 +1018,7 @@ int ecrt_slave_config_eoe_name(ec_slave_config_t *sc,
 
     return 0;
 }
+
+#endif // EC_EOE
 
 /****************************************************************************/

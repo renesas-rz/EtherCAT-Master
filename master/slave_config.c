@@ -1434,6 +1434,8 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
 
 /****************************************************************************/
 
+#ifdef EC_EOE
+
 int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
         const unsigned char *mac_address)
 {
@@ -1489,6 +1491,8 @@ int ecrt_slave_config_eoe_name(ec_slave_config_t *sc,
     return 0;
 }
 
+#endif
+
 /****************************************************************************/
 
 /** \cond */
@@ -1519,12 +1523,14 @@ EXPORT_SYMBOL(ecrt_slave_config_create_reg_request);
 EXPORT_SYMBOL(ecrt_slave_config_state);
 EXPORT_SYMBOL(ecrt_slave_config_idn);
 EXPORT_SYMBOL(ecrt_slave_config_flag);
+#ifdef EOE
 EXPORT_SYMBOL(ecrt_slave_config_eoe_link);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_addr);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_subnet);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_default);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_dns);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_name);
+#endif
 
 /** \endcond */
 
