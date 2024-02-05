@@ -875,7 +875,7 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
         return -ENOMEM;
     }
 
-    strcpy(io.key, key);
+    strcpy(io.key, key); // no strncpy, buffer is alloc'ed with strlen
     io.value = value;
 
     ret = ioctl(sc->master->fd, EC_IOCTL_SC_FLAG, &io);
