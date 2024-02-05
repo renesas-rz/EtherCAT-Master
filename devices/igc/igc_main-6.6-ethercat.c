@@ -7128,7 +7128,7 @@ static void igc_remove(struct pci_dev *pdev)
 
 	if (adapter->ecdev) {
 		ecdev_close(adapter->ecdev);
-		irq_work_sync(&adapter->irq_work);
+		irq_work_sync(&adapter->ec_watchdog_kicker);
 		ecdev_withdraw(adapter->ecdev);
 	}
 
