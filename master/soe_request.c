@@ -279,7 +279,7 @@ void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
 
 /****************************************************************************/
 
-uint8_t *ecrt_soe_request_data(ec_soe_request_t *req)
+uint8_t *ecrt_soe_request_data(const ec_soe_request_t *req)
 {
     return req->data;
 }

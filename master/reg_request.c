@@ -75,7 +75,7 @@ void ec_reg_request_clear(
  * Application interface.
  ****************************************************************************/
 
-uint8_t *ecrt_reg_request_data(ec_reg_request_t *reg)
+uint8_t *ecrt_reg_request_data(const ec_reg_request_t *reg)
 {
     return reg->data;
 }

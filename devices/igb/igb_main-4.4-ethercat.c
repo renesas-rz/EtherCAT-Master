@@ -2126,6 +2126,14 @@ static const struct net_device_ops igb_netdev_ops = {
 	.ndo_features_check	= passthru_features_check,
 };
 
+static void ec_kick_watchdog(struct irq_work *work)
+{
+	struct igb_adapter *adapter =
+		container_of(work, struct igb_adapter, ec_watchdog_kicker);
+
+	schedule_work(&adapter->watchdog_task);
+}
+
 /**
 * ec_poll - EtherCAT poll routine
 * @netdev: net device structure
@@ -2140,12 +2148,8 @@ void ec_poll(struct net_device *netdev)
 	int budget = 64;
 
 	if (jiffies - adapter->ec_watchdog_jiffies >= 2 * HZ) {
-		struct e1000_hw *hw = &adapter->hw;
-		bool link;
-		hw->mac.get_link_status = true;
-		link = igb_has_link(adapter);
-		ecdev_set_link(adapter->ecdev, link);
 		adapter->ec_watchdog_jiffies = jiffies;
+		irq_work_queue(&adapter->ec_watchdog_kicker);
 	}
 
 	for (i = 0; i < adapter->num_q_vectors; i++) {
@@ -2605,6 +2609,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	adapter->ecdev = ecdev_offer(netdev, ec_poll, THIS_MODULE);
 	if (adapter->ecdev) {
+		init_irq_work(&adapter->ec_watchdog_kicker, ec_kick_watchdog);
 		err = ecdev_open(adapter->ecdev);
 		if (err) {
 			ecdev_withdraw(adapter->ecdev);
@@ -2868,6 +2873,7 @@ static void igb_remove(struct pci_dev *pdev)
 
 	if (adapter->ecdev) {
 		ecdev_close(adapter->ecdev);
+		irq_work_sync(&adapter->ec_watchdog_kicker);
 		ecdev_withdraw(adapter->ecdev);
 	}
 
@@ -4336,7 +4342,15 @@ static void igb_watchdog_task(struct work_struct *work)
 	int i;
 	u32 connsw;
 
+	if (adapter->ecdev)
+		hw->mac.get_link_status = true;
+
 	link = igb_has_link(adapter);
+
+	if (adapter->ecdev) {
+		ecdev_set_link(adapter->ecdev, link);
+		return;
+	}
 
 	if (adapter->flags & IGB_FLAG_NEED_LINK_UPDATE) {
 		if (time_after(jiffies, (adapter->link_check_timeout + HZ)))

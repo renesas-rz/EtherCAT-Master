@@ -33,6 +33,7 @@
 #include <linux/in.h>
 #include <linux/ip.h>
 #include <linux/ipv6.h>
+#include <linux/irq_work.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
 #include <net/pkt_sched.h>
@@ -304,6 +305,7 @@ struct e1000_adapter {
 
 	ec_device_t *ecdev;
 	unsigned long ec_watchdog_jiffies;
+	struct irq_work ec_watchdog_kicker;
 };
 
 enum e1000_state_t {

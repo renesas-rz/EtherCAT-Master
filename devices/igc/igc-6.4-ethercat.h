@@ -5,6 +5,7 @@
 #define _IGC_H_
 #include "../ecdev.h"
 
+#include <linux/irq_work.h>
 #include <linux/kobject.h>
 #include <linux/pci.h>
 #include <linux/netdevice.h>
@@ -268,6 +269,7 @@ struct igc_adapter {
 	/* EtherCAT device variables */
 	ec_device_t *ecdev;
 	unsigned long ec_watchdog_jiffies;
+	struct irq_work ec_watchdog_kicker;
 };
 
 void igc_up(struct igc_adapter *adapter);

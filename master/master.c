@@ -2769,7 +2769,8 @@ void ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
 
 /****************************************************************************/
 
-int ecrt_master_reference_clock_time(ec_master_t *master, uint32_t *time)
+int ecrt_master_reference_clock_time(const ec_master_t *master,
+        uint32_t *time)
 {
     if (!master->dc_ref_clock) {
         return -ENXIO;
@@ -2829,7 +2830,7 @@ void ecrt_master_sync_monitor_queue(ec_master_t *master)
 
 /****************************************************************************/
 
-uint32_t ecrt_master_sync_monitor_process(ec_master_t *master)
+uint32_t ecrt_master_sync_monitor_process(const ec_master_t *master)
 {
     if (master->sync_mon_datagram.state == EC_DATAGRAM_RECEIVED) {
         return EC_READ_U32(master->sync_mon_datagram.data) & 0x7fffffff;
@@ -2841,7 +2842,7 @@ uint32_t ecrt_master_sync_monitor_process(ec_master_t *master)
 /****************************************************************************/
 
 int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
-        uint16_t index, uint8_t subindex, uint8_t *data,
+        uint16_t index, uint8_t subindex, const uint8_t *data,
         size_t data_size, uint32_t *abort_code)
 {
     ec_sdo_request_t request;
@@ -2920,7 +2921,7 @@ int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
 /****************************************************************************/
 
 int ecrt_master_sdo_download_complete(ec_master_t *master,
-        uint16_t slave_position, uint16_t index, uint8_t *data,
+        uint16_t slave_position, uint16_t index, const uint8_t *data,
         size_t data_size, uint32_t *abort_code)
 {
     ec_sdo_request_t request;
@@ -3084,7 +3085,7 @@ int ecrt_master_sdo_upload(ec_master_t *master, uint16_t slave_position,
 /****************************************************************************/
 
 int ecrt_master_write_idn(ec_master_t *master, uint16_t slave_position,
-        uint8_t drive_no, uint16_t idn, uint8_t *data, size_t data_size,
+        uint8_t drive_no, uint16_t idn, const uint8_t *data, size_t data_size,
         uint16_t *error_code)
 {
     ec_soe_request_t request;

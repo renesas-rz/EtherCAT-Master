@@ -40,6 +40,11 @@ SUBDIRS += \
 	xenomai \
 	xenomai_posix
 endif
+if ENABLE_XENOMAI_V3
+SUBDIRS += \
+	xenomai \
+	xenomai_posix
+endif
 
 if ENABLE_RTAI
 SUBDIRS += \

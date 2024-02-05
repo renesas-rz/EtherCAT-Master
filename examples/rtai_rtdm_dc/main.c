@@ -38,7 +38,7 @@ RT_TASK *task;
 
 static unsigned int cycle_ns = 1000000; /* 1 ms */
 
-static int run = 1;
+static volatile sig_atomic_t run = 1;
 
 /****************************************************************************/
 

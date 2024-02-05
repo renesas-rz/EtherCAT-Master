@@ -4,8 +4,16 @@ vim: spelllang=en spell tw=78
 
 -------------------------------------------------------------------------------
 
+Changes in 1.6.0:
+
+* Added all native Ethernet drivers for kernels 5.14 and 6.1.
+* Dropped support for kernels < 3.0.
+* Allow to query the scanning progress via API.
+* Added EoE set IP command via command-line-tool.
+
 Changes since 1.5.2:
 
+* Added feature flag API.
 * Fixed FoE timeout calculation bug.
 
 Changes in 1.5.2:

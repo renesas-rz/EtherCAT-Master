@@ -180,7 +180,7 @@
 
 /** EtherCAT realtime interface minor version number.
  */
-#define ECRT_VER_MINOR 5
+#define ECRT_VER_MINOR 6
 
 /** EtherCAT realtime interface version word generator.
  */
@@ -409,10 +409,10 @@ typedef struct  {
  * \see ecrt_master().
  */
 typedef struct {
-   unsigned int slave_count; /**< Number of slaves in the bus. */
-   unsigned int link_up : 1; /**< \a true, if the network link is up. */
-   uint8_t scan_busy; /**< \a true, while the master is scanning the bus */
-   uint64_t app_time; /**< Application time. */
+    unsigned int slave_count; /**< Number of slaves in the bus. */
+    unsigned int link_up : 1; /**< \a true, if the network link is up. */
+    uint8_t scan_busy; /**< \a true, while the master is scanning the bus */
+    uint64_t app_time; /**< Application time. */
 } ec_master_info_t;
 
 /****************************************************************************/
@@ -424,10 +424,11 @@ typedef struct {
  * \see ecrt_master_scan_progress().
  */
 typedef struct {
-   unsigned int slave_count; /**< Number of slaves detected. */
-   unsigned int scan_index; /**< Index of the slave that is currently scanned.
-                              If it is less than the \a slave_count, the
-                              network scan is in progress. */
+    unsigned int slave_count; /**< Number of slaves detected. */
+    unsigned int scan_index; /**< Index of the slave that is currently
+                               scanned.  If it is less than the \a
+                               slave_count, the network scan is in progress.
+                              */
 } ec_master_scan_progress_t;
 
 /****************************************************************************/
@@ -559,9 +560,9 @@ typedef struct {
                               Zero means, that the default mapping shall be
                               used (this can only be done if the slave is
                               present at bus configuration time). */
-    ec_pdo_entry_info_t *entries; /**< Array of PDO entries to map. Can either
-                                    be \a NULL, or must contain at
-                                    least \a n_entries values. */
+    ec_pdo_entry_info_t const *entries; /**< Array of PDO entries to map. Can
+                                          either be \a NULL, or must contain
+                                          at least \a n_entries values. */
 } ec_pdo_info_t;
 
 /****************************************************************************/
@@ -578,8 +579,8 @@ typedef struct {
                      but can also be \a 0xff to mark the end of the list. */
     ec_direction_t dir; /**< Sync manager direction. */
     unsigned int n_pdos; /**< Number of PDOs in \a pdos. */
-    ec_pdo_info_t *pdos; /**< Array with PDOs to assign. This must contain
-                            at least \a n_pdos PDOs. */
+    ec_pdo_info_t const *pdos; /**< Array with PDOs to assign. This must
+                                 contain at least \a n_pdos PDOs. */
     ec_watchdog_mode_t watchdog_mode; /**< Watchdog mode. */
 } ec_sync_info_t;
 
@@ -601,8 +602,8 @@ typedef struct {
                        (byte-)offset in the process data. */
     unsigned int *bit_position; /**< Pointer to a variable to store a bit
                                   position (0-7) within the \a offset. Can be
-                                  NULL, in which case an error is raised if the
-                                  PDO entry does not byte-align. */
+                                  NULL, in which case an error is raised if
+                                  the PDO entry does not byte-align. */
 } ec_pdo_entry_reg_t;
 
 /****************************************************************************/
@@ -835,7 +836,7 @@ EC_PUBLIC_API int ecrt_master(
  *
  * \return 0 in case of success, else < 0
  */
-int ecrt_master_scan_progress(
+EC_PUBLIC_API int ecrt_master_scan_progress(
         ec_master_t *master, /**< EtherCAT master */
         ec_master_scan_progress_t *progress /**< Structure that will output
                                               the progress information. */
@@ -927,7 +928,7 @@ EC_PUBLIC_API int ecrt_master_sdo_download(
         uint16_t slave_position, /**< Slave position. */
         uint16_t index, /**< Index of the SDO. */
         uint8_t subindex, /**< Subindex of the SDO. */
-        uint8_t *data, /**< Data buffer to download. */
+        const uint8_t *data, /**< Data buffer to download. */
         size_t data_size, /**< Size of the data buffer. */
         uint32_t *abort_code /**< Abort code of the SDO download. */
         );
@@ -946,7 +947,7 @@ EC_PUBLIC_API int ecrt_master_sdo_download_complete(
         ec_master_t *master, /**< EtherCAT master. */
         uint16_t slave_position, /**< Slave position. */
         uint16_t index, /**< Index of the SDO. */
-        uint8_t *data, /**< Data buffer to download. */
+        const uint8_t *data, /**< Data buffer to download. */
         size_t data_size, /**< Size of the data buffer. */
         uint32_t *abort_code /**< Abort code of the SDO download. */
         );
@@ -984,7 +985,7 @@ EC_PUBLIC_API int ecrt_master_write_idn(
         uint16_t slave_position, /**< Slave position. */
         uint8_t drive_no, /**< Drive number. */
         uint16_t idn, /**< SoE IDN (see ecrt_slave_config_idn()). */
-        uint8_t *data, /**< Pointer to data to write. */
+        const uint8_t *data, /**< Pointer to data to write. */
         size_t data_size, /**< Size of data to write. */
         uint16_t *error_code /**< Pointer to variable, where an SoE error code
                                can be stored. */
@@ -1169,6 +1170,9 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock(
  * The reference clock will by synchronized to the time passed in the
  * sync_time parameter.
  *
+ * Has to be called by the application after ecrt_master_activate()
+ * has returned.
+ *
  * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
@@ -1179,6 +1183,9 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
 /** Queues the DC clock drift compensation datagram for sending.
  *
  * All slave clocks synchronized to the reference clock.
+ *
+ * Has to be called by the application after ecrt_master_activate()
+ * has returned.
  *
  * \ingroup ApplicationInterfaceRT
  */
@@ -1203,7 +1210,7 @@ EC_PUBLIC_API void ecrt_master_sync_slave_clocks(
  * \retval -EIO Slave synchronization datagram was not received.
  */
 EC_PUBLIC_API int ecrt_master_reference_clock_time(
-        ec_master_t *master, /**< EtherCAT master. */
+        const ec_master_t *master, /**< EtherCAT master. */
         uint32_t *time /**< Pointer to store the queried system time. */
         );
 
@@ -1230,7 +1237,7 @@ EC_PUBLIC_API void ecrt_master_sync_monitor_queue(
  * \return Upper estimation of the maximum time difference in ns.
  */
 EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
-        ec_master_t *master /**< EtherCAT master. */
+        const ec_master_t *master /**< EtherCAT master. */
         );
 
 /** Retry configuring slaves.
@@ -1239,6 +1246,8 @@ EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
  * OP state. In general, this is not necessary, because it is automatically
  * done by the master. But with special slaves, that can be reconfigured by
  * the vendor during runtime, it can be useful.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_master_reset(
         ec_master_t *master /**< EtherCAT master. */
@@ -1654,7 +1663,7 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_clear(
  * \return Number of overruns since last clear, or negative error code.
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_overruns(
-        ec_slave_config_t *sc /**< Slave configuration. */
+        const ec_slave_config_t *sc /**< Slave configuration. */
         );
 
 /** Create an SDO request to exchange SDOs during realtime operation.
@@ -1684,7 +1693,7 @@ EC_PUBLIC_API ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
  *
  * \return New SoE request, or NULL on error.
  */
-ec_soe_request_t *ecrt_slave_config_create_soe_request(
+EC_PUBLIC_API ec_soe_request_t *ecrt_slave_config_create_soe_request(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t drive_no, /**< Drive number. */
         uint16_t idn, /**< Sercos ID-Number. */
@@ -2022,8 +2031,8 @@ EC_PUBLIC_API void ecrt_sdo_request_timeout(
  *
  * This function returns a pointer to the request's internal SDO data memory.
  *
- * - After a read operation was successful, integer data can be evaluated using
- *   the EC_READ_*() macros as usual. Example:
+ * - After a read operation was successful, integer data can be evaluated
+ *   using the EC_READ_*() macros as usual. Example:
  *   \code
  *   uint16_t value = EC_READ_U16(ecrt_sdo_request_data(sdo)));
  *   \endcode
@@ -2042,7 +2051,7 @@ EC_PUBLIC_API void ecrt_sdo_request_timeout(
  * \return Pointer to the internal SDO data memory.
  */
 EC_PUBLIC_API uint8_t *ecrt_sdo_request_data(
-        ec_sdo_request_t *req /**< SDO request. */
+        const ec_sdo_request_t *req /**< SDO request. */
         );
 
 /** Returns the current SDO data size.
@@ -2103,7 +2112,7 @@ EC_PUBLIC_API void ecrt_sdo_request_read(
  * ecrt_soe_request_state() returns EC_REQUEST_BUSY, this may lead to
  * unexpected results.
  */
-void ecrt_soe_request_idn(
+EC_PUBLIC_API void ecrt_soe_request_idn(
         ec_soe_request_t *req, /**< IDN request. */
         uint8_t drive_no, /**< SDO index. */
         uint16_t idn /**< SoE IDN. */
@@ -2117,7 +2126,7 @@ void ecrt_soe_request_idn(
  * The timeout is permanently stored in the request object and is valid until
  * the next call of this method.
  */
-void ecrt_soe_request_timeout(
+EC_PUBLIC_API void ecrt_soe_request_timeout(
         ec_soe_request_t *req, /**< SoE request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
@@ -2146,8 +2155,8 @@ void ecrt_soe_request_timeout(
  *
  * \return Pointer to the internal IDN data memory.
  */
-uint8_t *ecrt_soe_request_data(
-        ec_soe_request_t *req /**< SoE request. */
+EC_PUBLIC_API uint8_t *ecrt_soe_request_data(
+        const ec_soe_request_t *req /**< SoE request. */
         );
 
 /** Returns the current IDN data size.
@@ -2158,7 +2167,7 @@ uint8_t *ecrt_soe_request_data(
  *
  * \return IDN data size in bytes.
  */
-size_t ecrt_soe_request_data_size(
+EC_PUBLIC_API size_t ecrt_soe_request_data_size(
         const ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2166,8 +2175,9 @@ size_t ecrt_soe_request_data_size(
  *
  * \return Request state.
  */
-ec_request_state_t ecrt_soe_request_state(
-        ec_soe_request_t *req /**< SoE request. */
+EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
+        ec_soe_request_t *req /**< SoE request. Not const, because the
+                                internal data size may be updated. */
     );
 
 /** Schedule an SoE IDN write operation.
@@ -2175,7 +2185,7 @@ ec_request_state_t ecrt_soe_request_state(
  * \attention This method may not be called while ecrt_soe_request_state()
  * returns EC_REQUEST_BUSY.
  */
-void ecrt_soe_request_write(
+EC_PUBLIC_API void ecrt_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2188,7 +2198,7 @@ void ecrt_soe_request_write(
  * ecrt_soe_request_data() must be considered as invalid while
  * ecrt_soe_request_state() returns EC_REQUEST_BUSY.
  */
-void ecrt_soe_request_read(
+EC_PUBLIC_API void ecrt_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2244,7 +2254,7 @@ EC_PUBLIC_API void ecrt_voe_handler_received_header(
  * \return Pointer to the internal memory.
  */
 EC_PUBLIC_API uint8_t *ecrt_voe_handler_data(
-        ec_voe_handler_t *voe /**< VoE handler. */
+        const ec_voe_handler_t *voe /**< VoE handler. */
         );
 
 /** Returns the current data size.
@@ -2346,22 +2356,16 @@ EC_PUBLIC_API ec_request_state_t ecrt_voe_handler_execute(
  * \return Pointer to the internal memory.
  */
 EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
-        ec_reg_request_t *req /**< Register request. */
+        const ec_reg_request_t *req /**< Register request. */
         );
 
 /** Get the current state of the register request.
  *
  * \return Request state.
  */
-#ifdef __KERNEL__
 ec_request_state_t ecrt_reg_request_state(
         const ec_reg_request_t *req /**< Register request. */
     );
-#else
-EC_PUBLIC_API ec_request_state_t ecrt_reg_request_state(
-        ec_reg_request_t *req /**< Register request. */
-    );
-#endif
 
 /** Schedule an register write operation.
  *

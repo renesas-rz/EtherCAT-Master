@@ -29,6 +29,11 @@ ec_xenomai_posix_example_CFLAGS = \
 	$(XENOMAI_POSIX_CFLAGS) \
 	$(XENOMAI_RTDM_CFLAGS)
 
+if ENABLE_XENOMAI_V3
+ec_xenomai_posix_example_CFLAGS += \
+	-DXENOMAI_API_V3
+endif
+
 ec_xenomai_posix_example_LDFLAGS = \
 	-L$(top_builddir)/lib/.libs -lethercat_rtdm \
 	$(XENOMAI_POSIX_LDFLAGS) \

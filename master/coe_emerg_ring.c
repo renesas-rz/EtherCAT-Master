@@ -160,7 +160,7 @@ int ec_coe_emerg_ring_clear_ring(
  * \return Number of overruns.
  */
 int ec_coe_emerg_ring_overruns(
-        ec_coe_emerg_ring_t *ring /**< Emergency ring. */
+        const ec_coe_emerg_ring_t *ring /**< Emergency ring. */
         )
 {
     return ring->overruns;

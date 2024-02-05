@@ -405,9 +405,9 @@ int ecrt_master_get_pdo_entry(ec_master_t *master, uint16_t slave_position,
 
 /****************************************************************************/
 
-int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
-        uint16_t index, uint8_t subindex, uint8_t *data,
-        size_t data_size, uint32_t *abort_code)
+int ecrt_master_sdo_download(ec_master_t *master,
+        uint16_t slave_position, uint16_t index, uint8_t subindex,
+        const uint8_t *data, size_t data_size, uint32_t *abort_code)
 {
     ec_ioctl_slave_sdo_download_t download;
     int ret;
@@ -417,7 +417,7 @@ int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
     download.sdo_entry_subindex = subindex;
     download.complete_access = 0;
     download.data_size = data_size;
-    download.data = data;
+    download.data = (uint8_t *) data; // will only be read in ioctl()
 
     ret = ioctl(master->fd, EC_IOCTL_SLAVE_SDO_DOWNLOAD, &download);
     if (EC_IOCTL_IS_ERROR(ret)) {
@@ -435,7 +435,7 @@ int ecrt_master_sdo_download(ec_master_t *master, uint16_t slave_position,
 /****************************************************************************/
 
 int ecrt_master_sdo_download_complete(ec_master_t *master,
-        uint16_t slave_position, uint16_t index, uint8_t *data,
+        uint16_t slave_position, uint16_t index, const uint8_t *data,
         size_t data_size, uint32_t *abort_code)
 {
     ec_ioctl_slave_sdo_download_t download;
@@ -446,7 +446,7 @@ int ecrt_master_sdo_download_complete(ec_master_t *master,
     download.sdo_entry_subindex = 0;
     download.complete_access = 1;
     download.data_size = data_size;
-    download.data = data;
+    download.data = (uint8_t *) data; // will only be read in ioctl()
 
     ret = ioctl(master->fd, EC_IOCTL_SLAVE_SDO_DOWNLOAD, &download);
     if (EC_IOCTL_IS_ERROR(ret)) {
@@ -493,7 +493,7 @@ int ecrt_master_sdo_upload(ec_master_t *master, uint16_t slave_position,
 /****************************************************************************/
 
 int ecrt_master_write_idn(ec_master_t *master, uint16_t slave_position,
-        uint8_t drive_no, uint16_t idn, uint8_t *data, size_t data_size,
+        uint8_t drive_no, uint16_t idn, const uint8_t *data, size_t data_size,
         uint16_t *error_code)
 {
     ec_ioctl_slave_soe_write_t io;
@@ -503,7 +503,7 @@ int ecrt_master_write_idn(ec_master_t *master, uint16_t slave_position,
     io.drive_no = drive_no;
     io.idn = idn;
     io.data_size = data_size;
-    io.data = data;
+    io.data = (uint8_t *) data; // will only be read in ioctl()
 
     ret = ioctl(master->fd, EC_IOCTL_SLAVE_SOE_WRITE, &io);
     if (EC_IOCTL_IS_ERROR(ret)) {
@@ -742,7 +742,8 @@ void ecrt_master_sync_slave_clocks(ec_master_t *master)
 
 /****************************************************************************/
 
-int ecrt_master_reference_clock_time(ec_master_t *master, uint32_t *time)
+int ecrt_master_reference_clock_time(const ec_master_t *master,
+        uint32_t *time)
 {
     int ret;
 
@@ -770,7 +771,7 @@ void ecrt_master_sync_monitor_queue(ec_master_t *master)
 
 /****************************************************************************/
 
-uint32_t ecrt_master_sync_monitor_process(ec_master_t *master)
+uint32_t ecrt_master_sync_monitor_process(const ec_master_t *master)
 {
     uint32_t time_diff;
     int ret;

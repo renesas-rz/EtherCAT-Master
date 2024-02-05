@@ -1253,6 +1253,7 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	// offer device to EtherCAT master module
 	adapter->ecdev = ecdev_offer(netdev, ec_poll, THIS_MODULE);
 	if (adapter->ecdev) {
+		init_irq_work(&adapter->ec_watchdog_kicker, ec_kick_watchdog);
 		err = ecdev_open(adapter->ecdev);
 		if (err) {
 			ecdev_withdraw(adapter->ecdev);
@@ -1332,6 +1333,7 @@ static void e1000_remove(struct pci_dev *pdev)
 
 	if (adapter->ecdev) {
 		ecdev_close(adapter->ecdev);
+		irq_work_sync(&adapter->ec_watchdog_kicker);
 		ecdev_withdraw(adapter->ecdev);
 	} else {
 		unregister_netdev(netdev);
@@ -3857,12 +3859,20 @@ void e1000_update_stats(struct e1000_adapter *adapter)
 	}
 }
 
+static void ec_kick_watchdog(struct irq_work *work)
+{
+	struct e1000_adapter *adapter =
+		container_of(work, struct e1000_adapter, ec_watchdog_kicker);
+
+	schedule_work(&adapter->watchdog_task);
+}
+
 void ec_poll(struct net_device *netdev)
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	if (jiffies - adapter->ec_watchdog_jiffies >= 2 * HZ) {
-		e1000_watchdog(&adapter->watchdog_task.work);
 		adapter->ec_watchdog_jiffies = jiffies;
+		irq_work_queue(&adapter->ec_watchdog_kicker);
 	}
 
 	e1000_intr(0, netdev);

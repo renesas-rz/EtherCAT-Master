@@ -70,7 +70,10 @@ libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir) \
 # 3:0:2
 #
 libethercat_la_LDFLAGS = -version-info 3:0:2 \
+	-Wl,--version-script=$(srcdir)/libethercat.map \
 	-fvisibility=hidden
+
+libethercat_la_DEPENDENCIES = libethercat.map
 
 pkgconfig_DATA = libethercat.pc
 
@@ -78,7 +81,7 @@ cmakedir = $(libdir)/cmake/ethercat
 
 cmake_DATA = ethercat-config.cmake
 
-EXTRA_DIST = ethercat-config.cmake.in
+EXTRA_DIST = ethercat-config.cmake.in libethercat.map
 
 CLEANFILES = $(cmake_DATA)
 
@@ -90,12 +93,20 @@ if ENABLE_RTDM
 lib_LTLIBRARIES += libethercat_rtdm.la
 
 libethercat_rtdm_la_SOURCES = $(libethercat_la_SOURCES)
-libethercat_rtdm_la_CFLAGS = $(libethercat_la_CFLAGS) -DUSE_RTDM
+libethercat_rtdm_la_CFLAGS = $(libethercat_la_CFLAGS)
 libethercat_rtdm_la_LDFLAGS = $(libethercat_la_LDFLAGS)
 
 if ENABLE_XENOMAI
 libethercat_rtdm_la_CFLAGS += $(XENOMAI_RTDM_CFLAGS)
 libethercat_rtdm_la_LDFLAGS += $(XENOMAI_RTDM_LDFLAGS)
+endif
+
+if ENABLE_XENOMAI_V3
+libethercat_rtdm_la_CFLAGS += $(XENOMAI_RTDM_CFLAGS)
+libethercat_rtdm_la_LDFLAGS += $(XENOMAI_RTDM_LDFLAGS)
+libethercat_rtdm_la_CFLAGS += -DUSE_RTDM_XENOMAI_V3
+else
+libethercat_rtdm_la_CFLAGS += -DUSE_RTDM
 endif
 
 if ENABLE_RTAI
@@ -111,3 +122,17 @@ endif
 
 ethercat-config.cmake: $(srcdir)/ethercat-config.cmake.in Makefile
 	$(SED) -e 's,%libdir%,$(libdir),' -e 's,%includedir%,$(includedir),' $< > $@
+
+
+#-----------------------------------------------------------------------------
+
+.PHONY: symbol-version-check
+
+# check whether all symbols marked with EC_PUBLIC_API are listed in
+# libethercat.map
+
+symbol-version-check: libethercat.la
+	readelf --dyn-syms --wide $(builddir)/.libs/libethercat.so | \
+		awk '$$4 == "FUNC" && $$7 != "UND" && $$8 !~ /@LIBETHERCAT/ { print "Unversioned symbol: " $$8; err = 1; } END { exit err; }'
+
+#-----------------------------------------------------------------------------

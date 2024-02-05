@@ -21,6 +21,7 @@
 #include <linux/in.h>
 #include <linux/io.h>
 #include <linux/ip.h>
+#include <linux/irq_work.h>
 #include <linux/tcp.h>
 #include <linux/interrupt.h>
 #include <linux/dma-mapping.h>
@@ -653,6 +654,7 @@ struct rtl8169_private {
 
 	ec_device_t *ecdev;
 	unsigned long ec_watchdog_jiffies;
+	struct irq_work ec_watchdog_kicker;
 };
 
 typedef void (*rtl_generic_fct)(struct rtl8169_private *tp);
@@ -5048,6 +5050,7 @@ static void rtl_remove_one(struct pci_dev *pdev)
 
 	if (tp->ecdev) {
 		ecdev_close(tp->ecdev);
+		irq_work_sync(&tp->ec_watchdog_kicker);
 		ecdev_withdraw(tp->ecdev);
 	} else {
 		unregister_netdev(tp->dev);
@@ -5338,6 +5341,14 @@ done:
 	rtl_rar_set(tp, mac_addr);
 }
 
+static void ec_kick_watchdog(struct irq_work *work)
+{
+	struct rtl8169_private *tp =
+		container_of(work, struct rtl8169_private, ec_watchdog_kicker);
+
+	phy_mac_interrupt(tp->phydev);
+}
+
 static void ec_poll(struct net_device *dev)
 {
 	struct rtl8169_private *tp = netdev_priv(dev);
@@ -5356,7 +5367,7 @@ static void ec_poll(struct net_device *dev)
 	rtl_rx(dev, tp, 100);
 
 	if (status & LinkChg)
-		phy_mac_interrupt(tp->phydev);
+		irq_work_queue(&tp->ec_watchdog_kicker);
 
 	rtl_ack_events(tp, status);
 }
@@ -5560,6 +5571,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 		pm_runtime_put_sync(&pdev->dev);
 
 	if (tp->ecdev) {
+		init_irq_work(&tp->ec_watchdog_kicker, ec_kick_watchdog);
 		rc = ecdev_open(tp->ecdev);
 		if (rc) {
 			ecdev_withdraw(tp->ecdev);

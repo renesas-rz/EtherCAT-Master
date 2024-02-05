@@ -86,7 +86,7 @@ void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
 
 /****************************************************************************/
 
-uint8_t *ecrt_voe_handler_data(ec_voe_handler_t *voe)
+uint8_t *ecrt_voe_handler_data(const ec_voe_handler_t *voe)
 {
     return voe->data;
 }

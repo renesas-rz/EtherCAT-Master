@@ -29,19 +29,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#ifdef XENOMAI_API_V3
+#include <alchemy/task.h>
+#include <alchemy/sem.h>
+enum {T_FPU = 0};
+#else
 #include <rtdm/rtdm.h>
 #include <native/task.h>
 #include <native/sem.h>
 #include <native/mutex.h>
 #include <native/timer.h>
 #include <rtdk.h>
+#endif
 #include <pthread.h>
 
 #include "ecrt.h"
 
 RT_TASK my_task;
 
-static int run = 1;
+static volatile sig_atomic_t run = 1;
 
 /****************************************************************************/
 
@@ -84,14 +90,14 @@ const static ec_pdo_entry_reg_t domain1_regs[] = {
  * Revision number: 0x00100000
  */
 
-ec_pdo_entry_info_t slave_1_pdo_entries[] = {
+const ec_pdo_entry_info_t slave_1_pdo_entries[] = {
    {0x7000, 0x01, 1}, /* Output */
    {0x7010, 0x01, 1}, /* Output */
    {0x7020, 0x01, 1}, /* Output */
    {0x7030, 0x01, 1}, /* Output */
 };
 
-ec_pdo_info_t slave_1_pdos[] = {
+const ec_pdo_info_t slave_1_pdos[] = {
    {0x1600, 1, slave_1_pdo_entries + 0}, /* Channel 1 */
    {0x1601, 1, slave_1_pdo_entries + 1}, /* Channel 2 */
    {0x1602, 1, slave_1_pdo_entries + 2}, /* Channel 3 */
@@ -201,8 +207,10 @@ int main(int argc, char *argv[])
     ec_slave_config_t *sc;
     int ret;
 
+#ifndef XENOMAI_API_V3
     /* Perform auto-init of rt_print buffers if the task doesn't do so */
     rt_print_auto_init(1);
+#endif
 
     signal(SIGTERM, signal_handler);
     signal(SIGINT, signal_handler);

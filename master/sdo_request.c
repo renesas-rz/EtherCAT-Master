@@ -194,7 +194,7 @@ void ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
 
 /****************************************************************************/
 
-uint8_t *ecrt_sdo_request_data(ec_sdo_request_t *req)
+uint8_t *ecrt_sdo_request_data(const ec_sdo_request_t *req)
 {
     return req->data;
 }
