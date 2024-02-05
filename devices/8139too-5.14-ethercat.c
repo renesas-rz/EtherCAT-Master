@@ -155,6 +155,17 @@
 #include "../globals.h"
 #include "ecdev.h"
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
 #define RTL8139_DRIVER_NAME DRV_NAME \
 	" EtherCAT-capable Fast Ethernet driver " \
 	DRV_VERSION ", master " EC_MASTER_VERSION
@@ -2389,8 +2400,11 @@ static int rtl8139_set_mac_address(struct net_device *dev, void *p)
 	if (!is_valid_ether_addr(addr->sa_data))
 		return -EADDRNOTAVAIL;
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+	eth_hw_addr_set(dev, addr->sa_data);
+#else
 	memcpy(dev->dev_addr, addr->sa_data, dev->addr_len);
-
+#endif
 	spin_lock_irq(&tp->lock);
 
 	RTL_W8_F(Cfg9346, Cfg9346_Unlock);

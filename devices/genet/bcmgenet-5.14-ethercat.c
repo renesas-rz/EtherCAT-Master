@@ -41,6 +41,18 @@
 
 #include "bcmgenet-5.14-ethercat.h"
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
+
 /* Maximum number of hardware queues, downsized if needed */
 #define GENET_MAX_MQ_CNT	4
 
@@ -3323,7 +3335,7 @@ static void bcmgenet_umac_reset(struct bcmgenet_priv *priv)
 }
 
 static void bcmgenet_set_hw_addr(struct bcmgenet_priv *priv,
-				 unsigned char *addr)
+				 const unsigned char *addr)
 {
 	bcmgenet_umac_writel(priv, get_unaligned_be32(&addr[0]), UMAC_MAC0);
 	bcmgenet_umac_writel(priv, get_unaligned_be16(&addr[4]), UMAC_MAC1);
@@ -3621,7 +3633,7 @@ static void bcmgenet_timeout(struct net_device *dev, unsigned int txqueue)
 #define MAX_MDF_FILTER	17
 
 static inline void bcmgenet_set_mdf_addr(struct bcmgenet_priv *priv,
-					 unsigned char *addr,
+					 const unsigned char *addr,
 					 int *i)
 {
 	bcmgenet_umac_writel(priv, addr[0] << 8 | addr[1],
@@ -3694,8 +3706,11 @@ static int bcmgenet_set_mac_addr(struct net_device *dev, void *p)
 	if (netif_running(dev))
 		return -EBUSY;
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+	eth_hw_addr_set(dev, addr->sa_data);
+#else
 	ether_addr_copy(dev->dev_addr, addr->sa_data);
-
+#endif
 	return 0;
 }
 
@@ -4140,11 +4155,25 @@ static int bcmgenet_probe(struct platform_device *pdev)
 		bcmgenet_power_up(priv, GENET_POWER_PASSIVE);
 
 	if (pd && !IS_ERR_OR_NULL(pd->mac_address))
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+		eth_hw_addr_set(dev, pd->mac_address);
+#else
 		ether_addr_copy(dev->dev_addr, pd->mac_address);
+#endif
 	else
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+		if (!device_get_ethdev_address(&pdev->dev, dev))
+			if (has_acpi_companion(&pdev->dev)) {
+				u8 addr[ETH_ALEN];
+
+				bcmgenet_get_hw_addr(priv, addr);
+				eth_hw_addr_set(dev, addr);
+			}
+#else
 		if (!device_get_mac_address(&pdev->dev, dev->dev_addr, ETH_ALEN))
 			if (has_acpi_companion(&pdev->dev))
 				bcmgenet_get_hw_addr(priv, dev->dev_addr);
+#endif
 
 	if (!is_valid_ether_addr(dev->dev_addr)) {
 		dev_warn(&pdev->dev, "using random Ethernet MAC\n");
