@@ -73,7 +73,7 @@ libethercat_la_LDFLAGS = -version-info 3:0:2 \
 	-Wl,--version-script=$(srcdir)/libethercat.map \
 	-fvisibility=hidden
 
-libethercat_la_DEPENDENCIES = libethercat.map
+libethercat_la_DEPENDENCIES = $(srcdir)/libethercat.map
 
 pkgconfig_DATA = libethercat.pc
 
