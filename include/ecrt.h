@@ -1823,7 +1823,7 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_link(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        unsigned char *mac_address /**< MAC address. */
+        const unsigned char *mac_address /**< MAC address. */
         );
 
 /** Sets the IP address for Ethernet-over-EtherCAT (EoE) operation.
@@ -1888,7 +1888,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_name(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        unsigned char *name /**< Zero-terminated hostname. */
+        const unsigned char *name /**< Zero-terminated hostname. */
         );
 
 /*****************************************************************************
