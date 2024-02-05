@@ -249,7 +249,7 @@ struct igc_adapter {
 
 static inline ec_device_t *get_ecdev(struct igc_adapter *adapter)
 {
-#if 0
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
 	WARN_ON(!adapter->ecdev_initialized);
 #endif
 	return adapter->ecdev_;
