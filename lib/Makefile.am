@@ -73,7 +73,7 @@ libethercat_la_LDFLAGS = -version-info 3:0:2 \
 	-Wl,--version-script=$(srcdir)/libethercat.map \
 	-fvisibility=hidden
 
-libethercat_la_DEPENDENCIES = $(srcdir)/libethercat.map
+libethercat_la_DEPENDENCIES = libethercat.map
 
 pkgconfig_DATA = libethercat.pc
 
@@ -81,7 +81,7 @@ cmakedir = $(libdir)/cmake/ethercat
 
 cmake_DATA = ethercat-config.cmake
 
-EXTRA_DIST = ethercat-config.cmake.in
+EXTRA_DIST = ethercat-config.cmake.in libethercat.map
 
 CLEANFILES = $(cmake_DATA)
 
