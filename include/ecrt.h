@@ -47,10 +47,10 @@
  * - Added the ecrt_master_scan_progress() method, the
  *   ec_master_scan_progress_t structure and the EC_HAVE_SCAN_PROGRESS
  *   definition to check for its existence.
- * - Added the EoE configuration methods ecrt_slave_config_eoe_mac(),
- *   ecrt_slave_config_eoe_ip(), ecrt_slave_config_eoe_subnet(),
- *   ecrt_slave_config_eoe_gateway(), ecrt_slave_config_eoe_dns(),
- *   ecrt_slave_config_eoe_hostname() and the EC_HAVE_SET_IP
+ * - Added the EoE configuration methods ecrt_slave_config_eoe_link(),
+ *   ecrt_slave_config_eoe_addr(), ecrt_slave_config_eoe_subnet(),
+ *   ecrt_slave_config_eoe_default(), ecrt_slave_config_eoe_dns(),
+ *   ecrt_slave_config_eoe_name() and the EC_HAVE_SET_IP
  *   definition to check for its existence.
  *
  * Changes since version 1.5.2:
@@ -248,10 +248,10 @@
  */
 #define EC_HAVE_SCAN_PROGRESS
 
-/** Defined, if the methods ecrt_slave_config_eoe_mac(),
- *  ecrt_slave_config_eoe_ip(), ecrt_slave_config_eoe_subnet(),
- *  ecrt_slave_config_eoe_gateway(), ecrt_slave_config_eoe_dns(),
- *  ecrt_slave_config_eoe_hostname() are available.
+/** Defined, if the methods ecrt_slave_config_eoe_link(),
+ *  ecrt_slave_config_eoe_addr(), ecrt_slave_config_eoe_subnet(),
+ *  ecrt_slave_config_eoe_default(), ecrt_slave_config_eoe_dns(),
+ *  ecrt_slave_config_eoe_name() are available.
  */
 #define EC_HAVE_SET_IP
 
@@ -1813,7 +1813,7 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
         int32_t value /**< Value to store. */
         );
 
-/** Sets the MAC address for Ethernet-over-EtherCAT (EoE) operation.
+/** Sets the link/MAC address for Ethernet-over-EtherCAT (EoE) operation.
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
@@ -1821,7 +1821,7 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_mac(
+EC_PUBLIC_API int ecrt_slave_config_eoe_link(
         ec_slave_config_t *sc, /**< Slave configuration. */
         unsigned char *mac_address /**< MAC address. */
         );
@@ -1834,7 +1834,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_mac(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_ip(
+EC_PUBLIC_API int ecrt_slave_config_eoe_addr(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint32_t ip_address /**< IPv4 address. */
         );
@@ -1860,7 +1860,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_subnet(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_gateway(
+EC_PUBLIC_API int ecrt_slave_config_eoe_default(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint32_t gateway_address /**< Gateway's IPv4 address. */
         );
@@ -1886,7 +1886,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
+EC_PUBLIC_API int ecrt_slave_config_eoe_name(
         ec_slave_config_t *sc, /**< Slave configuration. */
         unsigned char *name /**< Zero-terminated hostname. */
         );
