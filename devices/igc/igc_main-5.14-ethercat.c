@@ -108,7 +108,7 @@ void igc_reset(struct igc_adapter *adapter)
 	/* Re-establish EEE setting */
 	igc_set_eee_i225(hw, true, true, true);
 
-	if (!adapter->ecdev && !netif_running(adapter->netdev))
+	if (!get_ecdev(adapter) && !netif_running(adapter->netdev))
 		igc_power_down_phy_copper_base(&adapter->hw);
 
 	/* Enable HW to recognize an 802.1Q VLAN Ethernet packet */
@@ -209,7 +209,7 @@ static void igc_clean_tx_ring(struct igc_ring *tx_ring)
 		case IGC_TX_BUFFER_TYPE_SKB:
 		{
 			struct igc_adapter *adapter = netdev_priv(tx_ring->netdev);
-			if (!adapter->ecdev) {
+			if (!get_ecdev(adapter)) {
 				/* skb is reused in EtherCAT TX operation */
 				dev_kfree_skb_any(tx_buffer->skb);
 			}
@@ -1103,7 +1103,7 @@ static int __igc_maybe_stop_tx(struct igc_ring *tx_ring, const u16 size)
 {
 	struct net_device *netdev = tx_ring->netdev;
 	struct igc_adapter *adapter = netdev_priv(netdev);
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_stop_subqueue(netdev, tx_ring->queue_index);
 	}
 
@@ -1117,7 +1117,7 @@ static int __igc_maybe_stop_tx(struct igc_ring *tx_ring, const u16 size)
 		return -EBUSY;
 
 	/* A reprieve! */
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_wake_subqueue(netdev, tx_ring->queue_index);
 	}
 
@@ -1315,7 +1315,7 @@ dma_error:
 	if (dma_unmap_len(tx_buffer, len))
 		igc_unmap_tx_buffer(tx_ring->dev, tx_buffer);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		dev_kfree_skb_any(tx_buffer->skb);
 		tx_buffer->skb = NULL;
 	}
@@ -1453,7 +1453,7 @@ static netdev_tx_t igc_xmit_frame_ring(struct sk_buff *skb,
 	first->bytecount = skb->len;
 	first->gso_segs = 1;
 
-	if (unlikely(!adapter->ecdev &&
+	if (unlikely(!get_ecdev(adapter) &&
 			skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP)) {
 		/* FIXME: add support for retrieving timestamps from
 		 * the other timer registers before skipping the
@@ -1492,7 +1492,7 @@ static netdev_tx_t igc_xmit_frame_ring(struct sk_buff *skb,
 	return NETDEV_TX_OK;
 
 out_drop:
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		dev_kfree_skb_any(first->skb);
 		first->skb = NULL;
 	}
@@ -2388,10 +2388,10 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 			total_packets++;
 			total_bytes += size;
 		}
-		else if (adapter->ecdev) {
+		else if (get_ecdev(adapter)) {
 			unsigned char *va = page_address(rx_buffer->page) + rx_buffer->page_offset;
 			unsigned int size = le16_to_cpu(rx_desc->wb.upper.length);
-			ecdev_receive(adapter->ecdev, va, size);
+			ecdev_receive(get_ecdev(adapter), va, size);
 			adapter->ec_watchdog_jiffies = jiffies;
 			igc_reuse_rx_page(rx_ring, rx_buffer);
 		}
@@ -2420,7 +2420,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 			continue;
 
 
-		if (adapter->ecdev) {
+		if (get_ecdev(adapter)) {
 			total_packets++;
 			continue;
 		}
@@ -2730,7 +2730,7 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
 			igc_unmap_tx_buffer(tx_ring->dev, tx_buffer);
 			break;
 		case IGC_TX_BUFFER_TYPE_SKB:
-			if (!adapter->ecdev) {
+			if (!get_ecdev(adapter)) {
 				napi_consume_skb(tx_buffer->skb, napi_budget);
 			}
 			igc_unmap_tx_buffer(tx_ring->dev, tx_buffer);
@@ -2773,7 +2773,7 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
 		budget--;
 	} while (likely(budget));
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netdev_tx_completed_queue(txring_txq(tx_ring),
 					total_packets, total_bytes);
 	}
@@ -2791,7 +2791,7 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
 		igc_xdp_xmit_zc(tx_ring);
 	}
 
-	if (!adapter->ecdev &&
+	if (!get_ecdev(adapter) &&
 			test_bit(IGC_RING_FLAG_TX_DETECT_HANG, &tx_ring->flags)) {
 		struct igc_hw *hw = &adapter->hw;
 
@@ -2834,7 +2834,7 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
 	}
 
 #define TX_WAKE_THRESHOLD (DESC_NEEDED * 2)
-	if (unlikely(!adapter->ecdev && total_packets &&
+	if (unlikely(!get_ecdev(adapter) && total_packets &&
 		     netif_carrier_ok(tx_ring->netdev) &&
 		     igc_desc_unused(tx_ring) >= TX_WAKE_THRESHOLD)) {
 		/* Make sure that anybody stopping the queue after this
@@ -3490,7 +3490,7 @@ static void igc_configure_msix(struct igc_adapter *adapter)
  */
 static void igc_irq_enable(struct igc_adapter *adapter)
 {
-	if (adapter->ecdev) {
+	if (get_ecdev(adapter)) {
 		/* skip enabling interrupts */
 		return;
 	}
@@ -3533,7 +3533,7 @@ static void igc_irq_disable(struct igc_adapter *adapter)
 	wr32(IGC_IMC, ~0);
 	wrfl();
 
-	if (adapter->ecdev) {
+	if (get_ecdev(adapter)) {
 		/* skip synchonizing IRQs */
 		return;
 	}
@@ -3602,7 +3602,7 @@ static void igc_reset_q_vector(struct igc_adapter *adapter, int v_idx)
 	if (q_vector->rx.ring)
 		adapter->rx_ring[q_vector->rx.ring->queue_index] = NULL;
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_napi_del(&q_vector->napi);
 	}
 }
@@ -4070,7 +4070,7 @@ static int igc_alloc_q_vector(struct igc_adapter *adapter,
 		return -ENOMEM;
 
 	/* initialize NAPI */
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_napi_add(adapter->netdev, &q_vector->napi,
 				igc_poll, 64);
 	}
@@ -4301,7 +4301,7 @@ void igc_up(struct igc_adapter *adapter)
 	igc_configure(adapter);
 
 	clear_bit(__IGC_DOWN, &adapter->state);
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		for (i = 0; i < adapter->num_q_vectors; i++)
 			napi_enable(&adapter->q_vector[i]->napi);
 	}
@@ -4314,7 +4314,7 @@ void igc_up(struct igc_adapter *adapter)
 	rd32(IGC_ICR);
 	igc_irq_enable(adapter);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_tx_start_all_queues(adapter->netdev);
 
 		/* start the watchdog. */
@@ -4512,7 +4512,7 @@ void igc_down(struct igc_adapter *adapter)
 	}
 	/* set trans_start so we don't get spurious watchdogs during reset */
 	netif_trans_update(netdev);
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_carrier_off(netdev);
 		netif_tx_stop_all_queues(netdev);
 	}
@@ -4532,7 +4532,7 @@ void igc_down(struct igc_adapter *adapter)
 	adapter->flags &= ~IGC_FLAG_NEED_LINK_UPDATE;
 
 	for (i = 0; i < adapter->num_q_vectors; i++) {
-		if (!adapter->ecdev && adapter->q_vector[i]) {
+		if (!get_ecdev(adapter) && adapter->q_vector[i]) {
 			napi_synchronize(&adapter->q_vector[i]->napi);
 			napi_disable(&adapter->q_vector[i]->napi);
 		}
@@ -4873,7 +4873,7 @@ static int igc_request_msix(struct igc_adapter *adapter)
 	unsigned int num_q_vectors = adapter->num_q_vectors;
 	int i = 0, err = 0, vector = 0, free_vector = 0;
 	struct net_device *netdev = adapter->netdev;
-	if (adapter->ecdev) {
+	if (get_ecdev(adapter)) {
 		/* avoid requesting MSI-X. */
 		return 0;
 	}
@@ -5016,13 +5016,13 @@ static void igc_watchdog_task(struct work_struct *work)
 	u32 link;
 	int i;
 
-	if (adapter->ecdev)
+	if (get_ecdev(adapter))
 		hw->mac.get_link_status = true;
 
 	link = igc_has_link(adapter);
 
-	if (adapter->ecdev) {
-		ecdev_set_link(adapter->ecdev, link);
+	if (get_ecdev(adapter)) {
+		ecdev_set_link(get_ecdev(adapter), link);
 		return;
 	}
 
@@ -5271,7 +5271,7 @@ static irqreturn_t igc_intr(int irq, void *data)
 
 static void igc_free_irq(struct igc_adapter *adapter)
 {
-	if (adapter->ecdev) {
+	if (get_ecdev(adapter)) {
 		/* no IRQ to free in EtherCAT operation */
 		return;
 	}
@@ -5321,7 +5321,7 @@ static int igc_request_irq(struct igc_adapter *adapter)
 
 	igc_assign_vector(adapter->q_vector[0], 0);
 
-	if (!adapter->ecdev && adapter->flags & IGC_FLAG_HAS_MSI) {
+	if (!get_ecdev(adapter) && adapter->flags & IGC_FLAG_HAS_MSI) {
 		err = request_irq(pdev->irq, &igc_intr_msi, 0,
 				  netdev->name, adapter);
 		if (!err)
@@ -5332,7 +5332,7 @@ static int igc_request_irq(struct igc_adapter *adapter)
 		adapter->flags &= ~IGC_FLAG_HAS_MSI;
 	}
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		err = request_irq(pdev->irq, &igc_intr, IRQF_SHARED,
 				netdev->name, adapter);
 
@@ -5374,8 +5374,8 @@ static int __igc_open(struct net_device *netdev, bool resuming)
 	if (!resuming)
 		pm_runtime_get_sync(&pdev->dev);
 
-	if (adapter->ecdev) {
-		ecdev_set_link(adapter->ecdev, 0);
+	if (get_ecdev(adapter)) {
+		ecdev_set_link(get_ecdev(adapter), 0);
 	}
 	else {
 		netif_carrier_off(netdev);
@@ -5399,7 +5399,7 @@ static int __igc_open(struct net_device *netdev, bool resuming)
 	if (err)
 		goto err_req_irq;
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		/* Notify the stack of the actual queue counts. */
 		err = netif_set_real_num_tx_queues(netdev, adapter->num_tx_queues);
 		if (err)
@@ -5411,7 +5411,7 @@ static int __igc_open(struct net_device *netdev, bool resuming)
 	}
 
 	clear_bit(__IGC_DOWN, &adapter->state);
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		for (i = 0; i < adapter->num_q_vectors; i++)
 			napi_enable(&adapter->q_vector[i]->napi);
 	}
@@ -5423,11 +5423,11 @@ static int __igc_open(struct net_device *netdev, bool resuming)
 	if (!resuming)
 		pm_runtime_put(&pdev->dev);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_tx_start_all_queues(netdev);
 	}
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		/* start the watchdog. */
 		hw->mac.get_link_status = true;
 		schedule_work(&adapter->watchdog_task);
@@ -6010,6 +6010,7 @@ static int igc_probe(struct pci_dev *pdev,
 	adapter = netdev_priv(netdev);
 	adapter->netdev = netdev;
 	adapter->pdev = pdev;
+	adapter->ecdev_initialized = false;
 	hw = &adapter->hw;
 	hw->back = adapter;
 	adapter->port_num = hw->bus.func;
@@ -6158,12 +6159,13 @@ static int igc_probe(struct pci_dev *pdev,
 	 */
 	igc_get_hw_control(adapter);
 
-	adapter->ecdev = ecdev_offer(netdev, ec_poll, THIS_MODULE);
-	if (adapter->ecdev) {
+	adapter->ecdev_ = ecdev_offer(netdev, ec_poll, THIS_MODULE);
+	adapter->ecdev_initialized = true;
+	if (get_ecdev(adapter)) {
 		init_irq_work(&adapter->ec_watchdog_kicker, ec_kick_watchdog);
-		err = ecdev_open(adapter->ecdev);
+		err = ecdev_open(get_ecdev(adapter));
 		if (err) {
-			ecdev_withdraw(adapter->ecdev);
+			ecdev_withdraw(get_ecdev(adapter));
 			goto err_register;
 		}
 		adapter->ec_watchdog_jiffies = jiffies;
@@ -6226,10 +6228,10 @@ static void igc_remove(struct pci_dev *pdev)
 	struct net_device *netdev = pci_get_drvdata(pdev);
 	struct igc_adapter *adapter = netdev_priv(netdev);
 
-	if (adapter->ecdev) {
-		ecdev_close(adapter->ecdev);
+	if (get_ecdev(adapter)) {
+		ecdev_close(get_ecdev(adapter));
 		irq_work_sync(&adapter->ec_watchdog_kicker);
-		ecdev_withdraw(adapter->ecdev);
+		ecdev_withdraw(get_ecdev(adapter));
 	}
 
 	pm_runtime_get_noresume(&pdev->dev);
@@ -6250,7 +6252,7 @@ static void igc_remove(struct pci_dev *pdev)
 	 * would have already happened in close and is redundant.
 	 */
 	igc_release_hw_control(adapter);
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		unregister_netdev(netdev);
 	}
 
@@ -6275,8 +6277,8 @@ static int __igc_shutdown(struct pci_dev *pdev, bool *enable_wake,
 	u32 ctrl, rctl, status;
 	bool wake;
 
-	if (adapter->ecdev) {
-		ecdev_close(adapter->ecdev);
+	if (get_ecdev(adapter)) {
+		ecdev_close(get_ecdev(adapter));
 	} else {
 		rtnl_lock();
 		netif_device_detach(netdev);
@@ -6416,8 +6418,8 @@ static int __maybe_unused igc_resume(struct device *dev)
 
 	wr32(IGC_WUS, ~0);
 
-	if (adapter->ecdev) {
-		ecdev_open(adapter->ecdev);
+	if (get_ecdev(adapter)) {
+		ecdev_open(get_ecdev(adapter));
 	} else {
 		rtnl_lock();
 		if (!err && netif_running(netdev))
