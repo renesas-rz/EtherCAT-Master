@@ -108,7 +108,7 @@ void igc_reset(struct igc_adapter *adapter)
 	/* Re-establish EEE setting */
 	igc_set_eee_i225(hw, true, true, true);
 
-	if (!get_ecdev(adapter) && !netif_running(adapter->netdev))
+	if (!netif_running(adapter->netdev))
 		igc_power_down_phy_copper_base(&adapter->hw);
 
 	/* Enable HW to recognize an 802.1Q VLAN Ethernet packet */
@@ -3602,9 +3602,7 @@ static void igc_reset_q_vector(struct igc_adapter *adapter, int v_idx)
 	if (q_vector->rx.ring)
 		adapter->rx_ring[q_vector->rx.ring->queue_index] = NULL;
 
-	if (!get_ecdev(adapter)) {
-		netif_napi_del(&q_vector->napi);
-	}
+	netif_napi_del(&q_vector->napi);
 }
 
 /**
@@ -4070,10 +4068,8 @@ static int igc_alloc_q_vector(struct igc_adapter *adapter,
 		return -ENOMEM;
 
 	/* initialize NAPI */
-	if (!get_ecdev(adapter)) {
-		netif_napi_add(adapter->netdev, &q_vector->napi,
-				igc_poll, 64);
-	}
+	netif_napi_add(adapter->netdev, &q_vector->napi,
+			igc_poll, 64);
 
 	/* tie q_vector and adapter together */
 	adapter->q_vector[v_idx] = q_vector;

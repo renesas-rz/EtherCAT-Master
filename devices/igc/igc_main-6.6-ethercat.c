@@ -110,7 +110,7 @@ void igc_reset(struct igc_adapter *adapter)
 	/* Re-establish EEE setting */
 	igc_set_eee_i225(hw, true, true, true);
 
-	if (!adapter->ecdev && !netif_running(adapter->netdev))
+	if (!netif_running(adapter->netdev))
 		igc_power_down_phy_copper_base(&adapter->hw);
 
 	/* Enable HW to recognize an 802.1Q VLAN Ethernet packet */
@@ -2664,7 +2664,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 
 			total_packets++;
 			total_bytes += size;
-		} 
+		}
 		else if (adapter->ecdev) {
 			unsigned char *va = page_address(rx_buffer->page) + rx_buffer->page_offset;
 			unsigned int size = le16_to_cpu(rx_desc->wb.upper.length);
@@ -2701,7 +2701,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 			total_packets++;
 			continue;
 		}
-		
+
 		/* verify the packet layout is correct */
 		if (igc_cleanup_headers(rx_ring, rx_desc, skb)) {
 			skb = NULL;
@@ -4215,9 +4215,7 @@ static void igc_reset_q_vector(struct igc_adapter *adapter, int v_idx)
 	if (q_vector->rx.ring)
 		adapter->rx_ring[q_vector->rx.ring->queue_index] = NULL;
 
-	if (!adapter->ecdev) {
-		netif_napi_del(&q_vector->napi);
-	}
+	netif_napi_del(&q_vector->napi);
 }
 
 /**
@@ -4682,10 +4680,8 @@ static int igc_alloc_q_vector(struct igc_adapter *adapter,
 	if (!q_vector)
 		return -ENOMEM;
 
-	if (!adapter->ecdev) {
-		/* initialize NAPI */
-		netif_napi_add(adapter->netdev, &q_vector->napi, igc_poll);
-	}
+	/* initialize NAPI */
+	netif_napi_add(adapter->netdev, &q_vector->napi, igc_poll);
 
 	/* tie q_vector and adapter together */
 	adapter->q_vector[v_idx] = q_vector;
@@ -6045,7 +6041,7 @@ static int __igc_open(struct net_device *netdev, bool resuming)
 
 	if (!resuming)
 		pm_runtime_put(&pdev->dev);
-	
+
 	if (!adapter->ecdev) {
 		netif_tx_start_all_queues(netdev);
 	}
@@ -6673,7 +6669,7 @@ static void ec_kick_watchdog(struct irq_work *work)
 	schedule_work(&adapter->watchdog_task);
 }
 
-/** 
+/**
 * ec_poll - EtherCAT poll routine
 * @netdev: net device structure
 *
