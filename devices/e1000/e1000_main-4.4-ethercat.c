@@ -528,9 +528,7 @@ static void e1000_down_and_stop(struct e1000_adapter *adapter)
 {
 	set_bit(__E1000_DOWN, &adapter->flags);
 
-	if (!adapter->ecdev) {
-		cancel_delayed_work_sync(&adapter->watchdog_task);
-	}
+	cancel_delayed_work_sync(&adapter->watchdog_task);
 
 	/*
 	 * Since the watchdog task can reschedule other tasks, we should cancel
@@ -1329,12 +1327,14 @@ static void e1000_remove(struct pci_dev *pdev)
 	struct e1000_hw *hw = &adapter->hw;
 	bool disable_dev;
 
+	if (adapter->ecdev)
+		irq_work_sync(&adapter->ec_watchdog_kicker);
+
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
 
 	if (adapter->ecdev) {
 		ecdev_close(adapter->ecdev);
-		irq_work_sync(&adapter->ec_watchdog_kicker);
 		ecdev_withdraw(adapter->ecdev);
 	} else {
 		unregister_netdev(netdev);
