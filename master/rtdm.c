@@ -199,6 +199,8 @@ static int ec_rtdm_ioctl_nrt_handler(
     return ec_ioctl_rtdm_nrt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 }
 
+/****************************************************************************/
+
 static int ec_rtdm_ioctl_rt_handler(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info, /**< User data. */

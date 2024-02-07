@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -2002,6 +2002,7 @@ static ATTRIBUTES int ec_ioctl_send(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_master_send(master);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -2025,6 +2026,7 @@ static ATTRIBUTES int ec_ioctl_receive(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_master_receive(master);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -2128,6 +2130,7 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_master_sync_reference_clock(master);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -2156,6 +2159,7 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_master_sync_reference_clock_to(master, time);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -2179,6 +2183,7 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_master_sync_slave_clocks(master);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -2233,6 +2238,7 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_master_sync_monitor_queue(master);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -3355,6 +3361,7 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     ecrt_domain_queue(domain);
     ec_ioctl_unlock(&master->io_mutex);
     return 0;
@@ -3392,7 +3399,8 @@ static ATTRIBUTES int ec_ioctl_domain_state(
 
     ecrt_domain_state(domain, &state);
 
-    if (ec_copy_to_user((void __user *) data.state, &state, sizeof(state), ctx))
+    if (ec_copy_to_user((void __user *) data.state, &state, sizeof(state),
+                ctx))
         return -EFAULT;
 
     return 0;
@@ -4326,6 +4334,7 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
 
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
+
     data.state = ecrt_voe_handler_execute(voe);
     ec_ioctl_unlock(&master->io_mutex);
     if (data.state == EC_REQUEST_SUCCESS && voe->dir == EC_DIR_INPUT)
@@ -4711,13 +4720,6 @@ static long ec_ioctl_both(
         case EC_IOCTL_MASTER_LINK_STATE:
             ret = ec_ioctl_master_link_state(master, arg, ctx);
             break;
-        case EC_IOCTL_APP_TIME:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_app_time(master, arg, ctx);
-            break;
         case EC_IOCTL_REF_CLOCK_TIME:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4921,6 +4923,13 @@ long ec_ioctl
             }
             ret = ec_ioctl_receive(master, arg, ctx);
             break;
+        case EC_IOCTL_APP_TIME:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_app_time(master, arg, ctx);
+            break;
         case EC_IOCTL_SYNC_REF:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -5056,6 +5065,10 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_slave_sdo_entry(master, arg);
             break;
         case EC_IOCTL_SLAVE_SDO_UPLOAD:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
             ret = ec_ioctl_slave_sdo_upload(master, arg);
             break;
         case EC_IOCTL_SLAVE_SDO_DOWNLOAD:
@@ -5076,6 +5089,10 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_slave_sii_write(master, arg);
             break;
         case EC_IOCTL_SLAVE_REG_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
             ret = ec_ioctl_slave_reg_read(master, arg);
             break;
         case EC_IOCTL_SLAVE_REG_WRITE:
@@ -5086,6 +5103,10 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_slave_reg_write(master, arg);
             break;
         case EC_IOCTL_SLAVE_FOE_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
             ret = ec_ioctl_slave_foe_read(master, arg);
             break;
         case EC_IOCTL_SLAVE_FOE_WRITE:
@@ -5096,6 +5117,10 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_slave_foe_write(master, arg);
             break;
         case EC_IOCTL_SLAVE_SOE_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
             ret = ec_ioctl_slave_soe_read(master, arg);
             break;
 #ifdef EC_EOE
