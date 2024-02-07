@@ -1821,7 +1821,7 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_link(
+EC_PUBLIC_API int ecrt_slave_config_eoe_mac_address(
         ec_slave_config_t *sc, /**< Slave configuration. */
         const unsigned char *mac_address /**< MAC address. */
         );
@@ -1834,7 +1834,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_link(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_addr(
+EC_PUBLIC_API int ecrt_slave_config_eoe_ip_address(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint32_t ip_address /**< IPv4 address. */
         );
@@ -1847,7 +1847,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_addr(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_subnet(
+EC_PUBLIC_API int ecrt_slave_config_eoe_subnet_mask(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint32_t subnet_mask /**< IPv4 subnet mask. */
         );
@@ -1860,7 +1860,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_subnet(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_default(
+EC_PUBLIC_API int ecrt_slave_config_eoe_default_gateway(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint32_t gateway_address /**< Gateway's IPv4 address. */
         );
@@ -1873,7 +1873,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_default(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_dns(
+EC_PUBLIC_API int ecrt_slave_config_eoe_dns_address(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint32_t dns_address /**< IPv4 address of the DNS server. */
         );
@@ -1886,7 +1886,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns(
  * \retval  0 Success.
  * \retval <0 Error code.
  */
-EC_PUBLIC_API int ecrt_slave_config_eoe_name(
+EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
         ec_slave_config_t *sc, /**< Slave configuration. */
         const unsigned char *name /**< Zero-terminated hostname. */
         );

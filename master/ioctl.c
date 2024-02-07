@@ -3343,22 +3343,22 @@ static ATTRIBUTES int ec_ioctl_sc_ip(
 
     /* the kernel versions of the EoE set IP methods never fail. */
     if (io.mac_address_included) {
-        ecrt_slave_config_eoe_link(sc, io.mac_address);
+        ecrt_slave_config_eoe_mac_address(sc, io.mac_address);
     }
     if (io.ip_address_included) {
-        ecrt_slave_config_eoe_addr(sc, io.ip_address);
+        ecrt_slave_config_eoe_ip_address(sc, io.ip_address);
     }
     if (io.subnet_mask_included) {
-        ecrt_slave_config_eoe_subnet(sc, io.subnet_mask);
+        ecrt_slave_config_eoe_subnet_mask(sc, io.subnet_mask);
     }
     if (io.gateway_included) {
-        ecrt_slave_config_eoe_default(sc, io.gateway);
+        ecrt_slave_config_eoe_default_gateway(sc, io.gateway);
     }
     if (io.dns_included) {
-        ecrt_slave_config_eoe_dns(sc, io.dns);
+        ecrt_slave_config_eoe_dns_address(sc, io.dns);
     }
     if (io.name_included) {
-        ecrt_slave_config_eoe_name(sc, io.name);
+        ecrt_slave_config_eoe_hostname(sc, io.name);
     }
 
     return ret;

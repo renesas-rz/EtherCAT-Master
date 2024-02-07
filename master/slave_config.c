@@ -1436,7 +1436,7 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
 
 #ifdef EC_EOE
 
-int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
+int ecrt_slave_config_eoe_mac_address(ec_slave_config_t *sc,
         const unsigned char *mac_address)
 {
     memcpy(sc->eoe_ip_param_request.mac_address, mac_address, EC_ETH_ALEN);
@@ -1446,7 +1446,8 @@ int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_addr(ec_slave_config_t *sc, uint32_t ip_address)
+int ecrt_slave_config_eoe_ip_address(ec_slave_config_t *sc,
+        uint32_t ip_address)
 {
     sc->eoe_ip_param_request.ip_address = ip_address;
     sc->eoe_ip_param_request.ip_address_included = 1;
@@ -1455,7 +1456,8 @@ int ecrt_slave_config_eoe_addr(ec_slave_config_t *sc, uint32_t ip_address)
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_subnet(ec_slave_config_t *sc, uint32_t subnet_mask)
+int ecrt_slave_config_eoe_subnet_mask(ec_slave_config_t *sc,
+        uint32_t subnet_mask)
 {
     sc->eoe_ip_param_request.subnet_mask = subnet_mask;
     sc->eoe_ip_param_request.subnet_mask_included = 1;
@@ -1464,7 +1466,7 @@ int ecrt_slave_config_eoe_subnet(ec_slave_config_t *sc, uint32_t subnet_mask)
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_default(ec_slave_config_t *sc,
+int ecrt_slave_config_eoe_default_gateway(ec_slave_config_t *sc,
         uint32_t gateway_address)
 {
     sc->eoe_ip_param_request.gateway = gateway_address;
@@ -1474,7 +1476,8 @@ int ecrt_slave_config_eoe_default(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_dns(ec_slave_config_t *sc, uint32_t dns_address)
+int ecrt_slave_config_eoe_dns_address(ec_slave_config_t *sc,
+        uint32_t dns_address)
 {
     sc->eoe_ip_param_request.dns = dns_address;
     sc->eoe_ip_param_request.dns_included = 1;
@@ -1483,7 +1486,7 @@ int ecrt_slave_config_eoe_dns(ec_slave_config_t *sc, uint32_t dns_address)
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_name(ec_slave_config_t *sc,
+int ecrt_slave_config_eoe_hostname(ec_slave_config_t *sc,
         const unsigned char *name)
 {
     strncpy(sc->eoe_ip_param_request.name, name, EC_MAX_HOSTNAME_SIZE);
@@ -1524,12 +1527,12 @@ EXPORT_SYMBOL(ecrt_slave_config_state);
 EXPORT_SYMBOL(ecrt_slave_config_idn);
 EXPORT_SYMBOL(ecrt_slave_config_flag);
 #ifdef EOE
-EXPORT_SYMBOL(ecrt_slave_config_eoe_link);
-EXPORT_SYMBOL(ecrt_slave_config_eoe_addr);
-EXPORT_SYMBOL(ecrt_slave_config_eoe_subnet);
-EXPORT_SYMBOL(ecrt_slave_config_eoe_default);
-EXPORT_SYMBOL(ecrt_slave_config_eoe_dns);
-EXPORT_SYMBOL(ecrt_slave_config_eoe_name);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_mac_address);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_ip_address);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_subnet_mask);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_default_gateway);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_dns_address);
+EXPORT_SYMBOL(ecrt_slave_config_eoe_hostname);
 #endif
 
 /** \endcond */

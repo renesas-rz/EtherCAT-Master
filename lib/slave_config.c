@@ -36,6 +36,13 @@
 
 /****************************************************************************/
 
+// prototypes for internal lethods (avoid -Wmissing-prototype warning)
+void ec_slave_config_add_sdo_request(ec_slave_config_t *, ec_sdo_request_t *);
+void ec_slave_config_add_reg_request(ec_slave_config_t *, ec_reg_request_t *);
+void ec_slave_config_add_voe_handler(ec_slave_config_t *, ec_voe_handler_t *);
+
+/****************************************************************************/
+
 void ec_slave_config_clear(ec_slave_config_t *sc)
 {
     ec_sdo_request_t *r, *next_r;
@@ -612,7 +619,7 @@ ec_sdo_request_t *ecrt_slave_config_create_sdo_request(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-void ec_slave_config_add_soe_request(ec_slave_config_t *sc,
+inline void ec_slave_config_add_soe_request(ec_slave_config_t *sc,
         ec_soe_request_t *req)
 {
     if (sc->first_soe_request) {
@@ -892,7 +899,7 @@ int ecrt_slave_config_flag(ec_slave_config_t *sc, const char *key,
 
 #ifdef EC_EOE
 
-int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
+int ecrt_slave_config_eoe_mac_address(ec_slave_config_t *sc,
         const unsigned char *mac_address)
 {
     ec_ioctl_eoe_ip_t io = {};
@@ -914,7 +921,8 @@ int ecrt_slave_config_eoe_link(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_addr(ec_slave_config_t *sc, uint32_t ip_address)
+int ecrt_slave_config_eoe_ip_address(ec_slave_config_t *sc,
+        uint32_t ip_address)
 {
     ec_ioctl_eoe_ip_t io = {};
     int ret;
@@ -935,7 +943,8 @@ int ecrt_slave_config_eoe_addr(ec_slave_config_t *sc, uint32_t ip_address)
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_subnet(ec_slave_config_t *sc, uint32_t subnet_mask)
+int ecrt_slave_config_eoe_subnet_mask(ec_slave_config_t *sc,
+        uint32_t subnet_mask)
 {
     ec_ioctl_eoe_ip_t io = {};
     int ret;
@@ -956,7 +965,7 @@ int ecrt_slave_config_eoe_subnet(ec_slave_config_t *sc, uint32_t subnet_mask)
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_default(ec_slave_config_t *sc,
+int ecrt_slave_config_eoe_default_gateway(ec_slave_config_t *sc,
         uint32_t gateway_address)
 {
     ec_ioctl_eoe_ip_t io = {};
@@ -978,7 +987,8 @@ int ecrt_slave_config_eoe_default(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_dns(ec_slave_config_t *sc, uint32_t dns_address)
+int ecrt_slave_config_eoe_dns_address(ec_slave_config_t *sc,
+        uint32_t dns_address)
 {
     ec_ioctl_eoe_ip_t io = {};
     int ret;
@@ -999,7 +1009,7 @@ int ecrt_slave_config_eoe_dns(ec_slave_config_t *sc, uint32_t dns_address)
 
 /****************************************************************************/
 
-int ecrt_slave_config_eoe_name(ec_slave_config_t *sc,
+int ecrt_slave_config_eoe_hostname(ec_slave_config_t *sc,
         const unsigned char *name)
 {
     ec_ioctl_eoe_ip_t io = {};

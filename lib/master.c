@@ -34,6 +34,13 @@
 
 /****************************************************************************/
 
+// prototypes for internal lethods (avoid -Wmissing-prototype warning)
+void ec_master_clear_config(ec_master_t *);
+void ec_master_add_domain(ec_master_t *, ec_domain_t *);
+void ec_master_add_slave_config(ec_master_t *, ec_slave_config_t *);
+
+/****************************************************************************/
+
 int ecrt_master_reserve(ec_master_t *master)
 {
     int ret = ioctl(master->fd, EC_IOCTL_REQUEST, NULL);
