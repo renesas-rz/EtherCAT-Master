@@ -2,6 +2,7 @@
 /* Copyright (c) 2020, Intel Corporation. */
 
 #include <net/xdp_sock_drv.h>
+#include <linux/if_vlan.h>
 
 #include "igc-5.14-ethercat.h"
 #include "igc_xdp-5.14-ethercat.h"
