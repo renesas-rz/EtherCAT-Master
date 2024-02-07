@@ -29,6 +29,17 @@
 
 #include "e1000-5.14-ethercat.h"
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
 char e1000e_driver_name[] = "ec_e1000e";
 
 static inline int check_arbiter_wa_flag(const struct e1000_adapter *adapter)
@@ -4887,7 +4898,11 @@ static int e1000_set_mac(struct net_device *netdev, void *p)
 	if (!is_valid_ether_addr(addr->sa_data))
 		return -EADDRNOTAVAIL;
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+    eth_hw_addr_set(netdev, addr->sa_data);
+#else
 	memcpy(netdev->dev_addr, addr->sa_data, netdev->addr_len);
+#endif
 	memcpy(adapter->hw.mac.addr, addr->sa_data, netdev->addr_len);
 
 	hw->mac.ops.rar_set(&adapter->hw, adapter->hw.mac.addr, 0);
@@ -7705,7 +7720,11 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		dev_err(&pdev->dev,
 			"NVM Read Error while reading MAC address\n");
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+	eth_hw_addr_set(netdev, adapter->hw.mac.addr);
+#else
 	memcpy(netdev->dev_addr, adapter->hw.mac.addr, netdev->addr_len);
+#endif
 
 	if (!is_valid_ether_addr(netdev->dev_addr)) {
 		dev_err(&pdev->dev, "Invalid MAC Address: %pM\n",
