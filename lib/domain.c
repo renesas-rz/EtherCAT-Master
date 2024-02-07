@@ -83,22 +83,8 @@ size_t ecrt_domain_size(const ec_domain_t *domain)
 
 /****************************************************************************/
 
-uint8_t *ecrt_domain_data(ec_domain_t *domain)
+uint8_t *ecrt_domain_data(const ec_domain_t *domain)
 {
-    if (!domain->process_data) {
-        int offset = 0;
-
-        offset = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_OFFSET,
-                domain->index);
-        if (EC_IOCTL_IS_ERROR(offset)) {
-            fprintf(stderr, "Failed to get domain offset: %s\n",
-                    strerror(EC_IOCTL_ERRNO(offset)));
-            return NULL;
-        }
-
-        domain->process_data = domain->master->process_data + offset;
-    }
-
     return domain->process_data;
 }
 

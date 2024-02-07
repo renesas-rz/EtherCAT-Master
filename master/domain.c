@@ -440,7 +440,7 @@ void ecrt_domain_external_memory(ec_domain_t *domain, uint8_t *mem)
 
 /****************************************************************************/
 
-uint8_t *ecrt_domain_data(ec_domain_t *domain)
+uint8_t *ecrt_domain_data(const ec_domain_t *domain)
 {
     return domain->data;
 }

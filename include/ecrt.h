@@ -1866,7 +1866,7 @@ void ecrt_domain_external_memory(
  * \return Pointer to the process data memory.
  */
 EC_PUBLIC_API uint8_t *ecrt_domain_data(
-        ec_domain_t *domain /**< Domain. */
+        const ec_domain_t *domain /**< Domain. */
         );
 
 /** Determines the states of the domain's datagrams.
