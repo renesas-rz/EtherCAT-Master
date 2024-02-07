@@ -5320,7 +5320,7 @@ static int rtl_get_ether_clk(struct rtl8169_private *tp)
 static void rtl_init_mac_address(struct rtl8169_private *tp)
 {
 	struct net_device *dev = tp->dev;
-	u8 *mac_addr = dev->dev_addr;
+	u8 mac_addr[ETH_ALEN];
 	int rc;
 
 	rc = eth_platform_get_mac_address(tp_to_dev(tp), mac_addr);
@@ -5338,6 +5338,12 @@ static void rtl_init_mac_address(struct rtl8169_private *tp)
 	eth_hw_addr_random(dev);
 	dev_warn(tp_to_dev(tp), "can't read MAC address, setting random one\n");
 done:
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+	eth_hw_addr_set(dev, mac_addr);
+#else
+	memcpy(dev->dev_addr, mac_addr, sizeof(mac_addr));
+#endif
+
 	rtl_rar_set(tp, mac_addr);
 }
 

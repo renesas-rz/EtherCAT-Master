@@ -41,6 +41,17 @@
 
 #define EC_GEN_RX_BUF_SIZE 1600
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
 /****************************************************************************/
 
 int __init ec_gen_init_module(void);
@@ -239,7 +250,7 @@ int ec_gen_device_offer(
     int ret = 0;
 
     dev->used_netdev = desc->netdev;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) || (SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5)
     eth_hw_addr_set(dev->netdev, desc->dev_addr);
 #else
     memcpy(dev->netdev->dev_addr, desc->dev_addr, ETH_ALEN);
