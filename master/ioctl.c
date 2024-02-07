@@ -3569,7 +3569,6 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     ec_ioctl_sdo_request_t data;
     ec_slave_config_t *sc;
     ec_sdo_request_t *req;
-    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3818,7 +3817,6 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     ec_ioctl_soe_request_t data;
     ec_slave_config_t *sc;
     ec_soe_request_t *req;
-    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
