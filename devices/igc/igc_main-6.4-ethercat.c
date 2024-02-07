@@ -6579,8 +6579,6 @@ void ec_poll(struct net_device *netdev)
 	}
 }
 
-/**
-
 /* PCIe configuration access */
 void igc_read_pci_cfg(struct igc_hw *hw, u32 reg, u16 *value)
 {
