@@ -108,6 +108,7 @@ static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
 static int e1000_change_mtu(struct net_device *netdev, int new_mtu);
 static int e1000_set_mac(struct net_device *netdev, void *p);
 void ec_poll(struct net_device *);
+static void ec_kick_watchdog(struct irq_work *work);
 static irqreturn_t e1000_intr(int irq, void *data);
 static bool e1000_clean_tx_irq(struct e1000_adapter *adapter,
 			       struct e1000_tx_ring *tx_ring);
