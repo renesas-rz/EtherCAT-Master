@@ -3842,7 +3842,7 @@ static void ec_kick_watchdog(struct irq_work *work)
 	struct e1000_adapter *adapter =
 		container_of(work, struct e1000_adapter, ec_watchdog_kicker);
 
-	schedule_work(&adapter->watchdog_task);
+	schedule_delayed_work(&adapter->watchdog_task, 1);
 }
 
 void ec_poll(struct net_device *netdev)
