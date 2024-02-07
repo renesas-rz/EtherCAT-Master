@@ -31,6 +31,17 @@
 #define request_dma(X, Y) ((int)(-EINVAL))
 #endif
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
 #include "module.h"
 
 /**
@@ -897,7 +908,7 @@ static int ccat_eth_init_netdev(struct ccat_eth_priv *priv)
 
 	/* init netdev with MAC and stack callbacks */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) || (SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 5)
 	u8 mac_addr[ETH_ALEN];
 
 	if (priv->netdev->addr_len != ETH_ALEN)
