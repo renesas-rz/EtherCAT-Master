@@ -16,12 +16,7 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
  *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
-
 
 #ifndef __EC_RTDM_DETAILS_H__
 #define __EC_RTDM_DETAILS_H__
@@ -60,5 +55,6 @@ static inline EC_RTDM_USERFD_T *ec_ioctl_to_rtdm(ec_ioctl_context_t *ctx)
     return container_of(ctx, ec_rtdm_context_t, ioctl_ctx)->user_fd;
 }
 
+/****************************************************************************/
 
 #endif  // __EC_RTDM_DETAILS_H__

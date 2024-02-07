@@ -1,10 +1,8 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2009-2010  Moehwald GmbH B. Benner
  *                     2011  IgH Andreas Stewering-Bone
- *                     2012  Florian Pose <fp@igh-essen.com>
+ *                     2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master.
  *
@@ -19,10 +17,6 @@
  *
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
  *
  ****************************************************************************/
 
@@ -42,6 +36,8 @@
 /** Set to 1 to enable device operations debugging.
  */
 #define DEBUG_RTDM 0
+
+/****************************************************************************/
 
 static int ec_rtdm_open(struct rtdm_fd *fd, int oflags)
 {
@@ -66,6 +62,8 @@ static int ec_rtdm_open(struct rtdm_fd *fd, int oflags)
 	return 0;
 }
 
+/****************************************************************************/
+
 static void ec_rtdm_close(struct rtdm_fd *fd)
 {
 	struct ec_rtdm_context *ctx = rtdm_fd_to_private(fd);
@@ -84,6 +82,8 @@ static void ec_rtdm_close(struct rtdm_fd *fd)
 #endif
 }
 
+/****************************************************************************/
+
 static int ec_rtdm_ioctl_rt_handler(struct rtdm_fd *fd, unsigned int request,
 			 void __user *arg)
 {
@@ -92,7 +92,8 @@ static int ec_rtdm_ioctl_rt_handler(struct rtdm_fd *fd, unsigned int request,
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	ec_rtdm_dev_t *rtdm_dev = dev->device_data;
 
-	result = ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+	result =
+        ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 
 	if (result == -ENOTTY)
 		/* Try again with nrt ioctl handler below in secondary mode. */
@@ -100,6 +101,8 @@ static int ec_rtdm_ioctl_rt_handler(struct rtdm_fd *fd, unsigned int request,
 
 	return result;
 }
+
+/****************************************************************************/
 
 static int ec_rtdm_ioctl_nrt_handler(struct rtdm_fd *fd, unsigned int request,
 			 void __user *arg)
@@ -111,11 +114,16 @@ static int ec_rtdm_ioctl_nrt_handler(struct rtdm_fd *fd, unsigned int request,
 	return ec_ioctl_rtdm_nrt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 }
 
+/****************************************************************************/
+
 static int ec_rtdm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 {
-	struct ec_rtdm_context *ctx = (struct ec_rtdm_context *) rtdm_fd_to_private(fd);
+	struct ec_rtdm_context *ctx =
+        (struct ec_rtdm_context *) rtdm_fd_to_private(fd);
 	return rtdm_mmap_kmem(vma, (void *)ctx->ioctl_ctx.process_data);
 }
+
+/****************************************************************************/
 
 static struct rtdm_driver ec_rtdm_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(ec_rtdm,
@@ -133,6 +141,8 @@ static struct rtdm_driver ec_rtdm_driver = {
 		.mmap		= ec_rtdm_mmap,
 	},
 };
+
+/****************************************************************************/
 
 int ec_rtdm_dev_init(ec_rtdm_dev_t *rtdm_dev, ec_master_t *master)
 {
@@ -167,6 +177,8 @@ int ec_rtdm_dev_init(ec_rtdm_dev_t *rtdm_dev, ec_master_t *master)
 	return 0;
 }
 
+/****************************************************************************/
+
 void ec_rtdm_dev_clear(ec_rtdm_dev_t *rtdm_dev)
 {
 	rtdm_dev_unregister(rtdm_dev->dev);
@@ -176,3 +188,5 @@ void ec_rtdm_dev_clear(ec_rtdm_dev_t *rtdm_dev)
 
 	kfree(rtdm_dev->dev);
 }
+
+/****************************************************************************/
