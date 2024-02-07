@@ -110,7 +110,7 @@ void igc_reset(struct igc_adapter *adapter)
 	/* Re-establish EEE setting */
 	igc_set_eee_i225(hw, true, true, true);
 
-	if (!adapter->ecdev && !netif_running(adapter->netdev))
+	if (!netif_running(adapter->netdev))
 		igc_power_down_phy_copper_base(&adapter->hw);
 
 	/* Enable HW to recognize an 802.1Q VLAN Ethernet packet */
@@ -2605,7 +2605,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 
 			total_packets++;
 			total_bytes += size;
-		} 
+		}
 		else if (adapter->ecdev) {
 			unsigned char *va = page_address(rx_buffer->page) + rx_buffer->page_offset;
 			unsigned int size = le16_to_cpu(rx_desc->wb.upper.length);
@@ -2642,7 +2642,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
 			total_packets++;
 			continue;
 		}
-		
+
 		/* verify the packet layout is correct */
 		if (igc_cleanup_headers(rx_ring, rx_desc, skb)) {
 			skb = NULL;
@@ -4152,9 +4152,7 @@ static void igc_reset_q_vector(struct igc_adapter *adapter, int v_idx)
 	if (q_vector->rx.ring)
 		adapter->rx_ring[q_vector->rx.ring->queue_index] = NULL;
 
-	if (!adapter->ecdev) {
-		netif_napi_del(&q_vector->napi);
-	}
+	netif_napi_del(&q_vector->napi);
 }
 
 /**
@@ -4619,10 +4617,8 @@ static int igc_alloc_q_vector(struct igc_adapter *adapter,
 	if (!q_vector)
 		return -ENOMEM;
 
-	if (!adapter->ecdev) {
-		/* initialize NAPI */
-		netif_napi_add(adapter->netdev, &q_vector->napi, igc_poll);
-	}
+	/* initialize NAPI */
+	netif_napi_add(adapter->netdev, &q_vector->napi, igc_poll);
 
 	/* tie q_vector and adapter together */
 	adapter->q_vector[v_idx] = q_vector;
@@ -5576,7 +5572,15 @@ static void igc_watchdog_task(struct work_struct *work)
 	u32 link;
 	int i;
 
+	if (adapter->ecdev)
+		hw->mac.get_link_status = true;
+
 	link = igc_has_link(adapter);
+
+	if (adapter->ecdev) {
+		ecdev_set_link(adapter->ecdev, link);
+		return;
+	}
 
 	if (adapter->flags & IGC_FLAG_NEED_LINK_UPDATE) {
 		if (time_after(jiffies, (adapter->link_check_timeout + HZ)))
@@ -5972,7 +5976,7 @@ static int __igc_open(struct net_device *netdev, bool resuming)
 
 	if (!resuming)
 		pm_runtime_put(&pdev->dev);
-	
+
 	if (!adapter->ecdev) {
 		netif_tx_start_all_queues(netdev);
 	}
@@ -6537,7 +6541,15 @@ static const struct net_device_ops igc_netdev_ops = {
 	.ndo_xsk_wakeup		= igc_xsk_wakeup,
 };
 
-/** 
+static void ec_kick_watchdog(struct irq_work *work)
+{
+	struct igc_adapter *adapter =
+		container_of(work, struct igc_adapter, ec_watchdog_kicker);
+
+	schedule_work(&adapter->watchdog_task);
+}
+
+/**
 * ec_poll - EtherCAT poll routine
 * @netdev: net device structure
 *
@@ -6551,13 +6563,8 @@ void ec_poll(struct net_device *netdev)
 	int budget = 64;
 
 	if (jiffies - adapter->ec_watchdog_jiffies >= 2 * HZ) {
-		struct igc_hw *hw = &adapter->hw;
-
-		bool link;
-		hw->mac.get_link_status = true;
-		link = igc_has_link(adapter);
-		ecdev_set_link(adapter->ecdev, link);
 		adapter->ec_watchdog_jiffies = jiffies;
+		irq_work_queue(&adapter->ec_watchdog_kicker);
 	}
 
 	for (i = 0; i < adapter->num_q_vectors; i++) {
@@ -6910,6 +6917,7 @@ static int igc_probe(struct pci_dev *pdev,
 
 	adapter->ecdev = ecdev_offer(netdev, ec_poll, THIS_MODULE);
 	if (adapter->ecdev) {
+		init_irq_work(&adapter->ec_watchdog_kicker, ec_kick_watchdog);
 		err = ecdev_open(adapter->ecdev);
 		if (err) {
 			ecdev_withdraw(adapter->ecdev);
@@ -6976,6 +6984,7 @@ static void igc_remove(struct pci_dev *pdev)
 
 	if (adapter->ecdev) {
 		ecdev_close(adapter->ecdev);
+		irq_work_sync(&adapter->ec_watchdog_kicker);
 		ecdev_withdraw(adapter->ecdev);
 	}
 
