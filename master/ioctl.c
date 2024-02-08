@@ -2282,9 +2282,12 @@ static ATTRIBUTES int ec_ioctl_reset(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
-    down(&master->master_sem);
-    ecrt_master_reset(master);
-    up(&master->master_sem);
+#ifdef EC_IOCTL_RTDM
+    /* Xenomai/LXRT is like NMI context, so we do a two-stage schedule. */
+    irq_work_queue(&master->sc_reset_work_kicker);
+#else
+    schedule_work(&master->sc_reset_work);
+#endif
     return 0;
 }
 
@@ -4720,6 +4723,13 @@ static long ec_ioctl_both(
         case EC_IOCTL_MASTER_LINK_STATE:
             ret = ec_ioctl_master_link_state(master, arg, ctx);
             break;
+        case EC_IOCTL_RESET:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_reset(master, arg, ctx);
+            break;
         case EC_IOCTL_REF_CLOCK_TIME:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -5203,13 +5213,6 @@ static long ec_ioctl_nrt
                 break;
             }
             ret = ec_ioctl_deactivate(master, arg, ctx);
-            break;
-        case EC_IOCTL_RESET:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_reset(master, arg, ctx);
             break;
         case EC_IOCTL_SC_SYNC:
             if (!ctx->writable) {

@@ -107,6 +107,8 @@ static int ec_master_eoe_thread(void *);
 void ec_master_find_dc_ref_clock(ec_master_t *);
 void ec_master_clear_device_stats(ec_master_t *);
 void ec_master_update_device_stats(ec_master_t *);
+static void sc_reset_task_kicker(struct irq_work *work);
+static void sc_reset_task(struct work_struct *work);
 
 /****************************************************************************/
 
@@ -316,6 +318,9 @@ int ec_master_init(ec_master_t *master, /**< EtherCAT master */
     master->dc_ref_config = NULL;
     master->dc_ref_clock = NULL;
 
+    INIT_WORK(&master->sc_reset_work, sc_reset_task);
+    init_irq_work(&master->sc_reset_work_kicker, sc_reset_task_kicker);
+
     // init character device
     ret = ec_cdev_init(&master->cdev, master, device_number);
     if (ret)
@@ -382,6 +387,9 @@ void ec_master_clear(
     device_unregister(master->class_device);
 
     ec_cdev_clear(&master->cdev);
+
+    irq_work_sync(&master->sc_reset_work_kicker);
+    cancel_work_sync(&master->sc_reset_work);
 
 #ifdef EC_EOE
     ec_master_clear_eoe_handlers(master);
@@ -3253,6 +3261,27 @@ void ecrt_master_reset(ec_master_t *master)
             ec_slave_request_state(sc->slave, EC_SLAVE_STATE_OP);
         }
     }
+}
+
+/****************************************************************************/
+
+static void sc_reset_task_kicker(struct irq_work *work)
+{
+    struct ec_master *master =
+        container_of(work, struct ec_master, sc_reset_work_kicker);
+    schedule_work(&master->sc_reset_work);
+}
+
+/****************************************************************************/
+
+static void sc_reset_task(struct work_struct *work)
+{
+    struct ec_master *master =
+        container_of(work, struct ec_master, sc_reset_work);
+
+    down(&master->master_sem);
+    ecrt_master_reset(master);
+    up(&master->master_sem);
 }
 
 /****************************************************************************/
