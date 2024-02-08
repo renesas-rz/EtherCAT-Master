@@ -1320,12 +1320,13 @@ ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
 void ecrt_slave_config_state(const ec_slave_config_t *sc,
         ec_slave_config_state_t *state)
 {
-    state->online = sc->slave ? 1 : 0;
+    const ec_slave_t *slave = sc->slave;
+
+    state->online = slave ? 1 : 0;
     if (state->online) {
         state->operational =
-            sc->slave->current_state == EC_SLAVE_STATE_OP
-            && !sc->slave->force_config;
-        state->al_state = sc->slave->current_state;
+            slave->current_state == EC_SLAVE_STATE_OP && !slave->force_config;
+        state->al_state = slave->current_state;
     } else {
         state->operational = 0;
         state->al_state = EC_SLAVE_STATE_UNKNOWN;
