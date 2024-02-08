@@ -27,20 +27,16 @@
  * \defgroup ApplicationInterface EtherCAT Configuration Interface
  *
  * Interface for configuring the EtherCAT master for realtime applications.
- * There are functions to request a master, to map process data,
- * to communicate with slaves via CoE
- * and to configure and activate the bus.
- * All methods in this group should be used before the
- * application switches to operational (real-time) mode
- * by calling ecrt_master_activate().
- * After that, only calls to the functions in \ref ApplicationInterfaceRT
- * are allowed.
- * The real-time operational mode finishes by calling ecrt_master_deactivate().
- * Many functions in this group are blocking and/or they
- * acquire locks.
- * Do not use these functions in non-Userspace contexts,
- * e.g. in RTAI/Xenomai Real-Time tasks or in atomic/softirq/tasklet
- * context in kernel modules. You have been warned.
+ * There are functions to request a master, to map process data, to
+ * communicate with slaves via CoE and to configure and activate the network.
+ * All methods in this group should be used before the application switches to
+ * operational (real-time) mode by calling ecrt_master_activate(). After
+ * that, only calls to the functions in \ref ApplicationInterfaceRT are
+ * allowed. The real-time operational mode finishes by calling
+ * ecrt_master_deactivate(). Many functions in this group are blocking and/or
+ * they acquire locks. Do not use these functions in non-userspace contexts,
+ * e. g. in RTAI/Xenomai Real-Time tasks or in atomic/softirq/tasklet context
+ * in kernel modules. You have been warned.
  *
  * Changes in version 1.6.0:
  *
@@ -109,10 +105,10 @@
  *   ecrt_slave_config_sync_manager()).
  * - Added ecrt_slave_config_complete_sdo() method to download an SDO during
  *   configuration via CompleteAccess.
- * - Added ecrt_master_deactivate() to remove the bus configuration.
+ * - Added ecrt_master_deactivate() to remove the master configuration.
  * - Added ecrt_open_master() and ecrt_master_reserve() separation for
  *   userspace.
- * - Added bus information interface (methods ecrt_master(),
+ * - Added master information interface (methods ecrt_master(),
  *   ecrt_master_get_slave(), ecrt_master_get_sync_manager(),
  *   ecrt_master_get_pdo() and ecrt_master_get_pdo_entry()) to get information
  *   about the currently connected slaves and the PDO entries provided.
@@ -332,7 +328,7 @@ typedef struct {
     unsigned int al_states : 4; /**< Application-layer states of all slaves.
                                   The states are coded in the lower 4 bits.
                                   If a bit is set, it means that at least one
-                                  slave in the bus is in the corresponding
+                                  slave in the network is in the corresponding
                                   state:
                                   - Bit 0: \a INIT
                                   - Bit 1: \a PREOP
@@ -354,10 +350,10 @@ typedef struct {
     unsigned int slaves_responding; /**< Sum of responding slaves on the given
                                       link. */
     unsigned int al_states : 4; /**< Application-layer states of the slaves on
-                                  the given link.  The states are coded in the
-                                  lower 4 bits.  If a bit is set, it means
-                                  that at least one slave in the bus is in the
-                                  corresponding state:
+                                  the given link. The states are coded in the
+                                  lower 4 bits. If a bit is set, it means
+                                  that at least one slave in the network is in
+                                  the corresponding state:
                                   - Bit 0: \a INIT
                                   - Bit 1: \a PREOP
                                   - Bit 2: \a SAFEOP
@@ -397,9 +393,10 @@ typedef struct  {
  * \see ecrt_master().
  */
 typedef struct {
-    unsigned int slave_count; /**< Number of slaves in the bus. */
+    unsigned int slave_count; /**< Number of slaves in the network. */
     unsigned int link_up : 1; /**< \a true, if the network link is up. */
-    uint8_t scan_busy; /**< \a true, while the master is scanning the bus */
+    uint8_t scan_busy; /**< \a true, while the master is scanning the network.
+                        */
     uint64_t app_time; /**< Application time. */
 } ec_master_info_t;
 
@@ -547,7 +544,7 @@ typedef struct {
     unsigned int n_entries; /**< Number of PDO entries in \a entries to map.
                               Zero means, that the default mapping shall be
                               used (this can only be done if the slave is
-                              present at bus configuration time). */
+                              present at configuration time). */
     ec_pdo_entry_info_t const *entries; /**< Array of PDO entries to map. Can
                                           either be \a NULL, or must contain
                                           at least \a n_entries values. */
@@ -709,14 +706,14 @@ EC_PUBLIC_API int ecrt_master_reserve(
 /** Sets the locking callbacks.
  *
  * For concurrent master access, i. e. if other instances than the application
- * want to send and receive datagrams on the bus, the application has to
+ * want to send and receive datagrams on the network, the application has to
  * provide a callback mechanism. This method takes two function pointers as
  * its parameters. Asynchronous master access (like EoE processing) is only
  * possible if the callbacks have been set.
  *
- * The task of the send callback (\a send_cb) is to decide, if the bus is
- * currently accessible and whether or not to call the ecrt_master_send_ext()
- * method.
+ * The task of the send callback (\a send_cb) is to decide, if the network
+ * hardware is currently accessible and whether or not to call the
+ * ecrt_master_send_ext() method.
  *
  * The task of the receive callback (\a receive_cb) is to decide, if a call to
  * ecrt_master_receive() is allowed and to execute it respectively.
@@ -765,11 +762,11 @@ EC_PUBLIC_API ec_domain_t *ecrt_master_create_domain(
  *   aliased slave, so a position of zero means the aliased slave itself and a
  *   positive value matches the n-th slave behind the aliased one.
  *
- * If the slave with the given address is found during the bus configuration,
+ * If the slave with the given address is found during the configuration,
  * its vendor ID and product code are matched against the given value. On
  * mismatch, the slave is not configured and an error message is raised.
  *
- * If different slave configurations are pointing to the same slave during bus
+ * If different slave configurations are pointing to the same slave during
  * configuration, a warning is raised and only the first configuration is
  * applied.
  *
@@ -1005,12 +1002,12 @@ EC_PUBLIC_API int ecrt_master_read_idn(
  * This function tells the master that the configuration phase is finished and
  * the realtime operation will begin. The function allocates internal memory
  * for the domains and calculates the logical FMMU addresses for domain
- * members. It tells the master state machine that the bus configuration is
- * now to be applied.
+ * members. It tells the master state machine that the configuration is
+ * now to be applied to the network.
  *
  * \attention After this function has been called, the realtime application is
  * in charge of cyclically calling ecrt_master_send() and
- * ecrt_master_receive() to ensure bus communication. Before calling this
+ * ecrt_master_receive() to ensure network communication. Before calling this
  * function, the master thread is responsible for that, so these functions may
  * not be called! The method itself allocates memory and should not be called
  * in realtime context.
@@ -1023,7 +1020,7 @@ EC_PUBLIC_API int ecrt_master_activate(
 
 /** Deactivates the master.
  *
- * Removes the bus configuration. All objects created by
+ * Removes the master configuration. All objects created by
  * ecrt_master_create_domain(), ecrt_master_slave_config(), ecrt_domain_data()
  * ecrt_slave_config_create_sdo_request() and
  * ecrt_slave_config_create_voe_handler() are freed, so pointers to them
@@ -1094,7 +1091,7 @@ EC_PUBLIC_API void ecrt_master_send_ext(
  * Stores the master state information in the given \a state structure.
  *
  * This method returns a global state. For the link-specific states in a
- * redundant bus topology, use the ecrt_master_link_state() method.
+ * redundant network topology, use the ecrt_master_link_state() method.
  */
 EC_PUBLIC_API void ecrt_master_state(
         const ec_master_t *master, /**< EtherCAT master. */
@@ -1193,6 +1190,10 @@ EC_PUBLIC_API void ecrt_master_sync_slave_clocks(
  * \attention The returned time is the system time of the reference clock
  * minus the transmission delay of the reference clock.
  *
+ * Calling this method makes only sense in realtime context (after master
+ * activation), when the ecrt_master_sync_slave_clocks() method is called
+ * cyclically.
+ *
  * \retval 0 success, system time was written into \a time.
  * \retval -ENXIO No reference clock found.
  * \retval -EIO Slave synchronization datagram was not received.
@@ -1234,6 +1235,9 @@ EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
  * OP state. In general, this is not necessary, because it is automatically
  * done by the master. But with special slaves, that can be reconfigured by
  * the vendor during runtime, it can be useful.
+ *
+ * Calling this method only makes sense in realtime context (after
+ * activation), because slaves will not be configured before.
  *
  * \ingroup ApplicationInterfaceRT
  */
@@ -1625,8 +1629,13 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_size(
  * Byte   2: Error register
  * Byte 3-7: Data
  *
+ * Calling this method makes only sense in realtime context (after master
+ * activation).
+ *
  * \return 0 on success (record popped), or negative error code (i. e.
  * -ENOENT, if ring is empty).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_pop(
         ec_slave_config_t *sc, /**< Slave configuration. */
@@ -1636,7 +1645,12 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_pop(
 
 /** Clears CoE emergency ring buffer and the overrun counter.
  *
+ * Calling this method makes only sense in realtime context (after master
+ * activation).
+ *
  * \return 0 on success, or negative error code.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_clear(
         ec_slave_config_t *sc /**< Slave configuration. */
@@ -1648,7 +1662,12 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_clear(
  * not be stored in the ring buffer and had to be dropped. Call
  * ecrt_slave_config_emerg_clear() to reset the counter.
  *
+ * Calling this method makes only sense in realtime context (after master
+ * activation).
+ *
  * \return Number of overruns since last clear, or negative error code.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_overruns(
         const ec_slave_config_t *sc /**< Slave configuration. */
@@ -1735,6 +1754,11 @@ EC_PUBLIC_API ec_reg_request_t *ecrt_slave_config_create_reg_request(
  *
  * \attention If the state of process data exchange shall be monitored in
  * realtime, ecrt_domain_state() should be used.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_slave_config_state(
         const ec_slave_config_t *sc, /**< Slave configuration */
@@ -1916,6 +1940,12 @@ EC_PUBLIC_API void ecrt_domain_state(
  * \attention If the SDO index and/or subindex is changed while
  * ecrt_sdo_request_state() returns EC_REQUEST_BUSY, this may lead to
  * unexpected results.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation). To initialize the SDO request, the index and subindex can be
+ * set via ecrt_slave_config_create_sdo_request().
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_sdo_request_index(
         ec_sdo_request_t *req, /**< SDO request. */
@@ -1930,6 +1960,9 @@ EC_PUBLIC_API void ecrt_sdo_request_index(
  *
  * The timeout is permanently stored in the request object and is valid until
  * the next call of this method.
+ *
+ * The timeout should be defined in non-realtime context, but can also be
+ * changed afterwards.
  */
 EC_PUBLIC_API void ecrt_sdo_request_timeout(
         ec_sdo_request_t *req, /**< SDO request. */
@@ -1958,7 +1991,12 @@ EC_PUBLIC_API void ecrt_sdo_request_timeout(
  * the internal SDO data memory could be re-allocated if the read SDO data do
  * not fit inside.
  *
+ * This method is meant to be called in realtime context (after master
+ * activation), but can also be used to initialize data before.
+ *
  * \return Pointer to the internal SDO data memory.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API uint8_t *ecrt_sdo_request_data(
         const ec_sdo_request_t *req /**< SDO request. */
@@ -1970,7 +2008,12 @@ EC_PUBLIC_API uint8_t *ecrt_sdo_request_data(
  * reserved memory. After a read operation the size is set to the size of the
  * read data. The size is not modified in any other situation.
  *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
  * \return SDO data size in bytes.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API size_t ecrt_sdo_request_data_size(
         const ec_sdo_request_t *req /**< SDO request. */
@@ -1978,22 +2021,32 @@ EC_PUBLIC_API size_t ecrt_sdo_request_data_size(
 
 /** Get the current state of the SDO request.
  *
+ * The user-space implementation fetches incoming data and stores the received
+ * data size in the request object, so the request is not const.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
  * \return Request state.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
-#ifdef __KERNEL__
 ec_request_state_t ecrt_sdo_request_state(
-        const ec_sdo_request_t *req /**< SDO request. */
-    );
-#else
-EC_PUBLIC_API ec_request_state_t ecrt_sdo_request_state(
-        ec_sdo_request_t *req /**< SDO request. */
-    );
+#ifdef __KERNEL__
+        const
 #endif
+        ec_sdo_request_t *req /**< SDO request. */
+        );
 
 /** Schedule an SDO write operation.
  *
  * \attention This method may not be called while ecrt_sdo_request_state()
  * returns EC_REQUEST_BUSY.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_sdo_request_write(
         ec_sdo_request_t *req /**< SDO request. */
@@ -2007,6 +2060,11 @@ EC_PUBLIC_API void ecrt_sdo_request_write(
  * \attention After calling this function, the return value of
  * ecrt_sdo_request_data() must be considered as invalid while
  * ecrt_sdo_request_state() returns EC_REQUEST_BUSY.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_sdo_request_read(
         ec_sdo_request_t *req /**< SDO request. */
@@ -2021,6 +2079,12 @@ EC_PUBLIC_API void ecrt_sdo_request_read(
  * \attention If the drive number and/or IDN is changed while
  * ecrt_soe_request_state() returns EC_REQUEST_BUSY, this may lead to
  * unexpected results.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation). To initialize the SoE request, the drive_no and IDN can be
+ * set via ecrt_slave_config_create_soe_request().
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_soe_request_idn(
         ec_soe_request_t *req, /**< IDN request. */
@@ -2035,6 +2099,9 @@ EC_PUBLIC_API void ecrt_soe_request_idn(
  *
  * The timeout is permanently stored in the request object and is valid until
  * the next call of this method.
+ *
+ * The timeout should be defined in non-realtime context, but can also be
+ * changed afterwards.
  */
 EC_PUBLIC_API void ecrt_soe_request_timeout(
         ec_soe_request_t *req, /**< SoE request. */
@@ -2063,7 +2130,12 @@ EC_PUBLIC_API void ecrt_soe_request_timeout(
  * because the internal IDN data memory could be re-allocated if the read IDN
  * data do not fit inside.
  *
+ * This method is meant to be called in realtime context (after master
+ * activation), but can also be used to initialize data before.
+ *
  * \return Pointer to the internal IDN data memory.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API uint8_t *ecrt_soe_request_data(
         const ec_soe_request_t *req /**< SoE request. */
@@ -2084,16 +2156,31 @@ EC_PUBLIC_API size_t ecrt_soe_request_data_size(
 /** Get the current state of the SoE request.
  *
  * \return Request state.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * In the user-space implementation, the method fetches the size of the
+ * incoming data, so the request object is not const.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
-        ec_soe_request_t *req /**< SoE request. Not const, because the
-                                internal data size may be updated. */
-    );
+#ifdef __KERNEL__
+        const
+#endif
+        ec_soe_request_t *req /**< SoE request. */
+        );
 
 /** Schedule an SoE IDN write operation.
  *
  * \attention This method may not be called while ecrt_soe_request_state()
  * returns EC_REQUEST_BUSY.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
@@ -2107,6 +2194,11 @@ EC_PUBLIC_API void ecrt_soe_request_write(
  * \attention After calling this function, the return value of
  * ecrt_soe_request_data() must be considered as invalid while
  * ecrt_soe_request_state() returns EC_REQUEST_BUSY.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
@@ -2122,6 +2214,12 @@ EC_PUBLIC_API void ecrt_soe_request_read(
  * type at as header. These numbers can be set with this function. The values
  * are valid and will be used for future send operations until the next call
  * of this method.
+ *
+ * This method is meant to be called in non-realtime context (before master
+ * activation) to initialize the header data, but it is also safe to
+ * change the header later on in realtime context.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_voe_handler_send_header(
         ec_voe_handler_t *voe, /**< VoE handler. */
@@ -2136,6 +2234,11 @@ EC_PUBLIC_API void ecrt_voe_handler_send_header(
  *
  * The header information is stored at the memory given by the pointer
  * parameters.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_voe_handler_received_header(
         const ec_voe_handler_t *voe, /**< VoE handler. */
@@ -2186,8 +2289,14 @@ EC_PUBLIC_API size_t ecrt_voe_handler_data_size(
 /** Start a VoE write operation.
  *
  * After this function has been called, the ecrt_voe_handler_execute() method
- * must be called in every bus cycle as long as it returns EC_REQUEST_BUSY. No
- * other operation may be started while the handler is busy.
+ * must be called in every realtime cycle as long as it returns
+ * EC_REQUEST_BUSY. No other operation may be started while the handler is
+ * busy.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_voe_handler_write(
         ec_voe_handler_t *voe, /**< VoE handler. */
@@ -2197,8 +2306,9 @@ EC_PUBLIC_API void ecrt_voe_handler_write(
 /** Start a VoE read operation.
  *
  * After this function has been called, the ecrt_voe_handler_execute() method
- * must be called in every bus cycle as long as it returns EC_REQUEST_BUSY. No
- * other operation may be started while the handler is busy.
+ * must be called in every realtime cycle as long as it returns
+ * EC_REQUEST_BUSY. No other operation may be started while the handler is
+ * busy.
  *
  * The state machine queries the slave's send mailbox for new data to be send
  * to the master. If no data appear within the EC_VOE_RESPONSE_TIMEOUT
@@ -2207,6 +2317,11 @@ EC_PUBLIC_API void ecrt_voe_handler_write(
  * On success, the size of the read data can be determined via
  * ecrt_voe_handler_data_size(), while the VoE header of the received data
  * can be retrieved with ecrt_voe_handler_received_header().
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_voe_handler_read(
         ec_voe_handler_t *voe /**< VoE handler. */
@@ -2215,8 +2330,9 @@ EC_PUBLIC_API void ecrt_voe_handler_read(
 /** Start a VoE read operation without querying the sync manager status.
  *
  * After this function has been called, the ecrt_voe_handler_execute() method
- * must be called in every bus cycle as long as it returns EC_REQUEST_BUSY. No
- * other operation may be started while the handler is busy.
+ * must be called in every realtime cycle as long as it returns
+ * EC_REQUEST_BUSY. No other operation may be started while the handler is
+ * busy.
  *
  * The state machine queries the slave by sending an empty mailbox. The slave
  * fills its data to the master in this mailbox. If no data appear within the
@@ -2226,6 +2342,11 @@ EC_PUBLIC_API void ecrt_voe_handler_read(
  * On success, the size of the read data can be determined via
  * ecrt_voe_handler_data_size(), while the VoE header of the received data
  * can be retrieved with ecrt_voe_handler_received_header().
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_voe_handler_read_nosync(
         ec_voe_handler_t *voe /**< VoE handler. */
@@ -2233,14 +2354,19 @@ EC_PUBLIC_API void ecrt_voe_handler_read_nosync(
 
 /** Execute the handler.
  *
- * This method executes the VoE handler. It has to be called in every bus
+ * This method executes the VoE handler. It has to be called in every realtime
  * cycle as long as it returns EC_REQUEST_BUSY.
  *
  * \return Handler state.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API ec_request_state_t ecrt_voe_handler_execute(
-    ec_voe_handler_t *voe /**< VoE handler. */
-    );
+        ec_voe_handler_t *voe /**< VoE handler. */
+        );
 
 /*****************************************************************************
  * Register request methods.
@@ -2263,7 +2389,12 @@ EC_PUBLIC_API ec_request_state_t ecrt_voe_handler_execute(
  *   EC_WRITE_U16(ecrt_reg_request_data(reg_request), 0xFFFF);
  *   \endcode
  *
+ * This method is meant to be called in realtime context (after master
+ * activation), but can also be used to initialize data before.
+ *
  * \return Pointer to the internal memory.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
         const ec_reg_request_t *req /**< Register request. */
@@ -2271,7 +2402,12 @@ EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
 
 /** Get the current state of the register request.
  *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
  * \return Request state.
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 ec_request_state_t ecrt_reg_request_state(
         const ec_reg_request_t *req /**< Register request. */
@@ -2284,6 +2420,11 @@ ec_request_state_t ecrt_reg_request_state(
  *
  * \attention The \a size parameter is truncated to the size given at request
  * creation.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_reg_request_write(
         ec_reg_request_t *req, /**< Register request. */
@@ -2298,6 +2439,11 @@ EC_PUBLIC_API void ecrt_reg_request_write(
  *
  * \attention The \a size parameter is truncated to the size given at request
  * creation.
+ *
+ * This method is meant to be called in realtime context (after master
+ * activation).
+ *
+ * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API void ecrt_reg_request_read(
         ec_reg_request_t *req, /**< Register request. */

@@ -3487,6 +3487,8 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
 
 /** Gets an SDO request's state.
  *
+ * Also pre-fetches the size of incoming data.
+ *
  * \return Zero on success, otherwise a negative error code.
  */
 static ATTRIBUTES int ec_ioctl_sdo_request_state(
@@ -4670,7 +4672,9 @@ static ATTRIBUTES int ec_ioctl_slave_soe_write(
     return retval;
 }
 
-/****************************************************************************/
+/*****************************************************************************
+ * ioctl() file operation functions
+ ****************************************************************************/
 
 /** ioctl() function to use.
  *
@@ -4684,6 +4688,8 @@ static long ec_ioctl_nrt(
         unsigned int cmd, /**< ioctl() command identifier. */
         void *arg /**< ioctl() argument. */);
 #endif
+
+/****************************************************************************/
 
 /** Called when an ioctl() command is issued.
  * Both RT and nRT context.
@@ -4703,13 +4709,6 @@ static long ec_ioctl_both(
         case EC_IOCTL_MODULE:
             ret = ec_ioctl_module(arg, ctx);
             break;
-        case EC_IOCTL_MASTER_DEBUG:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_master_debug(master, arg);
-            break;
         case EC_IOCTL_MASTER_RESCAN:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4723,50 +4722,6 @@ static long ec_ioctl_both(
         case EC_IOCTL_MASTER_LINK_STATE:
             ret = ec_ioctl_master_link_state(master, arg, ctx);
             break;
-        case EC_IOCTL_RESET:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_reset(master, arg, ctx);
-            break;
-        case EC_IOCTL_REF_CLOCK_TIME:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_ref_clock_time(master, arg, ctx);
-            break;
-        case EC_IOCTL_SC_EMERG_POP:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sc_emerg_pop(master, arg, ctx);
-            break;
-        case EC_IOCTL_SC_EMERG_CLEAR:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sc_emerg_clear(master, arg, ctx);
-            break;
-        case EC_IOCTL_SC_EMERG_OVERRUNS:
-            ret = ec_ioctl_sc_emerg_overruns(master, arg, ctx);
-            break;
-        case EC_IOCTL_SC_STATE:
-            ret = ec_ioctl_sc_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_DOMAIN_STATE:
-            ret = ec_ioctl_domain_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_INDEX:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_index(master, arg, ctx);
-            break;
         case EC_IOCTL_SDO_REQUEST_TIMEOUT:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4774,32 +4729,8 @@ static long ec_ioctl_both(
             }
             ret = ec_ioctl_sdo_request_timeout(master, arg, ctx);
             break;
-        case EC_IOCTL_SDO_REQUEST_STATE:
-            ret = ec_ioctl_sdo_request_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_write(master, arg, ctx);
-            break;
         case EC_IOCTL_SDO_REQUEST_DATA:
             ret = ec_ioctl_sdo_request_data(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_IDN:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_index(master, arg, ctx);
             break;
         case EC_IOCTL_SOE_REQUEST_TIMEOUT:
             if (!ctx->writable) {
@@ -4808,45 +4739,11 @@ static long ec_ioctl_both(
             }
             ret = ec_ioctl_soe_request_timeout(master, arg, ctx);
             break;
-        case EC_IOCTL_SOE_REQUEST_STATE:
-            ret = ec_ioctl_soe_request_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_write(master, arg, ctx);
-            break;
         case EC_IOCTL_SOE_REQUEST_DATA:
             ret = ec_ioctl_soe_request_data(master, arg, ctx);
             break;
         case EC_IOCTL_REG_REQUEST_DATA:
             ret = ec_ioctl_reg_request_data(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_STATE:
-            ret = ec_ioctl_reg_request_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_reg_request_write(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_reg_request_read(master, arg, ctx);
             break;
         case EC_IOCTL_VOE_SEND_HEADER:
             if (!ctx->writable) {
@@ -4854,30 +4751,6 @@ static long ec_ioctl_both(
                 break;
             }
             ret = ec_ioctl_voe_send_header(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_REC_HEADER:
-            ret = ec_ioctl_voe_rec_header(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_READ_NOSYNC:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_read_nosync(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_write(master, arg, ctx);
             break;
         case EC_IOCTL_VOE_DATA:
             ret = ec_ioctl_voe_data(master, arg, ctx);
@@ -4894,6 +4767,8 @@ static long ec_ioctl_both(
 
     return ret;
 }
+
+/****************************************************************************/
 
 /** Called when an ioctl() command is issued.
  * RTDM: RT only.
@@ -4961,6 +4836,13 @@ long ec_ioctl
             }
             ret = ec_ioctl_sync_slaves(master, arg, ctx);
             break;
+        case EC_IOCTL_REF_CLOCK_TIME:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_ref_clock_time(master, arg, ctx);
+            break;
         case EC_IOCTL_SYNC_MON_QUEUE:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4975,6 +4857,33 @@ long ec_ioctl
             }
             ret = ec_ioctl_sync_mon_process(master, arg, ctx);
             break;
+        case EC_IOCTL_RESET:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_reset(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_EMERG_POP:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_emerg_pop(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_EMERG_CLEAR:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_emerg_clear(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_EMERG_OVERRUNS:
+            ret = ec_ioctl_sc_emerg_overruns(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_STATE:
+            ret = ec_ioctl_sc_state(master, arg, ctx);
+            break;
         case EC_IOCTL_DOMAIN_PROCESS:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4988,6 +4897,98 @@ long ec_ioctl
                 break;
             }
             ret = ec_ioctl_domain_queue(master, arg, ctx);
+            break;
+        case EC_IOCTL_DOMAIN_STATE:
+            ret = ec_ioctl_domain_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_INDEX:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_index(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_STATE:
+            ret = ec_ioctl_sdo_request_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_IDN:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_index(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_STATE:
+            ret = ec_ioctl_soe_request_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_STATE:
+            ret = ec_ioctl_reg_request_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_reg_request_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_reg_request_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_REC_HEADER:
+            ret = ec_ioctl_voe_rec_header(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_READ_NOSYNC:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_read_nosync(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_write(master, arg, ctx);
             break;
         case EC_IOCTL_VOE_EXEC:
             if (!ctx->writable) {
@@ -5012,6 +5013,8 @@ long ec_ioctl
 
     return ret;
 }
+
+/****************************************************************************/
 
 /** Called when an ioctl() command is issued.
  * nRT context only.
@@ -5060,6 +5063,13 @@ static long ec_ioctl_nrt
             break;
         case EC_IOCTL_DOMAIN_DATA:
             ret = ec_ioctl_domain_data(master, arg);
+            break;
+        case EC_IOCTL_MASTER_DEBUG:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_master_debug(master, arg);
             break;
         case EC_IOCTL_SLAVE_STATE:
             if (!ctx->writable) {
@@ -5133,6 +5143,13 @@ static long ec_ioctl_nrt
             }
             ret = ec_ioctl_slave_soe_read(master, arg);
             break;
+        case EC_IOCTL_SLAVE_SOE_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_soe_write(master, arg);
+            break;
 #ifdef EC_EOE
         case EC_IOCTL_SLAVE_EOE_IP_PARAM:
             if (!ctx->writable) {
@@ -5142,13 +5159,6 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_slave_eoe_ip_param(master, arg);
             break;
 #endif
-        case EC_IOCTL_SLAVE_SOE_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_soe_write(master, arg);
-            break;
         case EC_IOCTL_CONFIG:
             ret = ec_ioctl_config(master, arg);
             break;
@@ -5172,6 +5182,9 @@ static long ec_ioctl_nrt
             ret = ec_ioctl_eoe_handler(master, arg);
             break;
 #endif
+
+        /* Application interface */
+
         case EC_IOCTL_REQUEST:
             if (!ctx->writable) {
                 ret = -EPERM;
