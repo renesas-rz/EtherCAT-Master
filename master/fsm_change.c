@@ -33,8 +33,11 @@
 /****************************************************************************/
 
 /** Timeout while waiting for AL state change [s].
+ *
+ * ETG2000_S_R_V1i0i15 section 5.3.7.2 mentions 10 s as maximum AL state
+ * change timeout.
  */
-#define EC_AL_STATE_CHANGE_TIMEOUT 5
+#define EC_AL_STATE_CHANGE_TIMEOUT 10
 
 /****************************************************************************/
 
