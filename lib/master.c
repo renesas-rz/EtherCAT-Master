@@ -585,6 +585,21 @@ int ecrt_master_activate(ec_master_t *master)
         master->process_data[0] = 0x00;
     }
 
+    // pick up process data pointers for all created domains
+    ec_domain_t *domain = master->first_domain;
+    while (domain) {
+        int offset = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_OFFSET,
+                domain->index);
+        if (EC_IOCTL_IS_ERROR(offset)) {
+            fprintf(stderr, "Failed to get domain offset: %s\n",
+                    strerror(EC_IOCTL_ERRNO(offset)));
+            return -EC_IOCTL_ERRNO(offset);
+        }
+
+        domain->process_data = master->process_data + offset;
+        domain = domain->next;
+    }
+
     return 0;
 }
 
