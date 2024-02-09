@@ -2472,8 +2472,9 @@ ec_request_state_t ecrt_reg_request_state(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_reg_request_write(
+EC_PUBLIC_API int ecrt_reg_request_write(
         ec_reg_request_t *req, /**< Register request. */
         uint16_t address, /**< Register address. */
         size_t size /**< Size to write. */
@@ -2491,8 +2492,9 @@ EC_PUBLIC_API void ecrt_reg_request_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_reg_request_read(
+EC_PUBLIC_API int ecrt_reg_request_read(
         ec_reg_request_t *req, /**< Register request. */
         uint16_t address, /**< Register address. */
         size_t size /**< Size to write. */

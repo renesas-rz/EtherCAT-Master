@@ -89,7 +89,7 @@ ec_request_state_t ecrt_reg_request_state(const ec_reg_request_t *reg)
 
 /****************************************************************************/
 
-void ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     ec_ioctl_reg_request_t io;
@@ -103,14 +103,14 @@ void ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
 
     ret = ioctl(reg->config->master->fd, EC_IOCTL_REG_REQUEST_WRITE, &io);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an register write operation: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     ec_ioctl_reg_request_t io;
@@ -123,9 +123,9 @@ void ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
 
     ret = ioctl(reg->config->master->fd, EC_IOCTL_REG_REQUEST_READ, &io);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an register read operation: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/

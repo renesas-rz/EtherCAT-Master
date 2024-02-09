@@ -1069,7 +1069,10 @@ static ATTRIBUTES int ec_ioctl_slave_reg_read(
         return ret;
     }
 
-    ecrt_reg_request_read(&request, io.address, io.size);
+    ret = ecrt_reg_request_read(&request, io.address, io.size);
+    if (ret) {
+        return ret;
+    }
 
     if (down_interruptible(&master->master_sem)) {
         ec_reg_request_clear(&request);
@@ -1153,7 +1156,10 @@ static ATTRIBUTES int ec_ioctl_slave_reg_write(
         return -EFAULT;
     }
 
-    ecrt_reg_request_write(&request, io.address, io.size);
+    ret = ecrt_reg_request_write(&request, io.address, io.size);
+    if (ret) {
+        return ret;
+    }
 
     if (down_interruptible(&master->master_sem)) {
         ec_reg_request_clear(&request);
@@ -4050,8 +4056,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
         return -EFAULT;
     }
 
-    ecrt_reg_request_write(reg, io.address, io.transfer_size);
-    return 0;
+    return ecrt_reg_request_write(reg, io.address, io.transfer_size);
 }
 
 /****************************************************************************/
@@ -4093,8 +4098,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
         return -EOVERFLOW;
     }
 
-    ecrt_reg_request_read(reg, io.address, io.transfer_size);
-    return 0;
+    return ecrt_reg_request_read(reg, io.address, io.transfer_size);
 }
 
 /****************************************************************************/
