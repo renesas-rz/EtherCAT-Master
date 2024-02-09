@@ -3459,8 +3459,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_index(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_index(req, data.sdo_index, data.sdo_subindex);
-    return 0;
+    return ecrt_sdo_request_index(req, data.sdo_index, data.sdo_subindex);
 }
 
 /****************************************************************************/
@@ -3496,8 +3495,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_timeout(req, data.timeout);
-    return 0;
+    return ecrt_sdo_request_timeout(req, data.timeout);
 }
 
 /****************************************************************************/
@@ -3580,8 +3578,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_read(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_read(req);
-    return 0;
+    return ecrt_sdo_request_read(req);
 }
 
 /****************************************************************************/
@@ -3630,8 +3627,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
         return -EFAULT;
 
     req->data_size = data.size;
-    ecrt_sdo_request_write(req);
-    return 0;
+    return ecrt_sdo_request_write(req);
 }
 
 /****************************************************************************/

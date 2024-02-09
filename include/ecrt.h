@@ -1974,8 +1974,9 @@ EC_PUBLIC_API int ecrt_domain_state(
  * set via ecrt_slave_config_create_sdo_request().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_index(
+EC_PUBLIC_API int ecrt_sdo_request_index(
         ec_sdo_request_t *req, /**< SDO request. */
         uint16_t index, /**< SDO index. */
         uint8_t subindex /**< SDO subindex. */
@@ -1991,8 +1992,9 @@ EC_PUBLIC_API void ecrt_sdo_request_index(
  *
  * The timeout should be defined in non-realtime context, but can also be
  * changed afterwards.
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_timeout(
+EC_PUBLIC_API int ecrt_sdo_request_timeout(
         ec_sdo_request_t *req, /**< SDO request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
@@ -2075,8 +2077,9 @@ ec_request_state_t ecrt_sdo_request_state(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_write(
+EC_PUBLIC_API int ecrt_sdo_request_write(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -2093,8 +2096,9 @@ EC_PUBLIC_API void ecrt_sdo_request_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_read(
+EC_PUBLIC_API int ecrt_sdo_request_read(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
