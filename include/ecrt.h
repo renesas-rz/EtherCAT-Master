@@ -2078,6 +2078,9 @@ ec_request_state_t ecrt_sdo_request_state(
  *
  * \ingroup ApplicationInterfaceRT
  * \return 0 on success, otherwise negative error code.
+ * \retval -EINVAL Invalid input data, e.g. data size == 0.
+ * \retval -ENOMEM Reserved memory in ecrt_slave_config_create_sdo_request()
+ *              too small.
  */
 EC_PUBLIC_API int ecrt_sdo_request_write(
         ec_sdo_request_t *req /**< SDO request. */
@@ -2117,8 +2120,9 @@ EC_PUBLIC_API int ecrt_sdo_request_read(
  * set via ecrt_slave_config_create_soe_request().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_soe_request_idn(
+EC_PUBLIC_API int ecrt_soe_request_idn(
         ec_soe_request_t *req, /**< IDN request. */
         uint8_t drive_no, /**< SDO index. */
         uint16_t idn /**< SoE IDN. */
@@ -2134,8 +2138,9 @@ EC_PUBLIC_API void ecrt_soe_request_idn(
  *
  * The timeout should be defined in non-realtime context, but can also be
  * changed afterwards.
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_soe_request_timeout(
+EC_PUBLIC_API int ecrt_soe_request_timeout(
         ec_soe_request_t *req, /**< SoE request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
@@ -2213,8 +2218,12 @@ EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval -EINVAL Invalid input data, e.g. data size == 0.
+ * \retval -ENOMEM Reserved memory in ecrt_slave_config_create_soe_request()
+ *              too small.
  */
-EC_PUBLIC_API void ecrt_soe_request_write(
+EC_PUBLIC_API int ecrt_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2231,8 +2240,9 @@ EC_PUBLIC_API void ecrt_soe_request_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_soe_request_read(
+EC_PUBLIC_API int ecrt_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
         );
 

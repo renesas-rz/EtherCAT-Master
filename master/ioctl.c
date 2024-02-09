@@ -3703,8 +3703,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_index(
         return -ENOENT;
     }
 
-    ecrt_soe_request_idn(req, data.drive_no, data.idn);
-    return 0;
+    return ecrt_soe_request_idn(req, data.drive_no, data.idn);
 }
 
 /****************************************************************************/
@@ -3740,8 +3739,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_timeout(
         return -ENOENT;
     }
 
-    ecrt_soe_request_timeout(req, data.timeout);
-    return 0;
+    return ecrt_soe_request_timeout(req, data.timeout);
 }
 
 /****************************************************************************/
@@ -3824,8 +3822,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_read(
         return -ENOENT;
     }
 
-    ecrt_soe_request_read(req);
-    return 0;
+    return ecrt_soe_request_read(req);
 }
 
 /****************************************************************************/
@@ -3874,8 +3871,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
         return -EFAULT;
 
     req->data_size = data.size;
-    ecrt_soe_request_write(req);
-    return 0;
+    return ecrt_soe_request_write(req);
 }
 
 /****************************************************************************/
