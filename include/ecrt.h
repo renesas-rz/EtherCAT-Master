@@ -1291,8 +1291,10 @@ EC_PUBLIC_API int ecrt_slave_config_sync_manager(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_watchdog(
+EC_PUBLIC_API int ecrt_slave_config_watchdog(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t watchdog_divider, /**< Number of 40 ns intervals (register
                                      0x0400). Used as a base unit for all
@@ -1330,8 +1332,9 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_assign_add(
  * ecrt_master_activate().
  *
  * \see ecrt_slave_config_pdos()
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_pdo_assign_clear(
+EC_PUBLIC_API int ecrt_slave_config_pdo_assign_clear(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t sync_index /**< Sync manager index. Must be less
                               than #EC_MAX_SYNC_MANAGERS. */
@@ -1364,8 +1367,9 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_add(
  * ecrt_master_activate().
  *
  * \see ecrt_slave_config_pdos()
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_pdo_mapping_clear(
+EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_clear(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t pdo_index /**< Index of the PDO. */
         );
@@ -1512,8 +1516,9 @@ EC_PUBLIC_API int ecrt_slave_config_reg_pdo_entry_pos(
  * ecrt_master_activate().
  *
  * \attention The \a sync1_shift time is ignored.
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_dc(
+EC_PUBLIC_API int ecrt_slave_config_dc(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t assign_activate, /**< AssignActivate word. */
         uint32_t sync0_cycle, /**< SYNC0 cycle time [ns]. */
@@ -1780,7 +1785,7 @@ EC_PUBLIC_API ec_reg_request_t *ecrt_slave_config_create_reg_request(
  *
  * \ingroup ApplicationInterfaceRT
  */
-EC_PUBLIC_API void ecrt_slave_config_state(
+EC_PUBLIC_API int ecrt_slave_config_state(
         const ec_slave_config_t *sc, /**< Slave configuration */
         ec_slave_config_state_t *state /**< State object to write to. */
         );

@@ -647,7 +647,7 @@ int ecrt_slave_config_sync_manager(ec_slave_config_t *sc, uint8_t sync_index,
 
 /****************************************************************************/
 
-void ecrt_slave_config_watchdog(ec_slave_config_t *sc,
+int ecrt_slave_config_watchdog(ec_slave_config_t *sc,
         uint16_t divider, uint16_t intervals)
 {
     EC_CONFIG_DBG(sc, 1, "%s(sc = 0x%p, divider = %u, intervals = %u)\n",
@@ -655,6 +655,7 @@ void ecrt_slave_config_watchdog(ec_slave_config_t *sc,
 
     sc->watchdog_divider = divider;
     sc->watchdog_intervals = intervals;
+    return 0;
 }
 
 /****************************************************************************/
@@ -689,7 +690,7 @@ int ecrt_slave_config_pdo_assign_add(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-void ecrt_slave_config_pdo_assign_clear(ec_slave_config_t *sc,
+int ecrt_slave_config_pdo_assign_clear(ec_slave_config_t *sc,
         uint8_t sync_index)
 {
     EC_CONFIG_DBG(sc, 1, "%s(sc = 0x%p, sync_index = %u)\n",
@@ -697,12 +698,13 @@ void ecrt_slave_config_pdo_assign_clear(ec_slave_config_t *sc,
 
     if (sync_index >= EC_MAX_SYNC_MANAGERS) {
         EC_CONFIG_ERR(sc, "Invalid sync manager index %u!\n", sync_index);
-        return;
+        return -EINVAL;
     }
 
     down(&sc->master->master_sem);
     ec_pdo_list_clear_pdos(&sc->sync_configs[sync_index].pdos);
     up(&sc->master->master_sem);
+    return 0;
 }
 
 /****************************************************************************/
@@ -744,7 +746,7 @@ int ecrt_slave_config_pdo_mapping_add(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-void ecrt_slave_config_pdo_mapping_clear(ec_slave_config_t *sc,
+int ecrt_slave_config_pdo_mapping_clear(ec_slave_config_t *sc,
         uint16_t pdo_index)
 {
     uint8_t sync_index;
@@ -765,6 +767,7 @@ void ecrt_slave_config_pdo_mapping_clear(ec_slave_config_t *sc,
     } else {
         EC_CONFIG_WARN(sc, "PDO 0x%04X is not assigned.\n", pdo_index);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -956,7 +959,7 @@ int ecrt_slave_config_reg_pdo_entry_pos(
 
 /****************************************************************************/
 
-void ecrt_slave_config_dc(ec_slave_config_t *sc, uint16_t assign_activate,
+int ecrt_slave_config_dc(ec_slave_config_t *sc, uint16_t assign_activate,
         uint32_t sync0_cycle_time, int32_t sync0_shift_time,
         uint32_t sync1_cycle_time, int32_t sync1_shift_time)
 {
@@ -971,6 +974,7 @@ void ecrt_slave_config_dc(ec_slave_config_t *sc, uint16_t assign_activate,
     sc->dc_sync[0].shift_time = sync0_shift_time;
     sc->dc_sync[1].cycle_time = sync1_cycle_time;
     sc->dc_sync[1].shift_time = sync1_shift_time;
+    return 0;
 }
 
 /****************************************************************************/
@@ -1317,7 +1321,7 @@ ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
 
 /****************************************************************************/
 
-void ecrt_slave_config_state(const ec_slave_config_t *sc,
+int ecrt_slave_config_state(const ec_slave_config_t *sc,
         ec_slave_config_state_t *state)
 {
     const ec_slave_t *slave = sc->slave;
@@ -1331,6 +1335,7 @@ void ecrt_slave_config_state(const ec_slave_config_t *sc,
         state->operational = 0;
         state->al_state = EC_SLAVE_STATE_UNKNOWN;
     }
+    return 0;
 }
 
 /****************************************************************************/

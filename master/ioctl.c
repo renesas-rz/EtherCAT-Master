@@ -2392,7 +2392,7 @@ static ATTRIBUTES int ec_ioctl_sc_watchdog(
         goto out_up;
     }
 
-    ecrt_slave_config_watchdog(sc,
+    ret = ecrt_slave_config_watchdog(sc,
             data.watchdog_divider, data.watchdog_intervals);
 
 out_up:
@@ -2466,8 +2466,7 @@ static ATTRIBUTES int ec_ioctl_sc_clear_pdos(
 
     up(&master->master_sem); /** \todo sc could be invalidated */
 
-    ecrt_slave_config_pdo_assign_clear(sc, data.sync_index);
-    return 0;
+    return ecrt_slave_config_pdo_assign_clear(sc, data.sync_index);
 }
 
 /****************************************************************************/
@@ -2536,8 +2535,7 @@ static ATTRIBUTES int ec_ioctl_sc_clear_entries(
 
     up(&master->master_sem); /** \todo sc could be invalidated */
 
-    ecrt_slave_config_pdo_mapping_clear(sc, data.index);
-    return 0;
+    return ecrt_slave_config_pdo_mapping_clear(sc, data.index);
 }
 
 /****************************************************************************/
@@ -2651,6 +2649,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
 {
     ec_ioctl_config_t data;
     ec_slave_config_t *sc;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -2666,7 +2665,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
         return -ENOENT;
     }
 
-    ecrt_slave_config_dc(sc, data.dc_assign_activate,
+    ret = ecrt_slave_config_dc(sc, data.dc_assign_activate,
             data.dc_sync[0].cycle_time,
             data.dc_sync[0].shift_time,
             data.dc_sync[1].cycle_time,
@@ -2674,7 +2673,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
 
     up(&master->master_sem);
 
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -3119,6 +3118,7 @@ static ATTRIBUTES int ec_ioctl_sc_state(
     ec_ioctl_sc_state_t data;
     const ec_slave_config_t *sc;
     ec_slave_config_state_t state;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3134,7 +3134,9 @@ static ATTRIBUTES int ec_ioctl_sc_state(
         return -ENOENT;
     }
 
-    ecrt_slave_config_state(sc, &state);
+    ret = ecrt_slave_config_state(sc, &state);
+    if (ret)
+        return ret;
 
     if (ec_copy_to_user((void __user *) data.state,
                         &state, sizeof(state), ctx))
