@@ -1948,8 +1948,7 @@ static ATTRIBUTES int ec_ioctl_deactivate(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    ecrt_master_deactivate(master);
-    return 0;
+    return ecrt_master_deactivate(master);
 }
 
 /****************************************************************************/
@@ -1996,6 +1995,8 @@ static ATTRIBUTES int ec_ioctl_send(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2003,9 +2004,9 @@ static ATTRIBUTES int ec_ioctl_send(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_send(master);
+    ret = ecrt_master_send(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2020,6 +2021,8 @@ static ATTRIBUTES int ec_ioctl_receive(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2027,9 +2030,9 @@ static ATTRIBUTES int ec_ioctl_receive(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_receive(master);
+    ret = ecrt_master_receive(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2045,8 +2048,11 @@ static ATTRIBUTES int ec_ioctl_master_state(
         )
 {
     ec_master_state_t data;
+    int ret;
 
-    ecrt_master_state(master, &data);
+    ret = ecrt_master_state(master, &data);
+    if (ret)
+        return ret;
 
     if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
@@ -2108,8 +2114,7 @@ static ATTRIBUTES int ec_ioctl_app_time(
         return -EFAULT;
     }
 
-    ecrt_master_application_time(master, time);
-    return 0;
+    return ecrt_master_application_time(master, time);
 }
 
 /****************************************************************************/
@@ -2124,6 +2129,8 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2131,9 +2138,9 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_reference_clock(master);
+    ret = ecrt_master_sync_reference_clock(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2148,6 +2155,7 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
     uint64_t time;
 
     if (unlikely(!ctx->requested))
@@ -2160,9 +2168,9 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_reference_clock_to(master, time);
+    ret = ecrt_master_sync_reference_clock_to(master, time);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2177,6 +2185,8 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2184,9 +2194,9 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_slave_clocks(master);
+    ret = ecrt_master_sync_slave_clocks(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2232,6 +2242,8 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2239,9 +2251,9 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_monitor_queue(master);
+    ret = ecrt_master_sync_monitor_queue(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/

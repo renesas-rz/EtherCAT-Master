@@ -605,18 +605,17 @@ int ecrt_master_activate(ec_master_t *master)
 
 /****************************************************************************/
 
-void ecrt_master_deactivate(ec_master_t *master)
+int ecrt_master_deactivate(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_DEACTIVATE, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to deactivate master: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
-        return;
+        return -EC_IOCTL_ERRNO(ret);
     }
 
     ec_master_clear_config(master);
+    return 0;
 }
 
 /****************************************************************************/
@@ -628,8 +627,6 @@ int ecrt_master_set_send_interval(ec_master_t *master,
 
     ret = ioctl(master->fd, EC_IOCTL_SET_SEND_INTERVAL, &send_interval_us);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set send interval: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
         return -EC_IOCTL_ERRNO(ret);
     }
 
@@ -638,41 +635,41 @@ int ecrt_master_set_send_interval(ec_master_t *master,
 
 /****************************************************************************/
 
-void ecrt_master_send(ec_master_t *master)
+int ecrt_master_send(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_SEND, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to send: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_receive(ec_master_t *master)
+int ecrt_master_receive(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_RECEIVE, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to receive: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
+int ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_MASTER_STATE, state);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to get master state: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -698,7 +695,7 @@ int ecrt_master_link_state(const ec_master_t *master, unsigned int dev_idx,
 
 /****************************************************************************/
 
-void ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
+int ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
 {
     uint64_t time;
     int ret;
@@ -707,27 +704,27 @@ void ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
 
     ret = ioctl(master->fd, EC_IOCTL_APP_TIME, &time);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set application time: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_sync_reference_clock(ec_master_t *master)
+int ecrt_master_sync_reference_clock(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_SYNC_REF, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to sync reference clock: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_sync_reference_clock_to(ec_master_t *master,
+int ecrt_master_sync_reference_clock_to(ec_master_t *master,
         uint64_t sync_time)
 {
     uint64_t time;
@@ -737,22 +734,22 @@ void ecrt_master_sync_reference_clock_to(ec_master_t *master,
 
     ret = ioctl(master->fd, EC_IOCTL_SYNC_REF_TO, &time);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to sync reference clock: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_sync_slave_clocks(ec_master_t *master)
+int ecrt_master_sync_slave_clocks(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_SYNC_SLAVES, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to sync slave clocks: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -766,6 +763,7 @@ int ecrt_master_reference_clock_time(const ec_master_t *master,
     if (EC_IOCTL_IS_ERROR(ret)) {
         fprintf(stderr, "Failed to get reference clock time: %s\n",
                 strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
 
     return ret;
@@ -773,15 +771,15 @@ int ecrt_master_reference_clock_time(const ec_master_t *master,
 
 /****************************************************************************/
 
-void ecrt_master_sync_monitor_queue(ec_master_t *master)
+int ecrt_master_sync_monitor_queue(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_SYNC_MON_QUEUE, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to queue sync monitor datagram: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -803,15 +801,15 @@ uint32_t ecrt_master_sync_monitor_process(const ec_master_t *master)
 
 /****************************************************************************/
 
-void ecrt_master_reset(ec_master_t *master)
+int ecrt_master_reset(ec_master_t *master)
 {
     int ret;
 
     ret = ioctl(master->fd, EC_IOCTL_RESET, NULL);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to reset master: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/

@@ -1027,8 +1027,11 @@ EC_PUBLIC_API int ecrt_master_activate(
  * become invalid.
  *
  * This method should not be called in realtime context.
+ * \return 0 on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -EINVAL Master has not been activated before.
  */
-EC_PUBLIC_API void ecrt_master_deactivate(
+EC_PUBLIC_API int ecrt_master_deactivate(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1056,8 +1059,9 @@ EC_PUBLIC_API int ecrt_master_set_send_interval(
  * has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_send(
+EC_PUBLIC_API int ecrt_master_send(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1072,19 +1076,23 @@ EC_PUBLIC_API void ecrt_master_send(
  * ecrt_master_activate() has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_receive(
+EC_PUBLIC_API int ecrt_master_receive(
         ec_master_t *master /**< EtherCAT master. */
         );
 
+#ifdef __KERNEL__
 /** Sends non-application datagrams.
  *
  * This method has to be called in the send callback function passed via
  * ecrt_master_callbacks() to allow the sending of non-application datagrams.
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_send_ext(
+int ecrt_master_send_ext(
         ec_master_t *master /**< EtherCAT master. */
         );
+#endif
 
 /** Reads the current master state.
  *
@@ -1092,8 +1100,9 @@ EC_PUBLIC_API void ecrt_master_send_ext(
  *
  * This method returns a global state. For the link-specific states in a
  * redundant network topology, use the ecrt_master_link_state() method.
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_state(
+EC_PUBLIC_API int ecrt_master_state(
         const ec_master_t *master, /**< EtherCAT master. */
         ec_master_state_t *state /**< Structure to store the information. */
         );
@@ -1133,8 +1142,9 @@ EC_PUBLIC_API int ecrt_master_link_state(
  * necessary, since the absolute value is not of any interest.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_application_time(
+EC_PUBLIC_API int ecrt_master_application_time(
         ec_master_t *master, /**< EtherCAT master. */
         uint64_t app_time /**< Application time. */
         );
@@ -1145,8 +1155,11 @@ EC_PUBLIC_API void ecrt_master_application_time(
  * by the last call off ecrt_master_application_time().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -ENXIO No reference clock found.
  */
-EC_PUBLIC_API void ecrt_master_sync_reference_clock(
+EC_PUBLIC_API int ecrt_master_sync_reference_clock(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1159,8 +1172,11 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock(
  * has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -ENXIO No reference clock found.
  */
-EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
+EC_PUBLIC_API int ecrt_master_sync_reference_clock_to(
         ec_master_t *master, /**< EtherCAT master. */
         uint64_t sync_time /**< Sync reference clock to this time. */
         );
@@ -1173,8 +1189,11 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
  * has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -ENXIO No reference clock found.
  */
-EC_PUBLIC_API void ecrt_master_sync_slave_clocks(
+EC_PUBLIC_API int ecrt_master_sync_slave_clocks(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1211,7 +1230,7 @@ EC_PUBLIC_API int ecrt_master_reference_clock_time(
  *
  * \ingroup ApplicationInterfaceRT
  */
-EC_PUBLIC_API void ecrt_master_sync_monitor_queue(
+EC_PUBLIC_API int ecrt_master_sync_monitor_queue(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1240,8 +1259,9 @@ EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
  * activation), because slaves will not be configured before.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_reset(
+EC_PUBLIC_API int ecrt_master_reset(
         ec_master_t *master /**< EtherCAT master. */
         );
 

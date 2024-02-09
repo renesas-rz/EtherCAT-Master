@@ -2350,7 +2350,7 @@ int ecrt_master_activate(ec_master_t *master)
 
 /****************************************************************************/
 
-void ecrt_master_deactivate(ec_master_t *master)
+int ecrt_master_deactivate(ec_master_t *master)
 {
     ec_slave_t *slave;
 #ifdef EC_EOE
@@ -2362,7 +2362,7 @@ void ecrt_master_deactivate(ec_master_t *master)
 
     if (!master->active) {
         EC_MASTER_WARN(master, "%s: Master not active.\n", __func__);
-        return;
+        return -EINVAL;
     }
 
     ec_master_thread_stop(master);
@@ -2416,11 +2416,12 @@ void ecrt_master_deactivate(ec_master_t *master)
     master->allow_scan = 0;
 
     master->active = 0;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_send(ec_master_t *master)
+int ecrt_master_send(ec_master_t *master)
 {
     ec_datagram_t *datagram, *n;
     ec_device_index_t dev_idx;
@@ -2460,11 +2461,12 @@ void ecrt_master_send(ec_master_t *master)
         // send frames
         ec_master_send_datagrams(master, dev_idx);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_receive(ec_master_t *master)
+int ecrt_master_receive(ec_master_t *master)
 {
     unsigned int dev_idx;
     ec_datagram_t *datagram, *next;
@@ -2512,11 +2514,12 @@ void ecrt_master_receive(ec_master_t *master)
 #endif /* RT_SYSLOG */
         }
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_send_ext(ec_master_t *master)
+int ecrt_master_send_ext(ec_master_t *master)
 {
     ec_datagram_t *datagram, *next;
 
@@ -2528,7 +2531,7 @@ void ecrt_master_send_ext(ec_master_t *master)
     }
     up(&master->ext_queue_sem);
 
-    ecrt_master_send(master);
+    return ecrt_master_send(master);
 }
 
 /****************************************************************************/
@@ -2727,7 +2730,7 @@ void ecrt_master_callbacks(ec_master_t *master,
 
 /****************************************************************************/
 
-void ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
+int ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
 {
     ec_device_index_t dev_idx;
 
@@ -2746,6 +2749,7 @@ void ecrt_master_state(const ec_master_t *master, ec_master_state_t *state)
         /* Signal link up if at least one device has link. */
         state->link_up |= master->devices[dev_idx].link_state;
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -2766,13 +2770,14 @@ int ecrt_master_link_state(const ec_master_t *master, unsigned int dev_idx,
 
 /****************************************************************************/
 
-void ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
+int ecrt_master_application_time(ec_master_t *master, uint64_t app_time)
 {
     master->app_time = app_time;
 
     if (unlikely(!master->dc_ref_time)) {
         master->dc_ref_time = app_time;
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -2797,17 +2802,20 @@ int ecrt_master_reference_clock_time(const ec_master_t *master,
 
 /****************************************************************************/
 
-void ecrt_master_sync_reference_clock(ec_master_t *master)
+int ecrt_master_sync_reference_clock(ec_master_t *master)
 {
     if (master->dc_ref_clock) {
         EC_WRITE_U32(master->ref_sync_datagram.data, master->app_time);
         ec_master_queue_datagram(master, &master->ref_sync_datagram);
+    } else {
+        return -ENXIO;
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_sync_reference_clock_to(
+int ecrt_master_sync_reference_clock_to(
         ec_master_t *master,
         uint64_t sync_time
         )
@@ -2815,25 +2823,32 @@ void ecrt_master_sync_reference_clock_to(
     if (master->dc_ref_clock) {
         EC_WRITE_U32(master->ref_sync_datagram.data, sync_time);
         ec_master_queue_datagram(master, &master->ref_sync_datagram);
+    } else {
+        return -ENXIO;
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_sync_slave_clocks(ec_master_t *master)
+int ecrt_master_sync_slave_clocks(ec_master_t *master)
 {
     if (master->dc_ref_clock) {
         ec_datagram_zero(&master->sync_datagram);
         ec_master_queue_datagram(master, &master->sync_datagram);
+    } else {
+        return -ENXIO;
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_master_sync_monitor_queue(ec_master_t *master)
+int ecrt_master_sync_monitor_queue(ec_master_t *master)
 {
     ec_datagram_zero(&master->sync_mon_datagram);
     ec_master_queue_datagram(master, &master->sync_mon_datagram);
+    return 0;
 }
 
 /****************************************************************************/
@@ -3252,7 +3267,7 @@ int ecrt_master_read_idn(ec_master_t *master, uint16_t slave_position,
 
 /****************************************************************************/
 
-void ecrt_master_reset(ec_master_t *master)
+int ecrt_master_reset(ec_master_t *master)
 {
     ec_slave_config_t *sc;
 
@@ -3261,6 +3276,7 @@ void ecrt_master_reset(ec_master_t *master)
             ec_slave_request_state(sc->slave, EC_SLAVE_STATE_OP);
         }
     }
+    return 0;
 }
 
 /****************************************************************************/
