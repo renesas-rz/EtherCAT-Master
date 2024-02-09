@@ -2262,8 +2262,9 @@ EC_PUBLIC_API int ecrt_soe_request_read(
  * change the header later on in realtime context.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_send_header(
+EC_PUBLIC_API int ecrt_voe_handler_send_header(
         ec_voe_handler_t *voe, /**< VoE handler. */
         uint32_t vendor_id, /**< Vendor ID. */
         uint16_t vendor_type /**< Vendor-specific type. */
@@ -2281,8 +2282,9 @@ EC_PUBLIC_API void ecrt_voe_handler_send_header(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_received_header(
+EC_PUBLIC_API int ecrt_voe_handler_received_header(
         const ec_voe_handler_t *voe, /**< VoE handler. */
         uint32_t *vendor_id, /**< Vendor ID. */
         uint16_t *vendor_type /**< Vendor-specific type. */
@@ -2339,8 +2341,9 @@ EC_PUBLIC_API size_t ecrt_voe_handler_data_size(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_write(
+EC_PUBLIC_API int ecrt_voe_handler_write(
         ec_voe_handler_t *voe, /**< VoE handler. */
         size_t size /**< Number of bytes to write (without the VoE header). */
         );
@@ -2364,8 +2367,9 @@ EC_PUBLIC_API void ecrt_voe_handler_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_read(
+EC_PUBLIC_API int ecrt_voe_handler_read(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2389,8 +2393,9 @@ EC_PUBLIC_API void ecrt_voe_handler_read(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_read_nosync(
+EC_PUBLIC_API int ecrt_voe_handler_read_nosync(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 

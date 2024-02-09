@@ -4139,8 +4139,7 @@ static ATTRIBUTES int ec_ioctl_voe_send_header(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_send_header(voe, vendor_id, vendor_type);
-    return 0;
+    return ecrt_voe_handler_send_header(voe, vendor_id, vendor_type);
 }
 
 /****************************************************************************/
@@ -4160,6 +4159,7 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
     ec_voe_handler_t *voe;
     uint32_t vendor_id;
     uint16_t vendor_type;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -4178,7 +4178,9 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
+    ret = ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
+    if (ret)
+        return ret;
 
     if (likely(data.vendor_id))
         if (ec_copy_to_user(data.vendor_id, &vendor_id,
@@ -4226,8 +4228,7 @@ static ATTRIBUTES int ec_ioctl_voe_read(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_read(voe);
-    return 0;
+    return ecrt_voe_handler_read(voe);
 }
 
 /****************************************************************************/
@@ -4263,8 +4264,7 @@ static ATTRIBUTES int ec_ioctl_voe_read_nosync(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_read_nosync(voe);
-    return 0;
+    return ecrt_voe_handler_read_nosync(voe);
 }
 
 /****************************************************************************/
@@ -4309,8 +4309,7 @@ static ATTRIBUTES int ec_ioctl_voe_write(
             return -EFAULT;
     }
 
-    ecrt_voe_handler_write(voe, data.size);
-    return 0;
+    return ecrt_voe_handler_write(voe, data.size);
 }
 
 /****************************************************************************/
