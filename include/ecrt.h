@@ -1901,8 +1901,9 @@ EC_PUBLIC_API uint8_t *ecrt_domain_data(
  * ecrt_domain_state() return the result of the last process data exchange.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_domain_process(
+EC_PUBLIC_API int ecrt_domain_process(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1912,8 +1913,9 @@ EC_PUBLIC_API void ecrt_domain_process(
  * next call of ecrt_master_send().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_domain_queue(
+EC_PUBLIC_API int ecrt_domain_queue(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1924,8 +1926,9 @@ EC_PUBLIC_API void ecrt_domain_queue(
  * Using this method, the process data exchange can be monitored in realtime.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_domain_state(
+EC_PUBLIC_API int ecrt_domain_state(
         const ec_domain_t *domain, /**< Domain. */
         ec_domain_state_t *state /**< Pointer to a state object to store the
                                    information. */

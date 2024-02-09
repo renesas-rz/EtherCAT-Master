@@ -3334,8 +3334,7 @@ static ATTRIBUTES int ec_ioctl_domain_process(
         return -ENOENT;
     }
 
-    ecrt_domain_process(domain);
-    return 0;
+    return ecrt_domain_process(domain);
 }
 
 /****************************************************************************/
@@ -3351,6 +3350,7 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
         )
 {
     ec_domain_t *domain;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3365,9 +3365,9 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_domain_queue(domain);
+    ret = ecrt_domain_queue(domain);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -3385,6 +3385,7 @@ static ATTRIBUTES int ec_ioctl_domain_state(
     ec_ioctl_domain_state_t data;
     const ec_domain_t *domain;
     ec_domain_state_t state;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3400,7 +3401,9 @@ static ATTRIBUTES int ec_ioctl_domain_state(
         return -ENOENT;
     }
 
-    ecrt_domain_state(domain, &state);
+    ret = ecrt_domain_state(domain, &state);
+    if (ret)
+        return ret;
 
     if (ec_copy_to_user((void __user *) data.state, &state, sizeof(state),
                 ctx))

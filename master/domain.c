@@ -447,7 +447,7 @@ uint8_t *ecrt_domain_data(const ec_domain_t *domain)
 
 /****************************************************************************/
 
-void ecrt_domain_process(ec_domain_t *domain)
+int ecrt_domain_process(ec_domain_t *domain)
 {
     uint16_t wc_sum[EC_MAX_NUM_DEVICES] = {}, wc_total;
     ec_datagram_pair_t *pair;
@@ -633,11 +633,12 @@ void ecrt_domain_process(ec_domain_t *domain)
         domain->working_counter_changes = 0;
     }
 #endif
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_domain_queue(ec_domain_t *domain)
+int ecrt_domain_queue(ec_domain_t *domain)
 {
     ec_datagram_pair_t *datagram_pair;
     ec_device_index_t dev_idx;
@@ -663,11 +664,12 @@ void ecrt_domain_queue(ec_domain_t *domain)
                     &datagram_pair->datagrams[dev_idx]);
         }
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
+int ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
 {
     unsigned int dev_idx;
     uint16_t wc = 0;
@@ -690,6 +692,7 @@ void ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
     }
 
     state->redundancy_active = domain->redundancy_active;
+    return 0;
 }
 
 /****************************************************************************/
