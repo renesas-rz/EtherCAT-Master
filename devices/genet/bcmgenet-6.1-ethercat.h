@@ -650,8 +650,18 @@ struct bcmgenet_priv {
 
 	struct ethtool_eee eee;
 	/* EtherCAT device variables */
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct bcmgenet_priv *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
+
 
 #define GENET_IO_MACRO(name, offset)					\
 static inline u32 bcmgenet_##name##_readl(struct bcmgenet_priv *priv,	\

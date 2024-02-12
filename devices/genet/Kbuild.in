@@ -38,6 +38,10 @@ ifeq (@ENABLE_GENET@,1)
         bcmmii-@KERNEL_GENET@-ethercat.o \
         bcmgenet_wol-@KERNEL_GENET@-ethercat.o
 
+ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+	ccflags-y := -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+endif
+
     CFLAGS_bcmgenet-@KERNEL_GENET@-ethercat.o = -DREV="\"$(REV)\""
 endif
 
