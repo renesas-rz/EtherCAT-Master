@@ -66,7 +66,7 @@ AC_ARG_ENABLE([kernel],
                 ;;
             no) enablekernel=0
                 ;;
-            *) AC_MSG_ERROR([Invalid value for --enable-generic])
+            *) AC_MSG_ERROR([Invalid value for --enable-kernel])
                 ;;
         esac
     ],
