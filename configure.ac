@@ -688,7 +688,7 @@ AC_MSG_CHECKING([for RTAI path])
 if test -z "${rtaidir}"; then
     AC_MSG_RESULT([not specified.])
 else
-    if test \! -r ${rtaidir}/include/rtai.h; then
+    if test \! -x ${rtaidir}/bin/rtai-config; then
         AC_MSG_ERROR([no RTAI installation found in ${rtaidir}!])
     fi
     AC_MSG_RESULT([$rtaidir])
@@ -696,6 +696,7 @@ else
     rtai_lxrt_cflags=`$rtaidir/bin/rtai-config --lxrt-cflags`
     rtai_lxrt_ldflags=`$rtaidir/bin/rtai-config --lxrt-ldflags`
     rtai_module_dir=`$rtaidir/bin/rtai-config --module-dir`
+    rtai_kernel_cflags=`$rtaidir/bin/rtai-config --kernel-cflags`
 fi
 
 AC_SUBST(RTAI_DIR,[$rtaidir])
@@ -705,6 +706,7 @@ AC_SUBST(ENABLE_RTAI,[$rtai])
 AC_SUBST(RTAI_LXRT_CFLAGS,[$rtai_lxrt_cflags])
 AC_SUBST(RTAI_LXRT_LDFLAGS,[$rtai_lxrt_ldflags])
 AC_SUBST(RTAI_MODULE_DIR,[$rtai_module_dir])
+AC_SUBST(RTAI_KERNEL_CFLAGS,[$rtai_kernel_cflags])
 
 #-----------------------------------------------------------------------------
 # Xenomai path (optional)
