@@ -336,10 +336,19 @@ struct e1000_adapter {
 	u16 eee_advert;
 
 	/* EtherCAT device variables */
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
 	unsigned long ec_watchdog_jiffies;
 	struct irq_work watchdog_kicker;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct e1000_adapter *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 struct e1000_info {
 	enum e1000_mac_type	mac;
