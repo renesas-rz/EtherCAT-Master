@@ -1,0 +1,95 @@
+#-----------------------------------------------------------------------------
+#
+#  $Id$
+#
+#  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
+#
+#  This file is part of the IgH EtherCAT Master.
+#
+#  The IgH EtherCAT Master is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License version 2, as
+#  published by the Free Software Foundation.
+#
+#  The IgH EtherCAT Master is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+#  Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License along
+#  with the IgH EtherCAT Master; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#  ---
+#
+#  The license mentioned above concerns the source code only. Using the
+#  EtherCAT technology and brand is only permitted in compliance with the
+#  industrial property and similar rights of Beckhoff Automation GmbH.
+#
+#  ---
+#
+#  vim: syntax=make
+#
+#-----------------------------------------------------------------------------
+
+TOPDIR := $(src)/../..
+
+REV := $(shell if test -s $(TOPDIR)/revision; then \
+                cat $(TOPDIR)/revision; \
+        else \
+                git -C $(TOPDIR) describe 2>/dev/null || echo "unknown"; \
+        fi)
+
+
+ifeq (@ENABLE_STMMAC@,1)
+EC_STMMAC_OBJS := \
+		chain_mode-@KERNEL_STMMAC@-ethercat.o \
+		dwmac1000_core-@KERNEL_STMMAC@-ethercat.o \
+		dwmac1000_dma-@KERNEL_STMMAC@-ethercat.o \
+		dwmac100_core-@KERNEL_STMMAC@-ethercat.o \
+		dwmac100_dma-@KERNEL_STMMAC@-ethercat.o \
+		dwmac4_core-@KERNEL_STMMAC@-ethercat.o \
+		dwmac4_descs-@KERNEL_STMMAC@-ethercat.o \
+		dwmac4_dma-@KERNEL_STMMAC@-ethercat.o \
+		dwmac4_lib-@KERNEL_STMMAC@-ethercat.o \
+		dwmac5-@KERNEL_STMMAC@-ethercat.o \
+		dwmac_lib-@KERNEL_STMMAC@-ethercat.o \
+		dwxgmac2_core-@KERNEL_STMMAC@-ethercat.o \
+		dwxgmac2_descs-@KERNEL_STMMAC@-ethercat.o \
+		dwxgmac2_dma-@KERNEL_STMMAC@-ethercat.o \
+		enh_desc-@KERNEL_STMMAC@-ethercat.o \
+		hwif-@KERNEL_STMMAC@-ethercat.o \
+		mmc_core-@KERNEL_STMMAC@-ethercat.o \
+		norm_desc-@KERNEL_STMMAC@-ethercat.o \
+		ring_mode-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_ethtool-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_hwtstamp-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_main-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_mdio-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_ptp-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_tc-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_xdp-@KERNEL_STMMAC@-ethercat.o \
+		$(ec_stmmac-y)
+
+ec_stmmac-$(CONFIG_STMMAC_SELFTESTS) = \
+	stmmac_selftests-@KERNEL_STMMAC@-ethercat.o
+
+ifeq (@ENABLE_DWMACINTEL@,1)
+	obj-m += ec_dwmac-intel.o
+	ec_dwmac-intel-objs := \
+		$(EC_STMMAC_OBJS) \
+		dwmac-intel-@KERNEL_STMMAC@-ethercat.o
+endif
+
+ifeq (@ENABLE_STMMACPCI@,1)
+	obj-m += ec_stmmac-pci.o
+	ec_stmmac-pci-objs := \
+		$(EC_STMMAC_OBJS) \
+		stmmac_pci-@KERNEL_STMMAC@-ethercat.o
+endif
+endif
+
+KBUILD_EXTRA_SYMBOLS := \
+	@abs_top_builddir@/$(LINUX_SYMVERS) \
+	@abs_top_builddir@/master/$(LINUX_SYMVERS)
+
+#-----------------------------------------------------------------------------
