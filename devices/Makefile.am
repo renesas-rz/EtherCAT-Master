@@ -34,7 +34,8 @@ SUBDIRS = \
 	genet \
 	igb \
 	igc \
-	r8169
+	r8169 \
+	stmmac
 
 # using HEADERS to enable tags target
 noinst_HEADERS = \

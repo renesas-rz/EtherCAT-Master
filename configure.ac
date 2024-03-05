@@ -638,6 +638,80 @@ fi
 
 AC_SUBST(KERNEL_R8169,[$kernel_r8169])
 
+#-----------------------------------------------------------------------------
+# stmmac-pci and dwmac-intel driver
+#-----------------------------------------------------------------------------
+
+enablestmmac=0
+
+AC_ARG_ENABLE([stmmac-pci],
+    AS_HELP_STRING([--enable-stmmac-pci],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enablestmmacpci=1
+                 enablestmmac=1
+                ;;
+            no) enablestmmacpci=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enablestmmacpci=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_STMMACPCI, test "x$enablestmmacpci" = "x1")
+AC_SUBST(ENABLE_STMMACPCI,[$enablestmmacpci])
+
+AC_ARG_ENABLE([dwmac-intel],
+    AS_HELP_STRING([--enable-dwmac-intel],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enabledwmacintel=1
+                 enablestmmac=1
+                ;;
+            no) enabledwmacintel=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enabledwmacintel=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_DWMACINTEL, test "x$enabledwmacintel" = "x1")
+AC_SUBST(ENABLE_DWMACINTEL,[$enabledwmacintel])
+
+AM_CONDITIONAL(ENABLE_STMMAC, test "x$enablestmmac" = "x1")
+AC_SUBST(ENABLE_STMMAC, [$enablestmmac])
+
+AC_ARG_WITH([stmmac-kernel],
+    AC_HELP_STRING(
+        [--with-stmmac-kernel=<X.Y.Z>],
+        [stmmac kernel (only if differing)]
+    ),
+    [
+        kernelstmmac=[$withval]
+    ],
+    [
+        kernelstmmac=$linuxversion
+    ]
+)
+
+if test "x${enablestmmac}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for stmmac driver])
+
+    if test ! -f "${srcdir}/devices/stmmac/stmmac-${kernelstmmac}-orig.h"; then
+        AC_MSG_ERROR([kernel $kernelstmmac not available for stmmac driver!])
+    fi
+
+    AC_MSG_RESULT([$kernelstmmac])
+fi
+
+AC_SUBST(KERNEL_STMMAC,[$kernelstmmac])
+
 #------------------------------------------------------------------------------
 # CCAT driver
 #------------------------------------------------------------------------------
@@ -1233,6 +1307,8 @@ AC_CONFIG_FILES([
         devices/igc/Makefile
         devices/r8169/Kbuild
         devices/r8169/Makefile
+        devices/stmmac/Kbuild
+        devices/stmmac/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile
