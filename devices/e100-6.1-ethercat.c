@@ -646,9 +646,18 @@ struct nic {
 	__le16 eeprom[256];
 	spinlock_t mdio_lock;
 	const struct firmware *fw;
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
 	unsigned long ec_watchdog_jiffies;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct nic *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 static inline void e100_write_flush(struct nic *nic)
 {
@@ -661,7 +670,7 @@ static void e100_enable_irq(struct nic *nic)
 {
 	unsigned long flags;
 
-	if (nic->ecdev)
+	if (get_ecdev(nic))
 		return;
 
 	spin_lock_irqsave(&nic->cmd_lock, flags);
@@ -674,11 +683,11 @@ static void e100_disable_irq(struct nic *nic)
 {
 	unsigned long flags = 0;
 
-	if (!nic->ecdev)
+	if (!nic->ecdev_)
 		spin_lock_irqsave(&nic->cmd_lock, flags);
 	iowrite8(irq_mask_all, &nic->csr->scb.cmd_hi);
 	e100_write_flush(nic);
-	if (!nic->ecdev)
+	if (!nic->ecdev_)
 		spin_unlock_irqrestore(&nic->cmd_lock, flags);
 }
 
@@ -868,7 +877,7 @@ static int e100_exec_cmd(struct nic *nic, u8 cmd, dma_addr_t dma_addr)
 	unsigned int i;
 	int err = 0;
 
-	if (!nic->ecdev)
+	if (!get_ecdev(nic))
 		spin_lock_irqsave(&nic->cmd_lock, flags);
 
 	/* Previous command is accepted when SCB clears */
@@ -889,7 +898,7 @@ static int e100_exec_cmd(struct nic *nic, u8 cmd, dma_addr_t dma_addr)
 	iowrite8(cmd, &nic->csr->scb.cmd_lo);
 
 err_unlock:
-	if (!nic->ecdev)
+	if (!get_ecdev(nic))
 		spin_unlock_irqrestore(&nic->cmd_lock, flags);
 
 	return err;
@@ -902,7 +911,7 @@ static int e100_exec_cb(struct nic *nic, struct sk_buff *skb,
 	unsigned long flags;
 	int err;
 
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		spin_lock_irqsave(&nic->cb_lock, flags);
 	}
 
@@ -950,7 +959,7 @@ static int e100_exec_cb(struct nic *nic, struct sk_buff *skb,
 	}
 
 err_unlock:
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		spin_unlock_irqrestore(&nic->cb_lock, flags);
 	}
 
@@ -984,7 +993,7 @@ static u16 mdio_ctrl_hw(struct nic *nic, u32 addr, u32 dir, u32 reg, u16 data)
 	 * manipulation of the MDI control registers is a multi-step
 	 * procedure it should be done under lock.
 	 */
-	if (!nic->ecdev)
+	if (!nic->ecdev_) /* exemption of initialization check */
 		spin_lock_irqsave(&nic->mdio_lock, flags);
 	for (i = 100; i; --i) {
 		if (ioread32(&nic->csr->mdi_ctrl) & mdi_ready)
@@ -993,7 +1002,7 @@ static u16 mdio_ctrl_hw(struct nic *nic, u32 addr, u32 dir, u32 reg, u16 data)
 	}
 	if (unlikely(!i)) {
 		netdev_err(nic->netdev, "e100.mdio_ctrl won't go Ready\n");
-		if (!nic->ecdev)
+		if (!get_ecdev(nic))
 			spin_unlock_irqrestore(&nic->mdio_lock, flags);
 		return 0;		/* No way to indicate timeout error */
 	}
@@ -1004,7 +1013,7 @@ static u16 mdio_ctrl_hw(struct nic *nic, u32 addr, u32 dir, u32 reg, u16 data)
 		if ((data_out = ioread32(&nic->csr->mdi_ctrl)) & mdi_ready)
 			break;
 	}
-	if (!nic->ecdev)
+	if (!nic->ecdev_)
 		spin_unlock_irqrestore(&nic->mdio_lock, flags);
 	netif_printk(nic, hw, KERN_DEBUG, nic->netdev,
 		     "%s:addr=%d, reg=%d, data_in=0x%04X, data_out=0x%04X\n",
@@ -1182,7 +1191,7 @@ static int e100_configure(struct nic *nic, struct cb *cb, struct sk_buff *skb)
 		config->multicast_all = 0x1;		/* 1=accept, 0=no */
 
 	/* disable WoL when up */
-	if (nic->ecdev ||
+	if (get_ecdev(nic) ||
 			(netif_running(nic->netdev) || !(nic->flags & wol_magic)))
 		config->magic_packet_disable = 0x1;	/* 1=off, 0=on */
 
@@ -1748,8 +1757,8 @@ static void e100_watchdog_impl(struct nic *nic)
 	struct ethtool_cmd cmd = { .cmd = ETHTOOL_GSET };
 	u32 speed;
 
-	if (nic->ecdev) {
-		ecdev_set_link(nic->ecdev, mii_link_ok(&nic->mii) ? 1 : 0);
+	if (get_ecdev(nic)) {
+		ecdev_set_link(get_ecdev(nic), mii_link_ok(&nic->mii) ? 1 : 0);
 		return;
 	}
 
@@ -1862,14 +1871,14 @@ static netdev_tx_t e100_xmit_frame(struct sk_buff *skb,
 		/* We queued the skb, but now we're out of space. */
 		netif_printk(nic, tx_err, KERN_DEBUG, nic->netdev,
 			     "No space for CB\n");
-		if (!nic->ecdev)
+		if (!get_ecdev(nic))
 			netif_stop_queue(netdev);
 		break;
 	case -ENOMEM:
 		/* This is a hard error - log it. */
 		netif_printk(nic, tx_err, KERN_DEBUG, nic->netdev,
 			     "Out of Tx resources, returning skb\n");
-		if (!nic->ecdev)
+		if (!get_ecdev(nic))
 			netif_stop_queue(netdev);
 		return NETDEV_TX_BUSY;
 	}
@@ -1883,7 +1892,7 @@ static int e100_tx_clean(struct nic *nic)
 	struct cb *cb;
 	int tx_cleaned = 0;
 
-	if (!nic->ecdev)
+	if (!get_ecdev(nic))
 		spin_lock(&nic->cb_lock);
 
 	/* Clean CBs marked complete */
@@ -1904,7 +1913,7 @@ static int e100_tx_clean(struct nic *nic)
 					 le32_to_cpu(cb->u.tcb.tbd.buf_addr),
 					 le16_to_cpu(cb->u.tcb.tbd.size),
 					 DMA_TO_DEVICE);
-			if (!nic->ecdev)
+			if (!get_ecdev(nic))
 				dev_kfree_skb_any(cb->skb);
 			cb->skb = NULL;
 			tx_cleaned = 1;
@@ -1913,7 +1922,7 @@ static int e100_tx_clean(struct nic *nic)
 		nic->cbs_avail++;
 	}
 
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		spin_unlock(&nic->cb_lock);
 
 		/* Recover from running out of Tx resources in xmit_frame */
@@ -1934,7 +1943,7 @@ static void e100_clean_cbs(struct nic *nic)
 						 le32_to_cpu(cb->u.tcb.tbd.buf_addr),
 						 le16_to_cpu(cb->u.tcb.tbd.size),
 						 DMA_TO_DEVICE);
-				if (!nic->ecdev)
+				if (!get_ecdev(nic))
 					dev_kfree_skb(cb->skb);
 			}
 			nic->cb_to_clean = nic->cb_to_clean->next;
@@ -2089,7 +2098,7 @@ static int e100_rx_indicate(struct nic *nic, struct rx *rx,
 		nic->ru_running = RU_SUSPENDED;
 	}
 
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		/* Pull off the RFD and put the actual data (minus eth hdr) */
 		skb_reserve(skb, sizeof(struct rfd));
 		skb_put(skb, actual_size);
@@ -2107,27 +2116,27 @@ static int e100_rx_indicate(struct nic *nic, struct rx *rx,
 	}
 
 	if (unlikely(!(rfd_status & cb_ok))) {
-		if (!nic->ecdev) {
+		if (!get_ecdev(nic)) {
 			/* Don't indicate if hardware indicates errors */
 			dev_kfree_skb_any(skb);
 		}
 	} else if (actual_size > ETH_DATA_LEN + VLAN_ETH_HLEN + fcs_pad) {
 		/* Don't indicate oversized frames */
 		nic->rx_over_length_errors++;
-		if (!nic->ecdev) {
+		if (!get_ecdev(nic)) {
 			dev_kfree_skb_any(skb);
 		}
 	} else {
 process_skb:
 		dev->stats.rx_packets++;
 		dev->stats.rx_bytes += (actual_size - fcs_pad);
-		if (nic->ecdev) {
-			ecdev_receive(nic->ecdev,
+		if (get_ecdev(nic)) {
+			ecdev_receive(get_ecdev(nic),
 					skb->data + sizeof(struct rfd), actual_size - fcs_pad);
 
 			// No need to detect link status as
 			// long as frames are received: Reset watchdog.
-			if (ecdev_get_link(nic->ecdev)) {
+			if (ecdev_get_link(get_ecdev(nic))) {
 				nic->ec_watchdog_jiffies = jiffies;
 			}
 		} else {
@@ -2137,7 +2146,7 @@ process_skb:
 			(*work_done)++;
 	}
 
-	if (nic->ecdev) {
+	if (get_ecdev(nic)) {
 		// make receive frame descriptior usable again
 		memcpy(skb->data, &nic->blank_rfd, sizeof(struct rfd));
 		rx->dma_addr = dma_map_single(&nic->pdev->dev, skb->data,
@@ -2191,7 +2200,7 @@ static void e100_rx_clean(struct nic *nic, unsigned int *work_done,
 	old_before_last_rx = nic->rx_to_use->prev->prev;
 	old_before_last_rfd = (struct rfd *)old_before_last_rx->skb->data;
 
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		/* Alloc new skbs to refill list */
 		for(rx = nic->rx_to_use; !rx->skb; rx = nic->rx_to_use = rx->next) {
 			if(unlikely(e100_rx_alloc_skb(nic, rx)))
@@ -2288,7 +2297,7 @@ static int e100_rx_alloc_list(struct nic *nic)
 		}
 	}
 
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		/* Set the el-bit on the buffer that is before the last buffer.
 		 * This lets us update the next pointer on the last buffer without
 		 * worrying about hardware touching it.
@@ -2330,7 +2339,7 @@ static irqreturn_t e100_intr(int irq, void *dev_id)
 	if (stat_ack & stat_ack_rnr)
 		nic->ru_running = RU_SUSPENDED;
 
-	if (!nic->ecdev && likely(napi_schedule_prep(&nic->napi))) {
+	if (!get_ecdev(nic) && likely(napi_schedule_prep(&nic->napi))) {
 		e100_disable_irq(nic);
 		__napi_schedule(&nic->napi);
 	}
@@ -2418,13 +2427,13 @@ static int e100_up(struct nic *nic)
 		goto err_clean_cbs;
 	e100_set_multicast_list(nic->netdev);
 	e100_start_receiver(nic, NULL);
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		mod_timer(&nic->watchdog, jiffies);
 	}
 	if ((err = request_irq(nic->pdev->irq, e100_intr, IRQF_SHARED,
 		nic->netdev->name, nic->netdev)))
 		goto err_no_irq;
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		netif_wake_queue(nic->netdev);
 		napi_enable(&nic->napi);
 		/* enable ints _after_ enabling poll, preventing a race between
@@ -2434,7 +2443,7 @@ static int e100_up(struct nic *nic)
 	return 0;
 
 err_no_irq:
-	if (!nic->ecdev)
+	if (!get_ecdev(nic))
 		del_timer_sync(&nic->watchdog);
 err_clean_cbs:
 	e100_clean_cbs(nic);
@@ -2445,14 +2454,14 @@ err_rx_clean_list:
 
 static void e100_down(struct nic *nic)
 {
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		/* wait here for poll to complete */
 		napi_disable(&nic->napi);
 		netif_stop_queue(nic->netdev);
 	}
 	e100_hw_reset(nic);
 	free_irq(nic->pdev->irq, nic->netdev);
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		del_timer_sync(&nic->watchdog);
 		netif_carrier_off(nic->netdev);
 	}
@@ -2929,7 +2938,7 @@ static int e100_open(struct net_device *netdev)
 	struct nic *nic = netdev_priv(netdev);
 	int err = 0;
 
-	if (!nic->ecdev)
+	if (!get_ecdev(nic))
 		netif_carrier_off(netdev);
 	if ((err = e100_up(nic)))
 		netif_err(nic, ifup, nic->netdev, "Cannot open interface, aborting\n");
@@ -3089,9 +3098,10 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_pme_active(pdev, false);
 
 	// offer device to EtherCAT master module
-	nic->ecdev = ecdev_offer(netdev, e100_ec_poll, THIS_MODULE);
+	nic->ecdev_ = ecdev_offer(netdev, e100_ec_poll, THIS_MODULE);
+	nic->ecdev_initialized = true;
 
-	if (!nic->ecdev) {
+	if (!get_ecdev(nic)) {
 		strcpy(netdev->name, "eth%d");
 		if ((err = register_netdev(netdev))) {
 			netif_err(nic, probe, nic->netdev,
@@ -3115,10 +3125,10 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		   (unsigned long long)pci_resource_start(pdev, use_io ? 1 : 0),
 		   pdev->irq, netdev->dev_addr);
 
-	if (nic->ecdev) {
-		err = ecdev_open(nic->ecdev);
+	if (get_ecdev(nic)) {
+		err = ecdev_open(get_ecdev(nic));
 		if (err) {
-			ecdev_withdraw(nic->ecdev);
+			ecdev_withdraw(get_ecdev(nic));
 			goto err_out_free;
 		}
 	}
@@ -3146,9 +3156,9 @@ static void e100_remove(struct pci_dev *pdev)
 
 	if (netdev) {
 		struct nic *nic = netdev_priv(netdev);
-		if (nic->ecdev) {
-			ecdev_close(nic->ecdev);
-			ecdev_withdraw(nic->ecdev);
+		if (get_ecdev(nic)) {
+			ecdev_close(get_ecdev(nic));
+			ecdev_withdraw(get_ecdev(nic));
 		} else {
 			unregister_netdev(netdev);
 		}
@@ -3263,7 +3273,7 @@ static pci_ers_result_t e100_io_error_detected(struct pci_dev *pdev, pci_channel
 	struct net_device *netdev = pci_get_drvdata(pdev);
 	struct nic *nic = netdev_priv(netdev);
 
-	if (nic->ecdev)
+	if (get_ecdev(nic))
 		return -EBUSY;
 
 	netif_device_detach(netdev);
@@ -3290,7 +3300,7 @@ static pci_ers_result_t e100_io_slot_reset(struct pci_dev *pdev)
 	struct net_device *netdev = pci_get_drvdata(pdev);
 	struct nic *nic = netdev_priv(netdev);
 
-	if (nic->ecdev)
+	if (get_ecdev(nic))
 		return -EBUSY;
 
 	if (pci_enable_device(pdev)) {
@@ -3323,11 +3333,11 @@ static void e100_io_resume(struct pci_dev *pdev)
 	/* ack any pending wake events, disable PME */
 	pci_enable_wake(pdev, PCI_D0, 0);
 
-	if (!nic->ecdev)
+	if (!get_ecdev(nic))
 		netif_device_attach(netdev);
-	if (nic->ecdev || netif_running(netdev)) {
+	if (get_ecdev(nic) || netif_running(netdev)) {
 		e100_open(netdev);
-		if (!nic->ecdev)
+		if (!get_ecdev(nic))
 			mod_timer(&nic->watchdog, jiffies);
 	}
 }

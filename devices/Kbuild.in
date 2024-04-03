@@ -26,6 +26,11 @@
 src := @abs_srcdir@
 ccflags-y := -I@abs_top_builddir@
 
+ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+	ccflags-y += -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+endif
+
+
 REV := $(shell if test -s $(src)/../revision; then \
 		cat $(src)/../revision; \
 	else \
