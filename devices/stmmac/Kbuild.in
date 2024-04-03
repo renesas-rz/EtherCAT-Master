@@ -39,6 +39,9 @@ REV := $(shell if test -s $(TOPDIR)/revision; then \
                 git -C $(TOPDIR) describe 2>/dev/null || echo "unknown"; \
         fi)
 
+ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+	ccflags-y := -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+endif
 
 ifeq (@ENABLE_STMMAC@,1)
 EC_STMMAC_OBJS := \
