@@ -60,7 +60,7 @@ uint8_t *ec_slave_mbox_prepare_send(const ec_slave_t *slave, /**< slave */
     if (unlikely(total_size > slave->configured_rx_mailbox_size)) {
         EC_SLAVE_ERR(slave, "Data size (%zu) does not fit in mailbox (%u)!\n",
                 total_size, slave->configured_rx_mailbox_size);
-        return ERR_PTR(-EOVERFLOW);
+        return ERR_PTR(-ENOBUFS);
     }
 
     ret = ec_datagram_fpwr(datagram, slave->station_address,

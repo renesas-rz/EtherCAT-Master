@@ -48,7 +48,7 @@ void ec_soe_request_clear(ec_soe_request_t *req)
  * Application interface.
  ****************************************************************************/
 
-void ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
+int ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
         uint16_t idn)
 {
     ec_ioctl_soe_request_t data;
@@ -61,14 +61,14 @@ void ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SOE_REQUEST_IDN, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set SoE request IDN: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
+int ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
 {
     ec_ioctl_soe_request_t data;
     int ret;
@@ -79,9 +79,9 @@ void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SOE_REQUEST_TIMEOUT, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set SoE request timeout: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -139,7 +139,7 @@ ec_request_state_t ecrt_soe_request_state(ec_soe_request_t *req)
 
 /****************************************************************************/
 
-void ecrt_soe_request_read(ec_soe_request_t *req)
+int ecrt_soe_request_read(ec_soe_request_t *req)
 {
     ec_ioctl_soe_request_t data;
     int ret;
@@ -149,14 +149,14 @@ void ecrt_soe_request_read(ec_soe_request_t *req)
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SOE_REQUEST_READ, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an SoE read operation : %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_soe_request_write(ec_soe_request_t *req)
+int ecrt_soe_request_write(ec_soe_request_t *req)
 {
     ec_ioctl_soe_request_t data;
     int ret;
@@ -168,9 +168,9 @@ void ecrt_soe_request_write(ec_soe_request_t *req)
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SOE_REQUEST_WRITE, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an SDO write operation : %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/

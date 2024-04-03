@@ -109,7 +109,7 @@ int ecrt_slave_config_sync_manager(ec_slave_config_t *sc, uint8_t sync_index,
 
 /****************************************************************************/
 
-void ecrt_slave_config_watchdog(ec_slave_config_t *sc,
+int ecrt_slave_config_watchdog(ec_slave_config_t *sc,
         uint16_t divider, uint16_t intervals)
 {
     ec_ioctl_config_t data;
@@ -124,7 +124,9 @@ void ecrt_slave_config_watchdog(ec_slave_config_t *sc,
     if (EC_IOCTL_IS_ERROR(ret)) {
         fprintf(stderr, "Failed to config watchdog: %s\n",
                 strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -151,7 +153,7 @@ int ecrt_slave_config_pdo_assign_add(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-void ecrt_slave_config_pdo_assign_clear(ec_slave_config_t *sc,
+int ecrt_slave_config_pdo_assign_clear(ec_slave_config_t *sc,
         uint8_t sync_index)
 {
     ec_ioctl_config_pdo_t data;
@@ -164,7 +166,9 @@ void ecrt_slave_config_pdo_assign_clear(ec_slave_config_t *sc,
     if (EC_IOCTL_IS_ERROR(ret)) {
         fprintf(stderr, "Failed to clear PDOs: %s\n",
                 strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -194,7 +198,7 @@ int ecrt_slave_config_pdo_mapping_add(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-void ecrt_slave_config_pdo_mapping_clear(ec_slave_config_t *sc,
+int ecrt_slave_config_pdo_mapping_clear(ec_slave_config_t *sc,
         uint16_t pdo_index)
 {
     ec_ioctl_config_pdo_t data;
@@ -207,7 +211,9 @@ void ecrt_slave_config_pdo_mapping_clear(ec_slave_config_t *sc,
     if (EC_IOCTL_IS_ERROR(ret)) {
         fprintf(stderr, "Failed to clear PDO entries: %s\n",
                 strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -356,7 +362,7 @@ int ecrt_slave_config_reg_pdo_entry_pos(
 
 /****************************************************************************/
 
-void ecrt_slave_config_dc(ec_slave_config_t *sc, uint16_t assign_activate,
+int ecrt_slave_config_dc(ec_slave_config_t *sc, uint16_t assign_activate,
         uint32_t sync0_cycle_time, int32_t sync0_shift_time,
         uint32_t sync1_cycle_time, int32_t sync1_shift_time)
 {
@@ -372,9 +378,9 @@ void ecrt_slave_config_dc(ec_slave_config_t *sc, uint16_t assign_activate,
 
     ret = ioctl(sc->master->fd, EC_IOCTL_SC_DC, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set DC parameters: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -813,7 +819,7 @@ ec_voe_handler_t *ecrt_slave_config_create_voe_handler(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
-void ecrt_slave_config_state(const ec_slave_config_t *sc,
+int ecrt_slave_config_state(const ec_slave_config_t *sc,
         ec_slave_config_state_t *state)
 {
     ec_ioctl_sc_state_t data;
@@ -824,9 +830,9 @@ void ecrt_slave_config_state(const ec_slave_config_t *sc,
 
     ret = ioctl(sc->master->fd, EC_IOCTL_SC_STATE, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to get slave configuration state: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/

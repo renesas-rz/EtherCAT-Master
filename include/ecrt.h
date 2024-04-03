@@ -1027,8 +1027,11 @@ EC_PUBLIC_API int ecrt_master_activate(
  * become invalid.
  *
  * This method should not be called in realtime context.
+ * \return 0 on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -EINVAL Master has not been activated before.
  */
-EC_PUBLIC_API void ecrt_master_deactivate(
+EC_PUBLIC_API int ecrt_master_deactivate(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1056,8 +1059,9 @@ EC_PUBLIC_API int ecrt_master_set_send_interval(
  * has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_send(
+EC_PUBLIC_API int ecrt_master_send(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1072,19 +1076,23 @@ EC_PUBLIC_API void ecrt_master_send(
  * ecrt_master_activate() has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_receive(
+EC_PUBLIC_API int ecrt_master_receive(
         ec_master_t *master /**< EtherCAT master. */
         );
 
+#ifdef __KERNEL__
 /** Sends non-application datagrams.
  *
  * This method has to be called in the send callback function passed via
  * ecrt_master_callbacks() to allow the sending of non-application datagrams.
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_send_ext(
+int ecrt_master_send_ext(
         ec_master_t *master /**< EtherCAT master. */
         );
+#endif
 
 /** Reads the current master state.
  *
@@ -1092,8 +1100,9 @@ EC_PUBLIC_API void ecrt_master_send_ext(
  *
  * This method returns a global state. For the link-specific states in a
  * redundant network topology, use the ecrt_master_link_state() method.
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_state(
+EC_PUBLIC_API int ecrt_master_state(
         const ec_master_t *master, /**< EtherCAT master. */
         ec_master_state_t *state /**< Structure to store the information. */
         );
@@ -1133,8 +1142,9 @@ EC_PUBLIC_API int ecrt_master_link_state(
  * necessary, since the absolute value is not of any interest.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_application_time(
+EC_PUBLIC_API int ecrt_master_application_time(
         ec_master_t *master, /**< EtherCAT master. */
         uint64_t app_time /**< Application time. */
         );
@@ -1145,8 +1155,11 @@ EC_PUBLIC_API void ecrt_master_application_time(
  * by the last call off ecrt_master_application_time().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -ENXIO No reference clock found.
  */
-EC_PUBLIC_API void ecrt_master_sync_reference_clock(
+EC_PUBLIC_API int ecrt_master_sync_reference_clock(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1159,8 +1172,11 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock(
  * has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return Zero on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -ENXIO No reference clock found.
  */
-EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
+EC_PUBLIC_API int ecrt_master_sync_reference_clock_to(
         ec_master_t *master, /**< EtherCAT master. */
         uint64_t sync_time /**< Sync reference clock to this time. */
         );
@@ -1173,8 +1189,11 @@ EC_PUBLIC_API void ecrt_master_sync_reference_clock_to(
  * has returned.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval 0 Success.
+ * \retval -ENXIO No reference clock found.
  */
-EC_PUBLIC_API void ecrt_master_sync_slave_clocks(
+EC_PUBLIC_API int ecrt_master_sync_slave_clocks(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1211,7 +1230,7 @@ EC_PUBLIC_API int ecrt_master_reference_clock_time(
  *
  * \ingroup ApplicationInterfaceRT
  */
-EC_PUBLIC_API void ecrt_master_sync_monitor_queue(
+EC_PUBLIC_API int ecrt_master_sync_monitor_queue(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1240,8 +1259,9 @@ EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
  * activation), because slaves will not be configured before.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_master_reset(
+EC_PUBLIC_API int ecrt_master_reset(
         ec_master_t *master /**< EtherCAT master. */
         );
 
@@ -1271,8 +1291,10 @@ EC_PUBLIC_API int ecrt_slave_config_sync_manager(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_watchdog(
+EC_PUBLIC_API int ecrt_slave_config_watchdog(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t watchdog_divider, /**< Number of 40 ns intervals (register
                                      0x0400). Used as a base unit for all
@@ -1310,8 +1332,9 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_assign_add(
  * ecrt_master_activate().
  *
  * \see ecrt_slave_config_pdos()
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_pdo_assign_clear(
+EC_PUBLIC_API int ecrt_slave_config_pdo_assign_clear(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint8_t sync_index /**< Sync manager index. Must be less
                               than #EC_MAX_SYNC_MANAGERS. */
@@ -1344,8 +1367,9 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_add(
  * ecrt_master_activate().
  *
  * \see ecrt_slave_config_pdos()
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_pdo_mapping_clear(
+EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_clear(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t pdo_index /**< Index of the PDO. */
         );
@@ -1492,8 +1516,9 @@ EC_PUBLIC_API int ecrt_slave_config_reg_pdo_entry_pos(
  * ecrt_master_activate().
  *
  * \attention The \a sync1_shift time is ignored.
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_slave_config_dc(
+EC_PUBLIC_API int ecrt_slave_config_dc(
         ec_slave_config_t *sc, /**< Slave configuration. */
         uint16_t assign_activate, /**< AssignActivate word. */
         uint32_t sync0_cycle, /**< SYNC0 cycle time [ns]. */
@@ -1760,7 +1785,7 @@ EC_PUBLIC_API ec_reg_request_t *ecrt_slave_config_create_reg_request(
  *
  * \ingroup ApplicationInterfaceRT
  */
-EC_PUBLIC_API void ecrt_slave_config_state(
+EC_PUBLIC_API int ecrt_slave_config_state(
         const ec_slave_config_t *sc, /**< Slave configuration */
         ec_slave_config_state_t *state /**< State object to write to. */
         );
@@ -1901,8 +1926,9 @@ EC_PUBLIC_API uint8_t *ecrt_domain_data(
  * ecrt_domain_state() return the result of the last process data exchange.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_domain_process(
+EC_PUBLIC_API int ecrt_domain_process(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1912,8 +1938,9 @@ EC_PUBLIC_API void ecrt_domain_process(
  * next call of ecrt_master_send().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_domain_queue(
+EC_PUBLIC_API int ecrt_domain_queue(
         ec_domain_t *domain /**< Domain. */
         );
 
@@ -1924,8 +1951,9 @@ EC_PUBLIC_API void ecrt_domain_queue(
  * Using this method, the process data exchange can be monitored in realtime.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_domain_state(
+EC_PUBLIC_API int ecrt_domain_state(
         const ec_domain_t *domain, /**< Domain. */
         ec_domain_state_t *state /**< Pointer to a state object to store the
                                    information. */
@@ -1946,8 +1974,9 @@ EC_PUBLIC_API void ecrt_domain_state(
  * set via ecrt_slave_config_create_sdo_request().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_index(
+EC_PUBLIC_API int ecrt_sdo_request_index(
         ec_sdo_request_t *req, /**< SDO request. */
         uint16_t index, /**< SDO index. */
         uint8_t subindex /**< SDO subindex. */
@@ -1963,8 +1992,9 @@ EC_PUBLIC_API void ecrt_sdo_request_index(
  *
  * The timeout should be defined in non-realtime context, but can also be
  * changed afterwards.
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_timeout(
+EC_PUBLIC_API int ecrt_sdo_request_timeout(
         ec_sdo_request_t *req, /**< SDO request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
@@ -2047,8 +2077,12 @@ ec_request_state_t ecrt_sdo_request_state(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval -EINVAL Invalid input data, e.g. data size == 0.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_sdo_request()
+ *              too small.
  */
-EC_PUBLIC_API void ecrt_sdo_request_write(
+EC_PUBLIC_API int ecrt_sdo_request_write(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -2065,8 +2099,9 @@ EC_PUBLIC_API void ecrt_sdo_request_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_sdo_request_read(
+EC_PUBLIC_API int ecrt_sdo_request_read(
         ec_sdo_request_t *req /**< SDO request. */
         );
 
@@ -2085,8 +2120,9 @@ EC_PUBLIC_API void ecrt_sdo_request_read(
  * set via ecrt_slave_config_create_soe_request().
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_soe_request_idn(
+EC_PUBLIC_API int ecrt_soe_request_idn(
         ec_soe_request_t *req, /**< IDN request. */
         uint8_t drive_no, /**< SDO index. */
         uint16_t idn /**< SoE IDN. */
@@ -2102,8 +2138,9 @@ EC_PUBLIC_API void ecrt_soe_request_idn(
  *
  * The timeout should be defined in non-realtime context, but can also be
  * changed afterwards.
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_soe_request_timeout(
+EC_PUBLIC_API int ecrt_soe_request_timeout(
         ec_soe_request_t *req, /**< SoE request. */
         uint32_t timeout /**< Timeout in milliseconds. Zero means no
                            timeout. */
@@ -2181,8 +2218,12 @@ EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval -EINVAL Invalid input data, e.g. data size == 0.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_soe_request()
+ *              too small.
  */
-EC_PUBLIC_API void ecrt_soe_request_write(
+EC_PUBLIC_API int ecrt_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2199,8 +2240,9 @@ EC_PUBLIC_API void ecrt_soe_request_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_soe_request_read(
+EC_PUBLIC_API int ecrt_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
         );
 
@@ -2220,8 +2262,9 @@ EC_PUBLIC_API void ecrt_soe_request_read(
  * change the header later on in realtime context.
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_send_header(
+EC_PUBLIC_API int ecrt_voe_handler_send_header(
         ec_voe_handler_t *voe, /**< VoE handler. */
         uint32_t vendor_id, /**< Vendor ID. */
         uint16_t vendor_type /**< Vendor-specific type. */
@@ -2239,8 +2282,9 @@ EC_PUBLIC_API void ecrt_voe_handler_send_header(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_received_header(
+EC_PUBLIC_API int ecrt_voe_handler_received_header(
         const ec_voe_handler_t *voe, /**< VoE handler. */
         uint32_t *vendor_id, /**< Vendor ID. */
         uint16_t *vendor_type /**< Vendor-specific type. */
@@ -2297,8 +2341,11 @@ EC_PUBLIC_API size_t ecrt_voe_handler_data_size(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_voe_handler
+ *                  too small.
  */
-EC_PUBLIC_API void ecrt_voe_handler_write(
+EC_PUBLIC_API int ecrt_voe_handler_write(
         ec_voe_handler_t *voe, /**< VoE handler. */
         size_t size /**< Number of bytes to write (without the VoE header). */
         );
@@ -2322,8 +2369,9 @@ EC_PUBLIC_API void ecrt_voe_handler_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_read(
+EC_PUBLIC_API int ecrt_voe_handler_read(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2347,8 +2395,9 @@ EC_PUBLIC_API void ecrt_voe_handler_read(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
  */
-EC_PUBLIC_API void ecrt_voe_handler_read_nosync(
+EC_PUBLIC_API int ecrt_voe_handler_read_nosync(
         ec_voe_handler_t *voe /**< VoE handler. */
         );
 
@@ -2425,8 +2474,11 @@ ec_request_state_t ecrt_reg_request_state(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_reg_request
+ *              too small.
  */
-EC_PUBLIC_API void ecrt_reg_request_write(
+EC_PUBLIC_API int ecrt_reg_request_write(
         ec_reg_request_t *req, /**< Register request. */
         uint16_t address, /**< Register address. */
         size_t size /**< Size to write. */
@@ -2444,8 +2496,11 @@ EC_PUBLIC_API void ecrt_reg_request_write(
  * activation).
  *
  * \ingroup ApplicationInterfaceRT
+ * \return 0 on success, otherwise negative error code.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_reg_request
+ *              too small.
  */
-EC_PUBLIC_API void ecrt_reg_request_read(
+EC_PUBLIC_API int ecrt_reg_request_read(
         ec_reg_request_t *req, /**< Register request. */
         uint16_t address, /**< Register address. */
         size_t size /**< Size to write. */

@@ -89,24 +89,26 @@ ec_request_state_t ecrt_reg_request_state(const ec_reg_request_t *reg)
 
 /****************************************************************************/
 
-void ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     reg->dir = EC_DIR_OUTPUT;
     reg->address = address;
     reg->transfer_size = min(size, reg->mem_size);
     reg->state = EC_INT_REQUEST_QUEUED;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     reg->dir = EC_DIR_INPUT;
     reg->address = address;
     reg->transfer_size = min(size, reg->mem_size);
     reg->state = EC_INT_REQUEST_QUEUED;
+    return 0;
 }
 
 /****************************************************************************/

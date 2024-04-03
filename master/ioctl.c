@@ -1069,7 +1069,10 @@ static ATTRIBUTES int ec_ioctl_slave_reg_read(
         return ret;
     }
 
-    ecrt_reg_request_read(&request, io.address, io.size);
+    ret = ecrt_reg_request_read(&request, io.address, io.size);
+    if (ret) {
+        return ret;
+    }
 
     if (down_interruptible(&master->master_sem)) {
         ec_reg_request_clear(&request);
@@ -1153,7 +1156,10 @@ static ATTRIBUTES int ec_ioctl_slave_reg_write(
         return -EFAULT;
     }
 
-    ecrt_reg_request_write(&request, io.address, io.size);
+    ret = ecrt_reg_request_write(&request, io.address, io.size);
+    if (ret) {
+        return ret;
+    }
 
     if (down_interruptible(&master->master_sem)) {
         ec_reg_request_clear(&request);
@@ -1948,8 +1954,7 @@ static ATTRIBUTES int ec_ioctl_deactivate(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    ecrt_master_deactivate(master);
-    return 0;
+    return ecrt_master_deactivate(master);
 }
 
 /****************************************************************************/
@@ -1996,6 +2001,8 @@ static ATTRIBUTES int ec_ioctl_send(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2003,9 +2010,9 @@ static ATTRIBUTES int ec_ioctl_send(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_send(master);
+    ret = ecrt_master_send(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2020,6 +2027,8 @@ static ATTRIBUTES int ec_ioctl_receive(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2027,9 +2036,9 @@ static ATTRIBUTES int ec_ioctl_receive(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_receive(master);
+    ret = ecrt_master_receive(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2045,8 +2054,11 @@ static ATTRIBUTES int ec_ioctl_master_state(
         )
 {
     ec_master_state_t data;
+    int ret;
 
-    ecrt_master_state(master, &data);
+    ret = ecrt_master_state(master, &data);
+    if (ret)
+        return ret;
 
     if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
@@ -2108,8 +2120,7 @@ static ATTRIBUTES int ec_ioctl_app_time(
         return -EFAULT;
     }
 
-    ecrt_master_application_time(master, time);
-    return 0;
+    return ecrt_master_application_time(master, time);
 }
 
 /****************************************************************************/
@@ -2124,6 +2135,8 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2131,9 +2144,9 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_reference_clock(master);
+    ret = ecrt_master_sync_reference_clock(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2148,6 +2161,7 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
     uint64_t time;
 
     if (unlikely(!ctx->requested))
@@ -2160,9 +2174,9 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_reference_clock_to(master, time);
+    ret = ecrt_master_sync_reference_clock_to(master, time);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2177,6 +2191,8 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2184,9 +2200,9 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_slave_clocks(master);
+    ret = ecrt_master_sync_slave_clocks(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2232,6 +2248,8 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
@@ -2239,9 +2257,9 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_master_sync_monitor_queue(master);
+    ret = ecrt_master_sync_monitor_queue(master);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -2380,7 +2398,7 @@ static ATTRIBUTES int ec_ioctl_sc_watchdog(
         goto out_up;
     }
 
-    ecrt_slave_config_watchdog(sc,
+    ret = ecrt_slave_config_watchdog(sc,
             data.watchdog_divider, data.watchdog_intervals);
 
 out_up:
@@ -2454,8 +2472,7 @@ static ATTRIBUTES int ec_ioctl_sc_clear_pdos(
 
     up(&master->master_sem); /** \todo sc could be invalidated */
 
-    ecrt_slave_config_pdo_assign_clear(sc, data.sync_index);
-    return 0;
+    return ecrt_slave_config_pdo_assign_clear(sc, data.sync_index);
 }
 
 /****************************************************************************/
@@ -2524,8 +2541,7 @@ static ATTRIBUTES int ec_ioctl_sc_clear_entries(
 
     up(&master->master_sem); /** \todo sc could be invalidated */
 
-    ecrt_slave_config_pdo_mapping_clear(sc, data.index);
-    return 0;
+    return ecrt_slave_config_pdo_mapping_clear(sc, data.index);
 }
 
 /****************************************************************************/
@@ -2639,6 +2655,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
 {
     ec_ioctl_config_t data;
     ec_slave_config_t *sc;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -2654,7 +2671,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
         return -ENOENT;
     }
 
-    ecrt_slave_config_dc(sc, data.dc_assign_activate,
+    ret = ecrt_slave_config_dc(sc, data.dc_assign_activate,
             data.dc_sync[0].cycle_time,
             data.dc_sync[0].shift_time,
             data.dc_sync[1].cycle_time,
@@ -2662,7 +2679,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
 
     up(&master->master_sem);
 
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -3107,6 +3124,7 @@ static ATTRIBUTES int ec_ioctl_sc_state(
     ec_ioctl_sc_state_t data;
     const ec_slave_config_t *sc;
     ec_slave_config_state_t state;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3122,7 +3140,9 @@ static ATTRIBUTES int ec_ioctl_sc_state(
         return -ENOENT;
     }
 
-    ecrt_slave_config_state(sc, &state);
+    ret = ecrt_slave_config_state(sc, &state);
+    if (ret)
+        return ret;
 
     if (ec_copy_to_user((void __user *) data.state,
                         &state, sizeof(state), ctx))
@@ -3334,8 +3354,7 @@ static ATTRIBUTES int ec_ioctl_domain_process(
         return -ENOENT;
     }
 
-    ecrt_domain_process(domain);
-    return 0;
+    return ecrt_domain_process(domain);
 }
 
 /****************************************************************************/
@@ -3351,6 +3370,7 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
         )
 {
     ec_domain_t *domain;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3365,9 +3385,9 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
     if (ec_ioctl_lock_interruptible(&master->io_mutex))
         return -EINTR;
 
-    ecrt_domain_queue(domain);
+    ret = ecrt_domain_queue(domain);
     ec_ioctl_unlock(&master->io_mutex);
-    return 0;
+    return ret;
 }
 
 /****************************************************************************/
@@ -3385,6 +3405,7 @@ static ATTRIBUTES int ec_ioctl_domain_state(
     ec_ioctl_domain_state_t data;
     const ec_domain_t *domain;
     ec_domain_state_t state;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3400,7 +3421,9 @@ static ATTRIBUTES int ec_ioctl_domain_state(
         return -ENOENT;
     }
 
-    ecrt_domain_state(domain, &state);
+    ret = ecrt_domain_state(domain, &state);
+    if (ret)
+        return ret;
 
     if (ec_copy_to_user((void __user *) data.state, &state, sizeof(state),
                 ctx))
@@ -3442,8 +3465,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_index(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_index(req, data.sdo_index, data.sdo_subindex);
-    return 0;
+    return ecrt_sdo_request_index(req, data.sdo_index, data.sdo_subindex);
 }
 
 /****************************************************************************/
@@ -3479,8 +3501,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_timeout(req, data.timeout);
-    return 0;
+    return ecrt_sdo_request_timeout(req, data.timeout);
 }
 
 /****************************************************************************/
@@ -3563,8 +3584,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_read(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_read(req);
-    return 0;
+    return ecrt_sdo_request_read(req);
 }
 
 /****************************************************************************/
@@ -3606,15 +3626,14 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     }
 
     if (data.size > req->mem_size)
-        return -ENOMEM;
+        return -ENOBUFS;
 
     if (ec_copy_from_user(req->data, (void __user *) data.data,
                           data.size, ctx))
         return -EFAULT;
 
     req->data_size = data.size;
-    ecrt_sdo_request_write(req);
-    return 0;
+    return ecrt_sdo_request_write(req);
 }
 
 /****************************************************************************/
@@ -3690,8 +3709,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_index(
         return -ENOENT;
     }
 
-    ecrt_soe_request_idn(req, data.drive_no, data.idn);
-    return 0;
+    return ecrt_soe_request_idn(req, data.drive_no, data.idn);
 }
 
 /****************************************************************************/
@@ -3727,8 +3745,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_timeout(
         return -ENOENT;
     }
 
-    ecrt_soe_request_timeout(req, data.timeout);
-    return 0;
+    return ecrt_soe_request_timeout(req, data.timeout);
 }
 
 /****************************************************************************/
@@ -3811,8 +3828,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_read(
         return -ENOENT;
     }
 
-    ecrt_soe_request_read(req);
-    return 0;
+    return ecrt_soe_request_read(req);
 }
 
 /****************************************************************************/
@@ -3854,15 +3870,14 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     }
 
     if (data.size > req->mem_size)
-        return -ENOMEM;
+        return -ENOBUFS;
 
     if (ec_copy_from_user(req->data, (void __user *) data.data,
                           data.size, ctx))
         return -EFAULT;
 
     req->data_size = data.size;
-    ecrt_soe_request_write(req);
-    return 0;
+    return ecrt_soe_request_write(req);
 }
 
 /****************************************************************************/
@@ -4033,7 +4048,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
     }
 
     if (io.transfer_size > reg->mem_size) {
-        return -EOVERFLOW;
+        return -ENOBUFS;
     }
 
     if (ec_copy_from_user(reg->data, (void __user *) io.data,
@@ -4041,8 +4056,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
         return -EFAULT;
     }
 
-    ecrt_reg_request_write(reg, io.address, io.transfer_size);
-    return 0;
+    return ecrt_reg_request_write(reg, io.address, io.transfer_size);
 }
 
 /****************************************************************************/
@@ -4081,11 +4095,10 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
     }
 
     if (io.transfer_size > reg->mem_size) {
-        return -EOVERFLOW;
+        return -ENOBUFS;
     }
 
-    ecrt_reg_request_read(reg, io.address, io.transfer_size);
-    return 0;
+    return ecrt_reg_request_read(reg, io.address, io.transfer_size);
 }
 
 /****************************************************************************/
@@ -4130,8 +4143,7 @@ static ATTRIBUTES int ec_ioctl_voe_send_header(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_send_header(voe, vendor_id, vendor_type);
-    return 0;
+    return ecrt_voe_handler_send_header(voe, vendor_id, vendor_type);
 }
 
 /****************************************************************************/
@@ -4151,6 +4163,7 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
     ec_voe_handler_t *voe;
     uint32_t vendor_id;
     uint16_t vendor_type;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -4169,7 +4182,9 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
+    ret = ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
+    if (ret)
+        return ret;
 
     if (likely(data.vendor_id))
         if (ec_copy_to_user(data.vendor_id, &vendor_id,
@@ -4217,8 +4232,7 @@ static ATTRIBUTES int ec_ioctl_voe_read(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_read(voe);
-    return 0;
+    return ecrt_voe_handler_read(voe);
 }
 
 /****************************************************************************/
@@ -4254,8 +4268,7 @@ static ATTRIBUTES int ec_ioctl_voe_read_nosync(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_read_nosync(voe);
-    return 0;
+    return ecrt_voe_handler_read_nosync(voe);
 }
 
 /****************************************************************************/
@@ -4293,15 +4306,14 @@ static ATTRIBUTES int ec_ioctl_voe_write(
 
     if (data.size) {
         if (data.size > ec_voe_handler_mem_size(voe))
-            return -EOVERFLOW;
+            return -ENOBUFS;
 
         if (ec_copy_from_user(ecrt_voe_handler_data(voe),
                     (void __user *) data.data, data.size, ctx))
             return -EFAULT;
     }
 
-    ecrt_voe_handler_write(voe, data.size);
-    return 0;
+    return ecrt_voe_handler_write(voe, data.size);
 }
 
 /****************************************************************************/
@@ -4470,7 +4482,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_read(
         if (request.data_size > io.buffer_size) {
             EC_SLAVE_ERR(slave, "%s(): Buffer too small.\n", __func__);
             ec_foe_request_clear(&request);
-            return -EOVERFLOW;
+            return -ENOBUFS;
         }
         io.data_size = request.data_size;
         if (copy_to_user((void __user *) io.buffer,
