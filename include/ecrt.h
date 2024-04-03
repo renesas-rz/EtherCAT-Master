@@ -2079,7 +2079,7 @@ ec_request_state_t ecrt_sdo_request_state(
  * \ingroup ApplicationInterfaceRT
  * \return 0 on success, otherwise negative error code.
  * \retval -EINVAL Invalid input data, e.g. data size == 0.
- * \retval -ENOMEM Reserved memory in ecrt_slave_config_create_sdo_request()
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_sdo_request()
  *              too small.
  */
 EC_PUBLIC_API int ecrt_sdo_request_write(
@@ -2220,7 +2220,7 @@ EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
  * \ingroup ApplicationInterfaceRT
  * \return 0 on success, otherwise negative error code.
  * \retval -EINVAL Invalid input data, e.g. data size == 0.
- * \retval -ENOMEM Reserved memory in ecrt_slave_config_create_soe_request()
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_soe_request()
  *              too small.
  */
 EC_PUBLIC_API int ecrt_soe_request_write(
@@ -2342,6 +2342,8 @@ EC_PUBLIC_API size_t ecrt_voe_handler_data_size(
  *
  * \ingroup ApplicationInterfaceRT
  * \return 0 on success, otherwise negative error code.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_voe_handler
+ *                  too small.
  */
 EC_PUBLIC_API int ecrt_voe_handler_write(
         ec_voe_handler_t *voe, /**< VoE handler. */
@@ -2473,6 +2475,8 @@ ec_request_state_t ecrt_reg_request_state(
  *
  * \ingroup ApplicationInterfaceRT
  * \return 0 on success, otherwise negative error code.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_reg_request
+ *              too small.
  */
 EC_PUBLIC_API int ecrt_reg_request_write(
         ec_reg_request_t *req, /**< Register request. */
@@ -2493,6 +2497,8 @@ EC_PUBLIC_API int ecrt_reg_request_write(
  *
  * \ingroup ApplicationInterfaceRT
  * \return 0 on success, otherwise negative error code.
+ * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_reg_request
+ *              too small.
  */
 EC_PUBLIC_API int ecrt_reg_request_read(
         ec_reg_request_t *req, /**< Register request. */

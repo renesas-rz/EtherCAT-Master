@@ -3092,7 +3092,7 @@ int ecrt_master_sdo_upload(ec_master_t *master, uint16_t slave_position,
     } else {
         if (request.data_size > target_size) {
             EC_SLAVE_ERR(slave, "%s(): Buffer too small.\n", __func__);
-            ret = -EOVERFLOW;
+            ret = -ENOBUFS;
         }
         else {
             memcpy(target, request.data, request.data_size);
@@ -3250,7 +3250,7 @@ int ecrt_master_read_idn(ec_master_t *master, uint16_t slave_position,
     } else { // success
         if (request.data_size > target_size) {
             EC_SLAVE_ERR(slave, "%s(): Buffer too small.\n", __func__);
-            ret = -EOVERFLOW;
+            ret = -ENOBUFS;
         }
         else { // data fits in buffer
             if (result_size) {

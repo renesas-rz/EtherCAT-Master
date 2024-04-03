@@ -3626,7 +3626,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     }
 
     if (data.size > req->mem_size)
-        return -ENOMEM;
+        return -ENOBUFS;
 
     if (ec_copy_from_user(req->data, (void __user *) data.data,
                           data.size, ctx))
@@ -3870,7 +3870,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     }
 
     if (data.size > req->mem_size)
-        return -ENOMEM;
+        return -ENOBUFS;
 
     if (ec_copy_from_user(req->data, (void __user *) data.data,
                           data.size, ctx))
@@ -4048,7 +4048,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
     }
 
     if (io.transfer_size > reg->mem_size) {
-        return -EOVERFLOW;
+        return -ENOBUFS;
     }
 
     if (ec_copy_from_user(reg->data, (void __user *) io.data,
@@ -4095,7 +4095,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
     }
 
     if (io.transfer_size > reg->mem_size) {
-        return -EOVERFLOW;
+        return -ENOBUFS;
     }
 
     return ecrt_reg_request_read(reg, io.address, io.transfer_size);
@@ -4306,7 +4306,7 @@ static ATTRIBUTES int ec_ioctl_voe_write(
 
     if (data.size) {
         if (data.size > ec_voe_handler_mem_size(voe))
-            return -EOVERFLOW;
+            return -ENOBUFS;
 
         if (ec_copy_from_user(ecrt_voe_handler_data(voe),
                     (void __user *) data.data, data.size, ctx))
@@ -4482,7 +4482,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_read(
         if (request.data_size > io.buffer_size) {
             EC_SLAVE_ERR(slave, "%s(): Buffer too small.\n", __func__);
             ec_foe_request_clear(&request);
-            return -EOVERFLOW;
+            return -ENOBUFS;
         }
         io.data_size = request.data_size;
         if (copy_to_user((void __user *) io.buffer,
