@@ -3969,12 +3969,12 @@ static int stmmac_release(struct net_device *dev)
 	struct stmmac_priv *priv = netdev_priv(dev);
 	u32 chan;
 
-	if (device_may_wakeup(priv->device))
-		phylink_speed_down(priv->phylink, false);
-	/* Stop and disconnect the PHY */
 	if (priv->ecdev) {
 		rtnl_lock();
 	}
+	if (device_may_wakeup(priv->device))
+		phylink_speed_down(priv->phylink, false);
+	/* Stop and disconnect the PHY */
 	phylink_stop(priv->phylink);
 	phylink_disconnect_phy(priv->phylink);
 	if (priv->ecdev) {
@@ -7550,13 +7550,10 @@ int stmmac_ec_dvr_remove(struct device *dev)
 	stmmac_stop_all_dma(priv);
 	stmmac_mac_set(priv, priv->ioaddr, false);
 	if (priv->ecdev) {
-		mutex_lock(&priv->lock);
 		ecdev_close(priv->ecdev);
 		irq_work_sync(&priv->ec_watchdog_kicker);
 		ecdev_withdraw(priv->ecdev);
 		priv->ecdev = NULL;
-
-		mutex_unlock(&priv->lock);
 	} else {
 		netif_carrier_off(ndev);
 		unregister_netdev(ndev);
