@@ -43,6 +43,10 @@ ifeq (@ENABLE_E1000@,1)
 	obj-m += ec_e1000.o
 	ec_e1000-objs := $(EC_E1000_OBJ)
 	CFLAGS_e1000_main-@KERNEL_E1000@-ethercat.o = -DREV=$(REV)
+
+	ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+		ccflags-y := -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	endif
 endif
 
 KBUILD_EXTRA_SYMBOLS := \

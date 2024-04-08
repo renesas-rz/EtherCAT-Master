@@ -303,10 +303,19 @@ struct e1000_adapter {
 	struct delayed_work fifo_stall_task;
 	struct delayed_work phy_info_task;
 
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
 	unsigned long ec_watchdog_jiffies;
 	struct irq_work ec_watchdog_kicker;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct e1000_adapter *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 enum e1000_state_t {
 	__E1000_TESTING,

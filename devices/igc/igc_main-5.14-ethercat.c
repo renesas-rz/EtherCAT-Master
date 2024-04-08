@@ -4023,6 +4023,9 @@ static int igc_poll(struct napi_struct *napi, int budget)
 	bool clean_complete = true;
 	int work_done = 0;
 
+	if (get_ecdev(q_vector->adapter))
+		return -EBUSY;
+
 	if (q_vector->tx.ring)
 		clean_complete = igc_clean_tx_irq(q_vector, budget);
 

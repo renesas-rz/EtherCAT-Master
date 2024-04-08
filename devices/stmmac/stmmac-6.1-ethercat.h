@@ -333,10 +333,19 @@ struct stmmac_priv {
 	struct bpf_prog *xdp_prog;
 
 	/* EtherCAT device variables */
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
 	unsigned long ec_watchdog_jiffies;
 	struct irq_work ec_watchdog_kicker;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct stmmac_priv *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 enum stmmac_state {
 	STMMAC_DOWN,

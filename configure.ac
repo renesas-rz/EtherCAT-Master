@@ -66,7 +66,7 @@ AC_ARG_ENABLE([kernel],
                 ;;
             no) enablekernel=0
                 ;;
-            *) AC_MSG_ERROR([Invalid value for --enable-generic])
+            *) AC_MSG_ERROR([Invalid value for --enable-kernel])
                 ;;
         esac
     ],
@@ -162,6 +162,37 @@ AC_SUBST(INSTALL_MOD_DIR,[$moddir])
 
 AC_MSG_CHECKING([for Linux modules installation directory])
 AC_MSG_RESULT([$INSTALL_MOD_DIR])
+
+#-----------------------------------------------------------------------------
+# Native driver resource (de)allocation verifying
+#-----------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to verify native driver resources])
+
+AC_ARG_ENABLE([driver-resource-verifying],
+    AS_HELP_STRING([--enable-driver-resource-verifying],
+                   [Verify resource (de-)allocation in native drivers]),
+    [
+        case "${enableval}" in
+            yes) enableverifying=1
+                ;;
+            no) enableverifying=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-driver-resource-verifying])
+                ;;
+        esac
+    ],
+    [enableverifying=0]
+)
+
+if test "x$enableverifying" = "x1"; then
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(ENABLE_DRIVER_RESOURCE_VERIFYING, test "x$enableverifying" = "x1")
+AC_SUBST(ENABLE_DRIVER_RESOURCE_VERIFYING,[$enableverifying])
 
 #-----------------------------------------------------------------------------
 # Generic Ethernet driver
