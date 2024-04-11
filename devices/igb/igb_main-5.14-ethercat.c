@@ -5548,13 +5548,13 @@ static void igb_watchdog_task(struct work_struct *work)
 	u32 connsw;
 	u16 phy_data, retry_count = 20;
 
-	if (adapter->ecdev)
+	if (get_ecdev(adapter))
 		hw->mac.get_link_status = true;
 
 	link = igb_has_link(adapter);
 
-	if (adapter->ecdev) {
-		ecdev_set_link(adapter->ecdev, link);
+	if (get_ecdev(adapter)) {
+		ecdev_set_link(get_ecdev(adapter), link);
 		return;
 	}
 
