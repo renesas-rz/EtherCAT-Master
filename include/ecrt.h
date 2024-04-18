@@ -2061,7 +2061,7 @@ EC_PUBLIC_API size_t ecrt_sdo_request_data_size(
  *
  * \ingroup ApplicationInterfaceRT
  */
-ec_request_state_t ecrt_sdo_request_state(
+EC_PUBLIC_API ec_request_state_t ecrt_sdo_request_state(
 #ifdef __KERNEL__
         const
 #endif
