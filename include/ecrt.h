@@ -2458,7 +2458,7 @@ EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
  *
  * \ingroup ApplicationInterfaceRT
  */
-ec_request_state_t ecrt_reg_request_state(
+EC_PUBLIC_API ec_request_state_t ecrt_reg_request_state(
         const ec_reg_request_t *req /**< Register request. */
     );
 
