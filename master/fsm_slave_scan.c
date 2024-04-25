@@ -448,6 +448,7 @@ void ec_fsm_slave_scan_enter_sii_size(
         ec_fsm_slave_scan_t *fsm /**< slave state machine */
         )
 {
+#if 0
     // Start fetching SII size
 
     EC_SLAVE_DBG(fsm->slave, 1, "Determining SII size.\n");
@@ -457,6 +458,14 @@ void ec_fsm_slave_scan_enter_sii_size(
             EC_FSM_SII_USE_CONFIGURED_ADDRESS);
     fsm->state = ec_fsm_slave_scan_state_sii_size;
     fsm->state(fsm); // execute state immediately
+#else
+    // skip reading SII and proceed to regalias or end
+#ifdef EC_REGALIAS
+    ec_fsm_slave_scan_enter_regalias(fsm);
+#else
+    fsm->state = ec_fsm_slave_scan_state_end;
+#endif
+#endif
 }
 
 /*****************************************************************************/
@@ -925,11 +934,15 @@ void ec_fsm_slave_scan_state_regalias(
                 slave->effective_alias);
     }
 
+#if 0
     if (slave->sii.mailbox_protocols & EC_MBOX_COE) {
         ec_fsm_slave_scan_enter_preop(fsm);
     } else {
         fsm->state = ec_fsm_slave_scan_state_end;
     }
+#else
+    ec_fsm_slave_scan_enter_preop(fsm);
+#endif
 }
 
 #endif // defined EC_REGALIAS
