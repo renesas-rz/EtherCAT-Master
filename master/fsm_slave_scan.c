@@ -529,11 +529,7 @@ void ec_fsm_slave_scan_state_datalink(
 #ifdef EC_SII_ASSIGN
     ec_fsm_slave_scan_enter_assign_sii(fsm);
 #else
-#ifdef EC_REGALIAS
-    ec_fsm_slave_scan_enter_regalias(fsm);
-#else
-    fsm->state = ec_fsm_slave_scan_state_end;
-#endif
+    ec_fsm_slave_scan_enter_sii_size(fsm);
 #endif
 }
 
@@ -929,7 +925,11 @@ void ec_fsm_slave_scan_state_regalias(
                 slave->effective_alias);
     }
 
-    fsm->state = ec_fsm_slave_scan_state_end;
+    if (slave->sii.mailbox_protocols & EC_MBOX_COE) {
+        ec_fsm_slave_scan_enter_preop(fsm);
+    } else {
+        fsm->state = ec_fsm_slave_scan_state_end;
+    }
 }
 
 #endif // defined EC_REGALIAS
