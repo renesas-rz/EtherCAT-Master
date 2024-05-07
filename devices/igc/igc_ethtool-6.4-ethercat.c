@@ -9,6 +9,18 @@
 #include "igc-6.4-ethercat.h"
 #include "igc_diag-6.4-ethercat.h"
 
+#ifdef CONFIG_SUSE_KERNEL
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
+
 /* forward declaration */
 struct igc_stats {
 	char stat_string[ETH_GSTRING_LEN];
@@ -1420,11 +1432,20 @@ static u32 igc_ethtool_get_rxfh_indir_size(struct net_device *netdev)
 	return IGC_RETA_SIZE;
 }
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 6
+static int igc_ethtool_get_rxfh(struct net_device *netdev,
+				struct ethtool_rxfh_param *rxfh)
+#else
 static int igc_ethtool_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key,
 				u8 *hfunc)
+#endif
 {
 	struct igc_adapter *adapter = netdev_priv(netdev);
 	int i;
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 6
+	u32 *indir = rxfh->indir;
+	u8 *hfunc = &rxfh->hfunc;
+#endif
 
 	if (hfunc)
 		*hfunc = ETH_RSS_HASH_TOP;
@@ -1436,12 +1457,23 @@ static int igc_ethtool_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key,
 	return 0;
 }
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 6
+static int igc_ethtool_set_rxfh(struct net_device *netdev,
+				struct ethtool_rxfh_param *rxfh,
+				struct netlink_ext_ack *extack)
+#else
 static int igc_ethtool_set_rxfh(struct net_device *netdev, const u32 *indir,
 				const u8 *key, const u8 hfunc)
+#endif
 {
 	struct igc_adapter *adapter = netdev_priv(netdev);
 	u32 num_queues;
 	int i;
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 6
+	const u8 *key = rxfh->key;
+	const u32 *indir = rxfh->indir;
+	const u8 hfunc = rxfh->hfunc;
+#endif
 
 	/* We do not allow change in unsupported parameters */
 	if (key ||
