@@ -17,6 +17,7 @@
 #include <linux/net_tstamp.h>
 #include <linux/bitfield.h>
 #include <linux/hrtimer.h>
+#include <net/xdp.h>
 
 #include "igc_hw-6.4-ethercat.h"
 
