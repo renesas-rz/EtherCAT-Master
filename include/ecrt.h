@@ -1880,6 +1880,23 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_mac_address(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * A string-represented IPv4 address can be converted via ithe POSIX
+ * function `inet_pton()` (see man 3 inet_pton):
+ *
+ * \code{.c}
+ *     #include <arpa/inet.h>
+ *     unsigned char buf[sizeof(struct in_addr)];
+ *     if (inet_pton(AF_INET, "192.168.0.1", buf) <= 0) {
+ *         fprintf(stderr, "Failed to convert IP address.\n");
+ *         return -1;
+ *     }
+ *     if (ecrt_slave_config_eoe_ip_address(sc, *(uint32_t *) buf)) {
+ *         fprintf(stderr, "Failed to set IP address.\n");
+ *         return -1;
+ *     }
+ * \endcode
+ *
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
