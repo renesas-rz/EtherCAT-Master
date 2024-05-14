@@ -85,6 +85,7 @@ struct ec_fsm_master {
     ec_fsm_coe_t fsm_coe; /**< CoE state machine */
     ec_fsm_soe_t fsm_soe; /**< SoE state machine */
     ec_fsm_pdo_t fsm_pdo; /**< PDO configuration state machine. */
+    ec_fsm_eoe_t fsm_eoe; /**< EoE state machine */
     ec_fsm_change_t fsm_change; /**< State change state machine */
     ec_fsm_slave_config_t fsm_slave_config; /**< slave state machine */
     ec_fsm_slave_scan_t fsm_slave_scan; /**< slave state machine */
