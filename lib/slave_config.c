@@ -36,7 +36,7 @@
 
 /****************************************************************************/
 
-// prototypes for internal lethods (avoid -Wmissing-prototype warning)
+// prototypes for internal methods (avoid -Wmissing-prototype warning)
 void ec_slave_config_add_sdo_request(ec_slave_config_t *, ec_sdo_request_t *);
 void ec_slave_config_add_reg_request(ec_slave_config_t *, ec_reg_request_t *);
 void ec_slave_config_add_voe_handler(ec_slave_config_t *, ec_voe_handler_t *);
