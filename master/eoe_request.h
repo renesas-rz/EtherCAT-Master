@@ -63,6 +63,7 @@ typedef struct {
 /****************************************************************************/
 
 void ec_eoe_request_init(ec_eoe_request_t *);
+int ec_eoe_request_valid(const ec_eoe_request_t *);
 
 /****************************************************************************/
 
