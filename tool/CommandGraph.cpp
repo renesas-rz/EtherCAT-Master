@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -126,7 +126,7 @@ void CommandGraph::execute(const StringVector &args)
     }
 
     MasterDevice m(getSingleMasterIndex());
-    m.open(MasterDevice::Read);
+    m.open(MasterDevice::ReadWrite);
     m.getMaster(&master);
 
     for (unsigned int i = 0; i < master.slave_count; i++) {
