@@ -28,6 +28,7 @@ from re import compile
 DRIVER_MAP=(
     # (subdir, driver name, file prefix)
     (".", "8139too", "8139too"),
+    ("stmmac", "dwmac-intel", "dwmac-intel"),
     (".", "e100", "e100"),
     ("e1000", "e1000", "e1000_main"),
     ("e1000e", "e1000e", "netdev"),
@@ -36,6 +37,7 @@ DRIVER_MAP=(
     ("igc", "igc", "igc_main"),
     (".", "r8169", "r8169"),
     ("r8169", "r8169", "r8169_main"),
+    ("stmmac", "stmmac-pci", "stmmac_pci"),
 )
 
 

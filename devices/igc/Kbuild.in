@@ -48,6 +48,10 @@ ifeq (@ENABLE_IGC@,1)
 		igc_ethtool-@KERNEL_IGC@-ethercat.o \
 		igc_nvm-@KERNEL_IGC@-ethercat.o
 
+ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+	ccflags-y := -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+endif
+
 	CFLAGS_igc_main-@KERNEL_IGC@-ethercat.o = -DREV=$(REV)
 endif
 

@@ -46,7 +46,7 @@ void ec_voe_handler_clear(ec_voe_handler_t *voe)
 
 /****************************************************************************/
 
-void ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
+int ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
         uint16_t vendor_type)
 {
     ec_ioctl_voe_t data;
@@ -59,14 +59,14 @@ void ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
 
     ret = ioctl(voe->config->master->fd, EC_IOCTL_VOE_SEND_HEADER, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set VoE send header: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
+int ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
         uint32_t *vendor_id, uint16_t *vendor_type)
 {
     ec_ioctl_voe_t data;
@@ -79,9 +79,9 @@ void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
 
     ret = ioctl(voe->config->master->fd, EC_IOCTL_VOE_REC_HEADER, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to get received VoE header: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
@@ -100,7 +100,7 @@ size_t ecrt_voe_handler_data_size(const ec_voe_handler_t *voe)
 
 /****************************************************************************/
 
-void ecrt_voe_handler_read(ec_voe_handler_t *voe)
+int ecrt_voe_handler_read(ec_voe_handler_t *voe)
 {
     ec_ioctl_voe_t data;
     int ret;
@@ -110,14 +110,14 @@ void ecrt_voe_handler_read(ec_voe_handler_t *voe)
 
     ret = ioctl(voe->config->master->fd, EC_IOCTL_VOE_READ, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to initiate VoE reading: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
+int ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
 {
     ec_ioctl_voe_t data;
     int ret;
@@ -127,14 +127,14 @@ void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
 
     ret = ioctl(voe->config->master->fd, EC_IOCTL_VOE_READ_NOSYNC, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to initiate VoE reading: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
+int ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
 {
     ec_ioctl_voe_t data;
     int ret;
@@ -146,9 +146,9 @@ void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
 
     ret = ioctl(voe->config->master->fd, EC_IOCTL_VOE_WRITE, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to initiate VoE writing: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/

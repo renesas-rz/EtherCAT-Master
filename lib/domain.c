@@ -83,54 +83,40 @@ size_t ecrt_domain_size(const ec_domain_t *domain)
 
 /****************************************************************************/
 
-uint8_t *ecrt_domain_data(ec_domain_t *domain)
+uint8_t *ecrt_domain_data(const ec_domain_t *domain)
 {
-    if (!domain->process_data) {
-        int offset = 0;
-
-        offset = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_OFFSET,
-                domain->index);
-        if (EC_IOCTL_IS_ERROR(offset)) {
-            fprintf(stderr, "Failed to get domain offset: %s\n",
-                    strerror(EC_IOCTL_ERRNO(offset)));
-            return NULL;
-        }
-
-        domain->process_data = domain->master->process_data + offset;
-    }
-
     return domain->process_data;
 }
 
 /****************************************************************************/
 
-void ecrt_domain_process(ec_domain_t *domain)
+int ecrt_domain_process(ec_domain_t *domain)
 {
     int ret;
 
     ret = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_PROCESS, domain->index);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to process domain: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_domain_queue(ec_domain_t *domain)
+int ecrt_domain_queue(ec_domain_t *domain)
 {
     int ret;
 
     ret = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_QUEUE, domain->index);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to queue domain: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
+int ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
 {
     ec_ioctl_domain_state_t data;
     int ret;
@@ -140,9 +126,9 @@ void ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
 
     ret = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_STATE, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to get domain state: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
 /****************************************************************************/

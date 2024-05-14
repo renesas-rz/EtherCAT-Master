@@ -10,6 +10,7 @@ Changes in 1.6.0:
 * Dropped support for kernels < 3.0.
 * Allow to query the scanning progress via API.
 * Added EoE set IP command via command-line-tool.
+* Changed the default AL state change timeout from 5 to 10 s.
 
 Changes since 1.5.2:
 

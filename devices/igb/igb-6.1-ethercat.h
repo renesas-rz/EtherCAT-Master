@@ -672,10 +672,19 @@ struct igb_adapter {
 	spinlock_t vfs_lock;
 
 	/* EtherCAT device variables */
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
 	unsigned long ec_watchdog_jiffies;
 	struct irq_work ec_watchdog_kicker;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct igb_adapter *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 /* flags controlling PTP/1588 function */
 #define IGB_PTP_ENABLED		BIT(0)

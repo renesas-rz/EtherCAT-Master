@@ -86,7 +86,7 @@ void CommandCrc::execute(const StringVector &args)
     }
 
     MasterDevice m(getSingleMasterIndex());
-    m.open(reset ? MasterDevice::ReadWrite : MasterDevice::Read);
+    m.open(MasterDevice::ReadWrite);
 
     ec_ioctl_master_t master;
     m.getMaster(&master);

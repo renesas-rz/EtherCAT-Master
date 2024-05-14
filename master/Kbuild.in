@@ -90,8 +90,8 @@ CFLAGS_rtdm-ioctl.o := @XENOMAI_RTDM_CFLAGS@
 endif
 
 ifeq (@ENABLE_RTAI@, 1)
-CFLAGS_rtdm.o := -I@RTAI_DIR@/include
-CFLAGS_rtdm-ioctl.o := -I@RTAI_DIR@/include
+CFLAGS_rtdm.o := @RTAI_KERNEL_CFLAGS@
+CFLAGS_rtdm-ioctl.o := @RTAI_KERNEL_CFLAGS@
 endif
 
 ec_master-objs += rtdm-ioctl.o

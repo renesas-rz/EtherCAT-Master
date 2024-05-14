@@ -28,12 +28,14 @@
 #include <linux/slab.h>
 #include <linux/mman.h>
 
-#include <rtdm/rtdm_driver.h>
 
 #include "master.h"
 #include "ioctl.h"
 #include "rtdm.h"
 #include "rtdm_details.h"
+
+/* include last because it does some redefinitions */
+#include <rtdm/rtdm_driver.h>
 
 /** Set to 1 to enable device operations debugging.
  */
@@ -43,10 +45,11 @@
 
 static int ec_rtdm_open(struct rtdm_dev_context *, rtdm_user_info_t *, int);
 static int ec_rtdm_close(struct rtdm_dev_context *, rtdm_user_info_t *);
-static int ec_rtdm_ioctl_nrt_handler(struct rtdm_dev_context *, rtdm_user_info_t *,
-        unsigned int, void __user *);
-static int ec_rtdm_ioctl_rt_handler(struct rtdm_dev_context *, rtdm_user_info_t *,
-        unsigned int, void __user *);
+static int ec_rtdm_ioctl_nrt_handler(struct rtdm_dev_context *,
+        rtdm_user_info_t *, unsigned int, void __user *);
+static int ec_rtdm_ioctl_rt_handler(struct rtdm_dev_context *,
+        rtdm_user_info_t *, unsigned int, void __user *);
+
 /****************************************************************************/
 
 /** Initialize an RTDM device.
@@ -198,6 +201,8 @@ static int ec_rtdm_ioctl_nrt_handler(
     return ec_ioctl_rtdm_nrt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 }
 
+/****************************************************************************/
+
 static int ec_rtdm_ioctl_rt_handler(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info, /**< User data. */
@@ -214,7 +219,8 @@ static int ec_rtdm_ioctl_rt_handler(
             " on RTDM device %s.\n", request, _IOC_NR(request),
             context->device->device_name);
 #endif
-    result = ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+    result =
+        ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
 
     if (result == -ENOTTY) {
 		/* Try again with nrt ioctl handler above in secondary mode. */

@@ -178,18 +178,20 @@ int ec_sdo_request_timed_out(const ec_sdo_request_t *req /**< SDO request. */)
  * Application interface.
  ****************************************************************************/
 
-void ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
+int ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
         uint8_t subindex)
 {
     req->index = index;
     req->subindex = subindex;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
+int ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
 {
     req->issue_timeout = timeout;
+    return 0;
 }
 
 /****************************************************************************/
@@ -215,24 +217,26 @@ ec_request_state_t ecrt_sdo_request_state(const ec_sdo_request_t *req)
 
 /****************************************************************************/
 
-void ecrt_sdo_request_read(ec_sdo_request_t *req)
+int ecrt_sdo_request_read(ec_sdo_request_t *req)
 {
     req->dir = EC_DIR_INPUT;
     req->state = EC_INT_REQUEST_QUEUED;
     req->errno = 0;
     req->abort_code = 0x00000000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_sdo_request_write(ec_sdo_request_t *req)
+int ecrt_sdo_request_write(ec_sdo_request_t *req)
 {
     req->dir = EC_DIR_OUTPUT;
     req->state = EC_INT_REQUEST_QUEUED;
     req->errno = 0;
     req->abort_code = 0x00000000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
 /****************************************************************************/

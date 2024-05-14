@@ -660,8 +660,17 @@ struct rtl8139_private {
 	unsigned int		regs_len;
 	unsigned long		fifo_copy_timeout;
 
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct rtl8139_private *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("RealTek RTL-8139 EtherCAT driver");
@@ -1083,9 +1092,10 @@ static int rtl8139_init_one(struct pci_dev *pdev,
 	/* dev is fully set up and ready to use now */
 
 	// offer device to EtherCAT master module
-	tp->ecdev = ecdev_offer(dev, ec_poll, THIS_MODULE);
+	tp->ecdev_ = ecdev_offer(dev, ec_poll, THIS_MODULE);
+	tp->ecdev_initialized = true;
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		pr_debug("about to register device named %s (%p)...\n",
 				dev->name, dev);
 		i = register_netdev (dev);
@@ -1158,10 +1168,10 @@ static int rtl8139_init_one(struct pci_dev *pdev,
 	if (rtl_chip_info[tp->chipset].flags & HasHltClk)
 		RTL_W8 (HltClk, 'H');	/* 'R' would leave the clock running. */
 
-	if (tp->ecdev) {
-		i = ecdev_open(tp->ecdev);
+	if (get_ecdev(tp)) {
+		i = ecdev_open(get_ecdev(tp));
 		if (i) {
-			ecdev_withdraw(tp->ecdev);
+			ecdev_withdraw(get_ecdev(tp));
 			goto err_out;
 		}
 	}
@@ -1182,9 +1192,9 @@ static void rtl8139_remove_one(struct pci_dev *pdev)
 
 	assert (dev != NULL);
 
-	if (tp->ecdev) {
-		ecdev_close(tp->ecdev);
-		ecdev_withdraw(tp->ecdev);
+	if (get_ecdev(tp)) {
+		ecdev_close(get_ecdev(tp));
+		ecdev_withdraw(get_ecdev(tp));
 	}
 	else {
 		cancel_delayed_work_sync(&tp->thread);
@@ -1393,7 +1403,7 @@ static int rtl8139_open (struct net_device *dev)
 	const int irq = tp->pci_dev->irq;
 	int retval;
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		retval = request_irq(irq, rtl8139_interrupt, IRQF_SHARED, dev->name, dev);
 		if (retval)
 			return retval;
@@ -1404,7 +1414,7 @@ static int rtl8139_open (struct net_device *dev)
 	tp->rx_ring = dma_alloc_coherent(&tp->pci_dev->dev, RX_BUF_TOT_LEN,
 					   &tp->rx_ring_dma, GFP_KERNEL);
 	if (tp->tx_bufs == NULL || tp->rx_ring == NULL) {
-		if (!tp->ecdev) {
+		if (!get_ecdev(tp)) {
 			free_irq(irq, dev);
 		}
 
@@ -1426,7 +1436,7 @@ static int rtl8139_open (struct net_device *dev)
 
 	rtl8139_init_ring (dev);
 	rtl8139_hw_start (dev);
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		netif_start_queue (dev);
 	}
 
@@ -1437,7 +1447,7 @@ static int rtl8139_open (struct net_device *dev)
 		  irq, RTL_R8 (MediaStatus),
 		  tp->mii.full_duplex ? "full" : "half");
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		rtl8139_start_thread(tp);
 	}
 
@@ -1449,10 +1459,10 @@ static void rtl_check_media (struct net_device *dev, unsigned int init_media)
 {
 	struct rtl8139_private *tp = netdev_priv(dev);
 
-	if (tp->ecdev) {
+	if (get_ecdev(tp)) {
 		void __iomem *ioaddr = tp->mmio_addr;
 		u16 state = RTL_R16(BasicModeStatus) & BMSR_LSTATUS;
-		ecdev_set_link(tp->ecdev, state ? 1 : 0);
+		ecdev_set_link(get_ecdev(tp), state ? 1 : 0);
 	}
 	else {
 		if (tp->phys[0] >= 0) {
@@ -1523,7 +1533,7 @@ static void rtl8139_hw_start (struct net_device *dev)
 	if ((!(tmp & CmdRxEnb)) || (!(tmp & CmdTxEnb)))
 		RTL_W8 (ChipCmd, CmdRxEnb | CmdTxEnb);
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		/* Enable all known interrupts by setting the interrupt mask. */
 		RTL_W16 (IntrMask, rtl8139_intr_mask);
 	}
@@ -1770,7 +1780,7 @@ static void rtl8139_tx_timeout_task (struct work_struct *work)
 	if (tmp8 & CmdTxEnb)
 		RTL_W8 (ChipCmd, CmdRxEnb);
 
-	if (tp->ecdev) {
+	if (get_ecdev(tp)) {
 		rtl8139_tx_clear (tp);
 		rtl8139_hw_start (dev);
 	}
@@ -1798,7 +1808,7 @@ static void rtl8139_tx_timeout(struct net_device *dev, unsigned int txqueue)
 	struct rtl8139_private *tp = netdev_priv(dev);
 
 	tp->watchdog_fired = 1;
-	if (!tp->ecdev && !tp->have_thread) {
+	if (!get_ecdev(tp) && !tp->have_thread) {
 		INIT_DELAYED_WORK(&tp->thread, rtl8139_thread);
 		schedule_delayed_work(&tp->thread, next_tick);
 	}
@@ -1821,18 +1831,18 @@ static netdev_tx_t rtl8139_start_xmit (struct sk_buff *skb,
 		if (len < ETH_ZLEN)
 			memset(tp->tx_buf[entry], 0, ETH_ZLEN);
 		skb_copy_and_csum_dev(skb, tp->tx_buf[entry]);
-		if (!tp->ecdev) {
+		if (!get_ecdev(tp)) {
 			dev_kfree_skb_any(skb);
 		}
 	} else {
-		if (!tp->ecdev) {
+		if (!get_ecdev(tp)) {
 			dev_kfree_skb_any(skb);
 		}
 		dev->stats.tx_dropped++;
 		return NETDEV_TX_OK;
 	}
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		spin_lock_irqsave(&tp->lock, flags);
 	}
 	/*
@@ -1846,7 +1856,7 @@ static netdev_tx_t rtl8139_start_xmit (struct sk_buff *skb,
 
 	tp->cur_tx++;
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		if ((tp->cur_tx - NUM_TX_DESC) == tp->dirty_tx)
 			netif_stop_queue (dev);
 		spin_unlock_irqrestore(&tp->lock, flags);
@@ -1925,7 +1935,7 @@ static void rtl8139_tx_interrupt (struct net_device *dev,
 	if (tp->dirty_tx != dirty_tx) {
 		tp->dirty_tx = dirty_tx;
 		mb();
-		if (!tp->ecdev) {
+		if (!get_ecdev(tp)) {
 			netif_wake_queue (dev);
 		}
 	}
@@ -2061,7 +2071,7 @@ static int rtl8139_rx(struct net_device *dev, struct rtl8139_private *tp,
 		 RTL_R16 (RxBufAddr),
 		 RTL_R16 (RxBufPtr), RTL_R8 (ChipCmd));
 
-	while ((tp->ecdev || netif_running(dev))
+	while ((get_ecdev(tp) || netif_running(dev))
 			&& received < budget
 			&& (RTL_R8 (ChipCmd) & RxBufEmpty) == 0) {
 		u32 ring_offset = cur_rx % RX_BUF_LEN;
@@ -2079,7 +2089,7 @@ static int rtl8139_rx(struct net_device *dev, struct rtl8139_private *tp,
 		else
 			pkt_size = rx_size;
 
-		if (!tp->ecdev) {
+		if (!get_ecdev(tp)) {
 			if (netif_msg_rx_status(tp))
 				pr_debug("%s:  rtl8139_rx() status %4.4x, size %4.4x,"
 					" cur %4.4x.\n", dev->name, rx_status,
@@ -2151,8 +2161,8 @@ no_early_rx:
 		}
 
 keep_pkt:
-		if (tp->ecdev) {
-			ecdev_receive(tp->ecdev, &rx_ring[ring_offset + 4], pkt_size);
+		if (get_ecdev(tp)) {
+			ecdev_receive(get_ecdev(tp), &rx_ring[ring_offset + 4], pkt_size);
 		}
 		else {
 			/* Malloc up new buffer, compatible with net-2e. */
@@ -2290,7 +2300,7 @@ static irqreturn_t rtl8139_interrupt (int irq, void *dev_instance)
 	int link_changed = 0; /* avoid bogus "uninit" warning */
 	int handled = 0;
 
-	if (tp->ecdev) {
+	if (get_ecdev(tp)) {
 		status = RTL_R16 (IntrStatus);
 	}
 	else {
@@ -2308,7 +2318,7 @@ static irqreturn_t rtl8139_interrupt (int irq, void *dev_instance)
 	if (unlikely(status == 0xFFFF))
 		goto out;
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		/* close possible race's with dev_close */
 		if (unlikely(!netif_running(dev))) {
 			RTL_W16 (IntrMask, 0);
@@ -2328,7 +2338,7 @@ static irqreturn_t rtl8139_interrupt (int irq, void *dev_instance)
 	/* Receive packets are processed by poll routine.
 	   If not running start it now. */
 	if (status & RxAckBits){
-		if (tp->ecdev) {
+		if (get_ecdev(tp)) {
 			/* EtherCAT device: Just receive all frames */
 			rtl8139_rx(dev, tp, 100); // FIXME
 		} else {
@@ -2351,7 +2361,7 @@ static irqreturn_t rtl8139_interrupt (int irq, void *dev_instance)
 			RTL_W16 (IntrStatus, TxErr);
 	}
 out:
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		spin_unlock (&tp->lock);
 	}
 
@@ -2405,7 +2415,7 @@ static int rtl8139_close (struct net_device *dev)
 	void __iomem *ioaddr = tp->mmio_addr;
 	unsigned long flags = 0;
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		netif_stop_queue(dev);
 		napi_disable(&tp->napi);
 
@@ -2426,7 +2436,7 @@ static int rtl8139_close (struct net_device *dev)
 	dev->stats.rx_missed_errors += RTL_R32 (RxMissed);
 	RTL_W32 (RxMissed, 0);
 
-	if (!tp->ecdev) {
+	if (!get_ecdev(tp)) {
 		spin_unlock_irqrestore (&tp->lock, flags);
 
 		free_irq(tp->pci_dev->irq, dev);
@@ -2654,7 +2664,7 @@ static int netdev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
 	struct rtl8139_private *tp = netdev_priv(dev);
 	int rc;
 
-	if (tp->ecdev || !netif_running(dev))
+	if (get_ecdev(tp) || !netif_running(dev))
 		return -EINVAL;
 
 	spin_lock_irq(&tp->lock);
@@ -2673,7 +2683,7 @@ rtl8139_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
 	unsigned long flags;
 	unsigned int start;
 
-	if (tp->ecdev || netif_running(dev)) {
+	if (get_ecdev(tp) || netif_running(dev)) {
 		spin_lock_irqsave (&tp->lock, flags);
 		dev->stats.rx_missed_errors += RTL_R32 (RxMissed);
 		RTL_W32 (RxMissed, 0);
@@ -2762,7 +2772,7 @@ static int __maybe_unused rtl8139_suspend(struct device *device)
 	void __iomem *ioaddr = tp->mmio_addr;
 	unsigned long flags;
 
-	if (tp->ecdev || !netif_running (dev))
+	if (get_ecdev(tp) || !netif_running (dev))
 		return 0;
 
 	netif_device_detach (dev);
@@ -2787,7 +2797,7 @@ static int __maybe_unused rtl8139_resume(struct device *device)
 	struct net_device *dev = dev_get_drvdata(device);
 	struct rtl8139_private *tp = netdev_priv(dev);
 
-	if (tp->ecdev || !netif_running (dev))
+	if (get_ecdev(tp) || !netif_running (dev))
 		return 0;
 
 	rtl8139_init_ring (dev);

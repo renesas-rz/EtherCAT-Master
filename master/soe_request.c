@@ -223,7 +223,7 @@ int ec_soe_request_append_data(
 
 /** Request a read operation.
  */
-void ec_soe_request_read(
+int ec_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
        )
 {
@@ -231,13 +231,14 @@ void ec_soe_request_read(
     req->state = EC_INT_REQUEST_QUEUED;
     req->error_code = 0x0000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
 /****************************************************************************/
 
 /** Request a write operation.
  */
-void ec_soe_request_write(
+int ec_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
         )
 {
@@ -245,6 +246,7 @@ void ec_soe_request_write(
     req->state = EC_INT_REQUEST_QUEUED;
     req->error_code = 0x0000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
 /****************************************************************************/
@@ -263,18 +265,20 @@ int ec_soe_request_timed_out(const ec_soe_request_t *req /**< SDO request. */)
  * Application interface.
  ****************************************************************************/
 
-void ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
+int ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
         uint16_t idn)
 {
     req->drive_no = drive_no;
     req->idn = idn;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
+int ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
 {
     req->issue_timeout = timeout;
+    return 0;
 }
 
 /****************************************************************************/
@@ -293,23 +297,23 @@ size_t ecrt_soe_request_data_size(const ec_soe_request_t *req)
 
 /****************************************************************************/
 
-ec_request_state_t ecrt_soe_request_state(ec_soe_request_t *req)
+ec_request_state_t ecrt_soe_request_state(const ec_soe_request_t *req)
 {
    return ec_request_state_translation_table[req->state];
 }
 
 /****************************************************************************/
 
-void ecrt_soe_request_read(ec_soe_request_t *req)
+int ecrt_soe_request_read(ec_soe_request_t *req)
 {
-    ec_soe_request_read(req);
+    return ec_soe_request_read(req);
 }
 
 /****************************************************************************/
 
-void ecrt_soe_request_write(ec_soe_request_t *req)
+int ecrt_soe_request_write(ec_soe_request_t *req)
 {
-    ec_soe_request_write(req);
+    return ec_soe_request_write(req);
 }
 
 /****************************************************************************/

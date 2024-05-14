@@ -108,6 +108,7 @@ static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
 static int e1000_change_mtu(struct net_device *netdev, int new_mtu);
 static int e1000_set_mac(struct net_device *netdev, void *p);
 void ec_poll(struct net_device *);
+static void ec_kick_watchdog(struct irq_work *work);
 static irqreturn_t e1000_intr(int irq, void *data);
 static bool e1000_clean_tx_irq(struct e1000_adapter *adapter,
 			       struct e1000_tx_ring *tx_ring);
@@ -496,9 +497,7 @@ static void e1000_down_and_stop(struct e1000_adapter *adapter)
 {
 	set_bit(__E1000_DOWN, &adapter->flags);
 
-	if (!adapter->ecdev) {
-		cancel_delayed_work_sync(&adapter->watchdog_task);
-	}
+	cancel_delayed_work_sync(&adapter->watchdog_task);
 
 	/*
 	 * Since the watchdog task can reschedule other tasks, we should cancel
@@ -1309,12 +1308,14 @@ static void e1000_remove(struct pci_dev *pdev)
 	struct e1000_hw *hw = &adapter->hw;
 	bool disable_dev;
 
+	if (adapter->ecdev)
+		irq_work_sync(&adapter->ec_watchdog_kicker);
+
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
 
 	if (adapter->ecdev) {
 		ecdev_close(adapter->ecdev);
-		irq_work_sync(&adapter->ec_watchdog_kicker);
 		ecdev_withdraw(adapter->ecdev);
 	} else {
 		unregister_netdev(netdev);
@@ -3842,7 +3843,7 @@ static void ec_kick_watchdog(struct irq_work *work)
 	struct e1000_adapter *adapter =
 		container_of(work, struct e1000_adapter, ec_watchdog_kicker);
 
-	schedule_work(&adapter->watchdog_task);
+	schedule_delayed_work(&adapter->watchdog_task, 1);
 }
 
 void ec_poll(struct net_device *netdev)

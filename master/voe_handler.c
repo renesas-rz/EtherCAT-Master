@@ -112,16 +112,17 @@ size_t ec_voe_handler_mem_size(
  * Application interface.
  ****************************************************************************/
 
-void ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
+int ecrt_voe_handler_send_header(ec_voe_handler_t *voe, uint32_t vendor_id,
         uint16_t vendor_type)
 {
     voe->vendor_id = vendor_id;
     voe->vendor_type = vendor_type;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
+int ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
         uint32_t *vendor_id, uint16_t *vendor_type)
 {
     uint8_t *header = voe->datagram.data + EC_MBOX_HEADER_SIZE;
@@ -130,6 +131,7 @@ void ecrt_voe_handler_received_header(const ec_voe_handler_t *voe,
         *vendor_id = EC_READ_U32(header);
     if (vendor_type)
         *vendor_type = EC_READ_U16(header + 4);
+    return 0;
 }
 
 /****************************************************************************/
@@ -148,30 +150,33 @@ size_t ecrt_voe_handler_data_size(const ec_voe_handler_t *voe)
 
 /****************************************************************************/
 
-void ecrt_voe_handler_read(ec_voe_handler_t *voe)
+int ecrt_voe_handler_read(ec_voe_handler_t *voe)
 {
     voe->dir = EC_DIR_INPUT;
     voe->state = ec_voe_handler_state_read_start;
     voe->request_state = EC_INT_REQUEST_BUSY;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
+int ecrt_voe_handler_read_nosync(ec_voe_handler_t *voe)
 {
     voe->dir = EC_DIR_INPUT;
     voe->state = ec_voe_handler_state_read_nosync_start;
     voe->request_state = EC_INT_REQUEST_BUSY;
+    return 0;
 }
 
 /****************************************************************************/
 
-void ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
+int ecrt_voe_handler_write(ec_voe_handler_t *voe, size_t size)
 {
     voe->dir = EC_DIR_OUTPUT;
     voe->data_size = size;
     voe->state = ec_voe_handler_state_write_start;
     voe->request_state = EC_INT_REQUEST_BUSY;
+    return 0;
 }
 
 /****************************************************************************/

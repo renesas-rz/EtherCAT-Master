@@ -66,7 +66,7 @@ AC_ARG_ENABLE([kernel],
                 ;;
             no) enablekernel=0
                 ;;
-            *) AC_MSG_ERROR([Invalid value for --enable-generic])
+            *) AC_MSG_ERROR([Invalid value for --enable-kernel])
                 ;;
         esac
     ],
@@ -162,6 +162,37 @@ AC_SUBST(INSTALL_MOD_DIR,[$moddir])
 
 AC_MSG_CHECKING([for Linux modules installation directory])
 AC_MSG_RESULT([$INSTALL_MOD_DIR])
+
+#-----------------------------------------------------------------------------
+# Native driver resource (de)allocation verifying
+#-----------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to verify native driver resources])
+
+AC_ARG_ENABLE([driver-resource-verifying],
+    AS_HELP_STRING([--enable-driver-resource-verifying],
+                   [Verify resource (de-)allocation in native drivers]),
+    [
+        case "${enableval}" in
+            yes) enableverifying=1
+                ;;
+            no) enableverifying=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-driver-resource-verifying])
+                ;;
+        esac
+    ],
+    [enableverifying=0]
+)
+
+if test "x$enableverifying" = "x1"; then
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(ENABLE_DRIVER_RESOURCE_VERIFYING, test "x$enableverifying" = "x1")
+AC_SUBST(ENABLE_DRIVER_RESOURCE_VERIFYING,[$enableverifying])
 
 #-----------------------------------------------------------------------------
 # Generic Ethernet driver
@@ -634,6 +665,80 @@ fi
 AC_SUBST(KERNEL_R8169,[$kernel_r8169])
 
 #-----------------------------------------------------------------------------
+# stmmac-pci and dwmac-intel driver
+#-----------------------------------------------------------------------------
+
+enablestmmac=0
+
+AC_ARG_ENABLE([stmmac-pci],
+    AS_HELP_STRING([--enable-stmmac-pci],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enablestmmacpci=1
+                 enablestmmac=1
+                ;;
+            no) enablestmmacpci=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enablestmmacpci=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_STMMACPCI, test "x$enablestmmacpci" = "x1")
+AC_SUBST(ENABLE_STMMACPCI,[$enablestmmacpci])
+
+AC_ARG_ENABLE([dwmac-intel],
+    AS_HELP_STRING([--enable-dwmac-intel],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enabledwmacintel=1
+                 enablestmmac=1
+                ;;
+            no) enabledwmacintel=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enabledwmacintel=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_DWMACINTEL, test "x$enabledwmacintel" = "x1")
+AC_SUBST(ENABLE_DWMACINTEL,[$enabledwmacintel])
+
+AM_CONDITIONAL(ENABLE_STMMAC, test "x$enablestmmac" = "x1")
+AC_SUBST(ENABLE_STMMAC, [$enablestmmac])
+
+AC_ARG_WITH([stmmac-kernel],
+    AC_HELP_STRING(
+        [--with-stmmac-kernel=<X.Y.Z>],
+        [stmmac kernel (only if differing)]
+    ),
+    [
+        kernelstmmac=[$withval]
+    ],
+    [
+        kernelstmmac=$linuxversion
+    ]
+)
+
+if test "x${enablestmmac}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for stmmac driver])
+
+    if test ! -f "${srcdir}/devices/stmmac/stmmac-${kernelstmmac}-orig.h"; then
+        AC_MSG_ERROR([kernel $kernelstmmac not available for stmmac driver!])
+    fi
+
+    AC_MSG_RESULT([$kernelstmmac])
+fi
+
+AC_SUBST(KERNEL_STMMAC,[$kernelstmmac])
+
+#-----------------------------------------------------------------------------
 # CCAT driver
 #-----------------------------------------------------------------------------
 
@@ -688,7 +793,7 @@ AC_MSG_CHECKING([for RTAI path])
 if test -z "${rtaidir}"; then
     AC_MSG_RESULT([not specified.])
 else
-    if test \! -r ${rtaidir}/include/rtai.h; then
+    if test \! -x ${rtaidir}/bin/rtai-config; then
         AC_MSG_ERROR([no RTAI installation found in ${rtaidir}!])
     fi
     AC_MSG_RESULT([$rtaidir])
@@ -696,6 +801,7 @@ else
     rtai_lxrt_cflags=`$rtaidir/bin/rtai-config --lxrt-cflags`
     rtai_lxrt_ldflags=`$rtaidir/bin/rtai-config --lxrt-ldflags`
     rtai_module_dir=`$rtaidir/bin/rtai-config --module-dir`
+    rtai_kernel_cflags=`$rtaidir/bin/rtai-config --kernel-cflags`
 fi
 
 AC_SUBST(RTAI_DIR,[$rtaidir])
@@ -705,6 +811,7 @@ AC_SUBST(ENABLE_RTAI,[$rtai])
 AC_SUBST(RTAI_LXRT_CFLAGS,[$rtai_lxrt_cflags])
 AC_SUBST(RTAI_LXRT_LDFLAGS,[$rtai_lxrt_ldflags])
 AC_SUBST(RTAI_MODULE_DIR,[$rtai_module_dir])
+AC_SUBST(RTAI_KERNEL_CFLAGS,[$rtai_kernel_cflags])
 
 #-----------------------------------------------------------------------------
 # Xenomai path (optional)
@@ -1263,6 +1370,8 @@ AC_CONFIG_FILES([
         devices/igc/Makefile
         devices/r8169/Kbuild
         devices/r8169/Makefile
+        devices/stmmac/Kbuild
+        devices/stmmac/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile

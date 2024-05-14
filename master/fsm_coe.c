@@ -1309,7 +1309,7 @@ void ec_fsm_coe_down_start(
     if (slave->configured_rx_mailbox_size <
             EC_MBOX_HEADER_SIZE + EC_COE_DOWN_REQ_HEADER_SIZE) {
         EC_SLAVE_ERR(slave, "Mailbox too small!\n");
-        request->errno = EOVERFLOW;
+        request->errno = ENOBUFS;
         fsm->state = ec_fsm_coe_error;
         return;
     }
@@ -2463,7 +2463,7 @@ void ec_fsm_coe_up_seg_response(
         EC_SLAVE_ERR(slave, "SDO upload 0x%04X:%02X failed: Fragment"
                 " exceeding complete size!\n",
                 request->index, request->subindex);
-        request->errno = EOVERFLOW;
+        request->errno = ENOBUFS;
         fsm->state = ec_fsm_coe_error;
         return;
     }
