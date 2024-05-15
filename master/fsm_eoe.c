@@ -43,7 +43,8 @@
  */
 void memcpy_swap32(void *dst, const void *src)
 {
-    for (int i = 0; i < 4; i++) {
+    int i;
+    for (i = 0; i < 4; i++) {
         ((u8 *) dst)[i] = ((const u8 *) src)[3 - i];
     }
 }
