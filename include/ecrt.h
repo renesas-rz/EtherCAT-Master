@@ -1957,7 +1957,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns_address(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        const unsigned char *name /**< Zero-terminated hostname. */
+        const char *name /**< Zero-terminated hostname. */
         );
 
 /*****************************************************************************

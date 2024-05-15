@@ -1016,7 +1016,7 @@ int ecrt_slave_config_eoe_dns_address(ec_slave_config_t *sc,
 /****************************************************************************/
 
 int ecrt_slave_config_eoe_hostname(ec_slave_config_t *sc,
-        const unsigned char *name)
+        const char *name)
 {
     ec_ioctl_eoe_ip_t io = {};
     int ret;
