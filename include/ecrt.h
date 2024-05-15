@@ -160,10 +160,12 @@
 #include <asm/byteorder.h>
 #include <linux/types.h>
 #include <linux/time.h>
+#include <linux/in.h> // struct in_addr
 #else
 #include <stdlib.h> // for size_t
 #include <stdint.h>
 #include <sys/time.h> // for struct timeval
+#include <netinet/in.h> // struct in_addr
 #endif
 
 /*****************************************************************************
@@ -1885,12 +1887,12 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_mac_address(
  *
  * \code{.c}
  *     #include <arpa/inet.h>
- *     unsigned char buf[sizeof(struct in_addr)];
- *     if (inet_pton(AF_INET, "192.168.0.1", buf) <= 0) {
+ *     struct in_addr addr;
+ *     if (inet_aton("192.168.0.1", &addr) == 0) {
  *         fprintf(stderr, "Failed to convert IP address.\n");
  *         return -1;
  *     }
- *     if (ecrt_slave_config_eoe_ip_address(sc, *(uint32_t *) buf)) {
+ *     if (ecrt_slave_config_eoe_ip_address(sc, addr)) {
  *         fprintf(stderr, "Failed to set IP address.\n");
  *         return -1;
  *     }
@@ -1902,7 +1904,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_mac_address(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_ip_address(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        uint32_t ip_address /**< IPv4 address. */
+        struct in_addr ip_address /**< IPv4 address. */
         );
 
 /** Sets the subnet mask for Ethernet-over-EtherCAT (EoE) operation.
@@ -1915,7 +1917,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_ip_address(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_subnet_mask(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        uint32_t subnet_mask /**< IPv4 subnet mask. */
+        struct in_addr subnet_mask /**< IPv4 subnet mask. */
         );
 
 /** Sets the gateway address for Ethernet-over-EtherCAT (EoE) operation.
@@ -1928,7 +1930,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_subnet_mask(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_default_gateway(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        uint32_t gateway_address /**< Gateway's IPv4 address. */
+        struct in_addr gateway_address /**< Gateway's IPv4 address. */
         );
 
 /** Sets the DNS server address for Ethernet-over-EtherCAT (EoE) operation.
@@ -1941,7 +1943,7 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_default_gateway(
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_dns_address(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        uint32_t dns_address /**< IPv4 address of the DNS server. */
+        struct in_addr dns_address /**< IPv4 address of the DNS server. */
         );
 
 /** Sets the host name for Ethernet-over-EtherCAT (EoE) operation.

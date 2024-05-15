@@ -51,10 +51,10 @@ void ec_eoe_request_init(
     req->name_included = 0;
 
     memset(req->mac_address, 0x00, ETH_ALEN);
-    req->ip_address = 0;
-    req->subnet_mask = 0;
-    req->gateway = 0;
-    req->dns = 0;
+    req->ip_address.s_addr = 0;
+    req->subnet_mask.s_addr = 0;
+    req->gateway.s_addr = 0;
+    req->dns.s_addr = 0;
     req->name[0] = 0x00;
 
     req->result = 0x0000;

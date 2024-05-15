@@ -198,26 +198,22 @@ int ec_fsm_eoe_prepare_set(
     cur += ETH_ALEN;
 
     if (req->ip_address_included) {
-        uint32_t swapped = htonl(req->ip_address);
-        memcpy(cur, &swapped, 4);
+        memcpy(cur, &req->ip_address, 4);
     }
     cur += 4;
 
     if (req->subnet_mask_included) {
-        uint32_t swapped = htonl(req->subnet_mask);
-        memcpy(cur, &swapped, 4);
+        memcpy(cur, &req->subnet_mask, 4);
     }
     cur += 4;
 
     if (req->gateway_included) {
-        uint32_t swapped = htonl(req->gateway);
-        memcpy(cur, &swapped, 4);
+        memcpy(cur, &req->gateway, 4);
     }
     cur += 4;
 
     if (req->dns_included) {
-        uint32_t swapped = htonl(req->dns);
-        memcpy(cur, &swapped, 4);
+        memcpy(cur, &req->dns, 4);
     }
     cur += 4;
 

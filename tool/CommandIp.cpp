@@ -206,11 +206,8 @@ void CommandIp::parseIpv4Prefix(ec_ioctl_eoe_ip_t *io,
             err << "Invalid prefix '" << prefixStr << "'!";
             throwInvalidUsageException(err);
         }
-        uint32_t mask = 0;
-        for (unsigned int bit = 0; bit < prefix; bit++) {
-            mask |= (1 << (31 - bit));
-        }
-        io->subnet_mask = htonl(mask);
+        uint32_t mask = (0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF;
+        io->subnet_mask.s_addr = htonl(mask);
     }
 
     resolveIpv4(&io->ip_address, host);
@@ -218,7 +215,7 @@ void CommandIp::parseIpv4Prefix(ec_ioctl_eoe_ip_t *io,
 
 /****************************************************************************/
 
-void CommandIp::resolveIpv4(uint32_t *addr, const string &str)
+void CommandIp::resolveIpv4(struct in_addr *dst, const string &str)
 {
     struct addrinfo hints = {};
     struct addrinfo *res;
@@ -239,12 +236,9 @@ void CommandIp::resolveIpv4(uint32_t *addr, const string &str)
         throwCommandException(err.str());
     }
 
-    sockaddr_in *sin = (sockaddr_in *) res->ai_addr;
-    for (unsigned int i = 0; i < 4; i++) {
-        ((unsigned char *) addr)[i] =
-            ((unsigned char *) &sin->sin_addr.s_addr)[i];
-    }
-
+    const struct sockaddr_in *in_addr =
+        (const struct sockaddr_in *) res->ai_addr;
+    *dst = in_addr->sin_addr;
     freeaddrinfo(res);
 }
 

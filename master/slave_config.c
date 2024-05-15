@@ -1453,7 +1453,7 @@ int ecrt_slave_config_eoe_mac_address(ec_slave_config_t *sc,
 /****************************************************************************/
 
 int ecrt_slave_config_eoe_ip_address(ec_slave_config_t *sc,
-        uint32_t ip_address)
+        struct in_addr ip_address)
 {
     sc->eoe_ip_param_request.ip_address = ip_address;
     sc->eoe_ip_param_request.ip_address_included = 1;
@@ -1463,7 +1463,7 @@ int ecrt_slave_config_eoe_ip_address(ec_slave_config_t *sc,
 /****************************************************************************/
 
 int ecrt_slave_config_eoe_subnet_mask(ec_slave_config_t *sc,
-        uint32_t subnet_mask)
+        struct in_addr subnet_mask)
 {
     sc->eoe_ip_param_request.subnet_mask = subnet_mask;
     sc->eoe_ip_param_request.subnet_mask_included = 1;
@@ -1473,7 +1473,7 @@ int ecrt_slave_config_eoe_subnet_mask(ec_slave_config_t *sc,
 /****************************************************************************/
 
 int ecrt_slave_config_eoe_default_gateway(ec_slave_config_t *sc,
-        uint32_t gateway_address)
+        struct in_addr gateway_address)
 {
     sc->eoe_ip_param_request.gateway = gateway_address;
     sc->eoe_ip_param_request.gateway_included = 1;
@@ -1483,7 +1483,7 @@ int ecrt_slave_config_eoe_default_gateway(ec_slave_config_t *sc,
 /****************************************************************************/
 
 int ecrt_slave_config_eoe_dns_address(ec_slave_config_t *sc,
-        uint32_t dns_address)
+        struct in_addr dns_address)
 {
     sc->eoe_ip_param_request.dns = dns_address;
     sc->eoe_ip_param_request.dns_included = 1;
