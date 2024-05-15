@@ -21,14 +21,16 @@
  *
  ****************************************************************************/
 
+#include "CommandConfig.h"
+#include "MasterDevice.h"
+
 #include <list>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 using namespace std;
 
-#include "CommandConfig.h"
-#include "MasterDevice.h"
+#include <arpa/inet.h>
 
 /****************************************************************************/
 
@@ -307,6 +309,7 @@ void CommandConfig::showDetailedConfigs(
         if (ip.mac_address_included or ip.ip_address_included or
                 ip.subnet_mask_included or ip.gateway_included or
                 ip.dns_included or ip.name_included) {
+            char addr[32];
             cout << indent << "EoE IP parameters:" << endl;
             if (ip.mac_address_included) {
                 cout << indent << "  MAC address: "
@@ -319,39 +322,23 @@ void CommandConfig::showDetailedConfigs(
                     << ip.mac_address[5] << dec << endl;
             }
             if (ip.ip_address_included) {
-                const uint8_t *addr = (const uint8_t *) &ip.ip_address;
-                cout << indent << "  IP address: "
-                    << (unsigned int) addr[0] << "."
-                    << (unsigned int) addr[1] << "."
-                    << (unsigned int) addr[2] << "."
-                    << (unsigned int) addr[3] << endl;
+                inet_ntop(AF_INET, &ip.ip_address, addr, sizeof(addr));
+                cout << indent << "  IP address: " << addr << endl;
             }
             if (ip.subnet_mask_included) {
-                const uint8_t *addr = (const uint8_t *) &ip.subnet_mask;
-                cout << indent << "  Subnet mask: "
-                    << (unsigned int) addr[0] << "."
-                    << (unsigned int) addr[1] << "."
-                    << (unsigned int) addr[2] << "."
-                    << (unsigned int) addr[3] << endl;
+                inet_ntop(AF_INET, &ip.subnet_mask, addr, sizeof(addr));
+                cout << indent << "  Subnet mask: " << addr << endl;
             }
             if (ip.gateway_included) {
-                const uint8_t *addr = (const uint8_t *) &ip.gateway;
-                cout << indent << "  Default gateway: "
-                    << (unsigned int) addr[0] << "."
-                    << (unsigned int) addr[1] << "."
-                    << (unsigned int) addr[2] << "."
-                    << (unsigned int) addr[3] << endl;
+                inet_ntop(AF_INET, &ip.gateway, addr, sizeof(addr));
+                cout << indent << "  Default gateway: " << addr << endl;
             }
             if (ip.dns_included) {
-                const uint8_t *addr = (const uint8_t *) &ip.dns;
-                cout << indent << "  DNS server address: "
-                    << (unsigned int) addr[0] << "."
-                    << (unsigned int) addr[1] << "."
-                    << (unsigned int) addr[2] << "."
-                    << (unsigned int) addr[3] << endl;
+                inet_ntop(AF_INET, &ip.dns, addr, sizeof(addr));
+                cout << indent << "  DNS server address: " << addr << endl;
             }
             if (ip.name_included) {
-                cout << indent << "  Hostname:" << ip.name << endl;
+                cout << indent << "  Hostname: " << ip.name << endl;
             }
         }
 #endif
