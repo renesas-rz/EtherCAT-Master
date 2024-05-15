@@ -43,10 +43,11 @@
  * - Added the ecrt_master_scan_progress() method, the
  *   ec_master_scan_progress_t structure and the EC_HAVE_SCAN_PROGRESS
  *   definition to check for its existence.
- * - Added the EoE configuration methods ecrt_slave_config_eoe_link(),
- *   ecrt_slave_config_eoe_addr(), ecrt_slave_config_eoe_subnet(),
- *   ecrt_slave_config_eoe_default(), ecrt_slave_config_eoe_dns(),
- *   ecrt_slave_config_eoe_name() and the EC_HAVE_SET_IP
+ * - Added the EoE configuration methods ecrt_slave_config_eoe_mac_address(),
+ *   ecrt_slave_config_eoe_ip_address(), ecrt_slave_config_eoe_subnet_mask(),
+ *   ecrt_slave_config_eoe_default_gateway(),
+ *   ecrt_slave_config_eoe_dns_address(),
+ *   ecrt_slave_config_eoe_hostname() and the EC_HAVE_SET_IP
  *   definition to check for its existence.
  *
  * Changes since version 1.5.2:
