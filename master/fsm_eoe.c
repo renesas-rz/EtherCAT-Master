@@ -454,7 +454,7 @@ void ec_fsm_eoe_set_ip_response(
         }
     }
 
-    req->result = EC_READ_U16(data + 2);
+    req->result = EC_READ_U16(data + 2); // result code 0x0000 means success
 
     if (req->result) {
         fsm->state = ec_fsm_eoe_error;
