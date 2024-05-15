@@ -3347,7 +3347,6 @@ static ATTRIBUTES int ec_ioctl_sc_ip(
     ec_ioctl_eoe_ip_t io;
     ec_slave_config_t *sc;
     uint8_t *key;
-    int ret;
 
     if (unlikely(!ctx->requested)) {
         return -EPERM;
@@ -3390,7 +3389,7 @@ static ATTRIBUTES int ec_ioctl_sc_ip(
         ecrt_slave_config_eoe_hostname(sc, io.name);
     }
 
-    return ret;
+    return 0;
 }
 
 #endif
