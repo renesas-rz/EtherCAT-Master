@@ -33,6 +33,23 @@
 
 /****************************************************************************/
 
+/** Host-architecture-independent 32-bit swap function.
+ *
+ * The internal storage of struct in_addr is always big-endian.
+ * The mailbox protocol format to supply IPv4 adresses is little-endian
+ * (Yuck!). So we need a swap function, that is independent of the CPU
+ * architecture. ntohl()/htonl() can not be used, because they evaluate to
+ * NOPs if the host architecture matches the target architecture!
+ */
+void memcpy_swap32(void *dst, const void *src)
+{
+    for (int i = 0; i < 4; i++) {
+        ((u8 *) dst)[i] = ((const u8 *) src)[3 - i];
+    }
+}
+
+/****************************************************************************/
+
 /** Maximum time to wait for a set IP parameter response.
  */
 #define EC_EOE_RESPONSE_TIMEOUT 3000 // [ms]
@@ -198,22 +215,22 @@ int ec_fsm_eoe_prepare_set(
     cur += ETH_ALEN;
 
     if (req->ip_address_included) {
-        memcpy(cur, &req->ip_address, 4);
+        memcpy_swap32(cur, &req->ip_address);
     }
     cur += 4;
 
     if (req->subnet_mask_included) {
-        memcpy(cur, &req->subnet_mask, 4);
+        memcpy_swap32(cur, &req->subnet_mask);
     }
     cur += 4;
 
     if (req->gateway_included) {
-        memcpy(cur, &req->gateway, 4);
+        memcpy_swap32(cur, &req->gateway);
     }
     cur += 4;
 
     if (req->dns_included) {
-        memcpy(cur, &req->dns, 4);
+        memcpy_swap32(cur, &req->dns);
     }
     cur += 4;
 
