@@ -77,7 +77,9 @@ typedef enum {
 /** EtherCAT datagram.
  */
 typedef struct {
-    struct list_head queue; /**< Master datagram queue item. */
+    struct list_head queue; /**< Master datagram queue item,
+        protected by user-supplied mutex. */
+    struct list_head ext_queue; /**< External datagram queue item, protected by ext_queue_sem. */
     struct list_head sent; /**< Master list item for sent datagrams. */
     ec_device_index_t device_index; /**< Device via which the datagram shall
                                       be / was sent. */

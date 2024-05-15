@@ -971,7 +971,7 @@ void ec_master_queue_datagram_ext(
         )
 {
     down(&master->ext_queue_sem);
-    list_add_tail(&datagram->queue, &master->ext_datagram_queue);
+    list_add_tail(&datagram->ext_queue, &master->ext_datagram_queue);
     up(&master->ext_queue_sem);
 }
 
@@ -2525,8 +2525,8 @@ int ecrt_master_send_ext(ec_master_t *master)
 
     down(&master->ext_queue_sem);
     list_for_each_entry_safe(datagram, next, &master->ext_datagram_queue,
-            queue) {
-        list_del(&datagram->queue);
+            ext_queue) {
+        list_del_init(&datagram->ext_queue);
         ec_master_queue_datagram(master, datagram);
     }
     up(&master->ext_queue_sem);
