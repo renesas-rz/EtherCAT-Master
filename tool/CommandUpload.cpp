@@ -106,7 +106,7 @@ void CommandUpload::execute(const StringVector &args)
     data.sdo_entry_subindex = uval;
 
     MasterDevice m(getSingleMasterIndex());
-    m.open(MasterDevice::Read);
+    m.open(MasterDevice::ReadWrite);
     slaves = selectedSlaves(m);
     if (slaves.size() != 1) {
         throwSingleSlaveRequired(slaves.size());
