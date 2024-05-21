@@ -247,10 +247,11 @@
  */
 #define EC_HAVE_SCAN_PROGRESS
 
-/** Defined, if the methods ecrt_slave_config_eoe_link(),
- *  ecrt_slave_config_eoe_addr(), ecrt_slave_config_eoe_subnet(),
- *  ecrt_slave_config_eoe_default(), ecrt_slave_config_eoe_dns(),
- *  ecrt_slave_config_eoe_name() are available.
+/** Defined, if the methods ecrt_slave_config_eoe_mac_address(),
+ * ecrt_slave_config_eoe_ip_address(), ecrt_slave_config_eoe_subnet_mask(),
+ * ecrt_slave_config_eoe_default_gateway(),
+ * ecrt_slave_config_eoe_dns_address(), ecrt_slave_config_eoe_hostname() are
+ * available.
  */
 #define EC_HAVE_SET_IP
 
@@ -1861,7 +1862,7 @@ EC_PUBLIC_API int ecrt_slave_config_idn(
  */
 EC_PUBLIC_API int ecrt_slave_config_flag(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        const char *key, /**< Key as null-terminated ascii string. */
+        const char *key, /**< Key as null-terminated ASCII string. */
         int32_t value /**< Value to store. */
         );
 
@@ -1869,6 +1870,9 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * The MAC address is stored in the slave configuration object and will be
+ * written to the slave during the configuration process.
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1883,8 +1887,14 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_mac_address(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
- * A string-represented IPv4 address can be converted via ithe POSIX
- * function `inet_pton()` (see man 3 inet_pton):
+ * The IP address is stored in the slave configuration object and will be
+ * written to the slave during the configuration process.
+ *
+ * The IP address is passed by-value as a `struct in_addr`. This structure
+ * contains the 32-bit IPv4 address in network byte order (big endian).
+ *
+ * A string-represented IPv4 address can be converted to a `struct in_addr`
+ * for example via the POSIX function `inet_pton()` (see man 3 inet_pton):
  *
  * \code{.c}
  *     #include <arpa/inet.h>
@@ -1913,6 +1923,15 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_ip_address(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * The subnet mask is stored in the slave configuration object and will be
+ * written to the slave during the configuration process.
+ *
+ * The subnet mask is passed by-value as a `struct in_addr`. This structure
+ * contains the 32-bit mask in network byte order (big endian).
+ *
+ * See ecrt_slave_config_eoe_ip_address() on how to convert string-coded masks
+ * to `struct in_addr`.
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1926,6 +1945,15 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_subnet_mask(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * The gateway address is stored in the slave configuration object and will be
+ * written to the slave during the configuration process.
+ *
+ * The address is passed by-value as a `struct in_addr`. This structure
+ * contains the 32-bit IPv4 address in network byte order (big endian).
+ *
+ * See ecrt_slave_config_eoe_ip_address() on how to convert string-coded IPv4
+ * addresses to `struct in_addr`.
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1934,10 +1962,20 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_default_gateway(
         struct in_addr gateway_address /**< Gateway's IPv4 address. */
         );
 
-/** Sets the DNS server address for Ethernet-over-EtherCAT (EoE) operation.
+/** Sets the IPv4 address of the DNS server for Ethernet-over-EtherCAT (EoE)
+ * operation.
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * The DNS server address is stored in the slave configuration object and will
+ * be written to the slave during the configuration process.
+ *
+ * The address is passed by-value as a `struct in_addr`. This structure
+ * contains the 32-bit IPv4 address in network byte order (big endian).
+ *
+ * See ecrt_slave_config_eoe_ip_address() on how to convert string-coded IPv4
+ * addresses to `struct in_addr`.
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1952,12 +1990,18 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns_address(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * The host name is stored in the slave configuration object and will
+ * be written to the slave during the configuration process.
+ *
+ * The maximum size of the host name is 32 bytes (including the zero
+ * terminator).
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
 EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
         ec_slave_config_t *sc, /**< Slave configuration. */
-        const char *name /**< Zero-terminated hostname. */
+        const char *name /**< Zero-terminated host name. */
         );
 
 /*****************************************************************************
