@@ -1595,6 +1595,7 @@ static ATTRIBUTES int ec_ioctl_config_ip(
 {
     ec_ioctl_eoe_ip_t *ioctl;
     const ec_slave_config_t *sc;
+    const ec_eoe_request_t *req;
 
     if (!(ioctl = kmalloc(sizeof(*ioctl), GFP_KERNEL))) {
         return -ENOMEM;
@@ -1610,8 +1611,7 @@ static ATTRIBUTES int ec_ioctl_config_ip(
         return -EINTR;
     }
 
-    if (!(sc = ec_master_get_config_const(
-                    master, ioctl->config_index))) {
+    if (!(sc = ec_master_get_config_const(master, ioctl->config_index))) {
         up(&master->master_sem);
         EC_MASTER_ERR(master, "Slave config %u does not exist!\n",
                 ioctl->config_index);
@@ -1619,7 +1619,7 @@ static ATTRIBUTES int ec_ioctl_config_ip(
         return -EINVAL;
     }
 
-    const ec_eoe_request_t *req = &sc->eoe_ip_param_request;
+    req = &sc->eoe_ip_param_request;
 
     ioctl->mac_address_included = req->mac_address_included;
     ioctl->ip_address_included = req->ip_address_included;
