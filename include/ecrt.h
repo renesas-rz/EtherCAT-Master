@@ -243,7 +243,7 @@
 #define EC_HAVE_SOE_REQUESTS
 
 /** Defined, if the method ecrt_master_scan_progress() and the
- * ec_master_scan_progress_t sttucture are available.
+ * ec_master_scan_progress_t structure are available.
  */
 #define EC_HAVE_SCAN_PROGRESS
 
