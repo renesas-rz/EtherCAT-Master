@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -553,26 +553,6 @@ void MasterDevice::requestState(
 
 /****************************************************************************/
 
-#ifdef EC_EOE
-
-void MasterDevice::getEoeHandler(
-        ec_ioctl_eoe_handler_t *eoe,
-        uint16_t eoeHandlerIndex
-        )
-{
-    eoe->eoe_index = eoeHandlerIndex;
-
-    if (ioctl(fd, EC_IOCTL_EOE_HANDLER, eoe)) {
-        stringstream err;
-        err << "Failed to get EoE handler: " << strerror(errno);
-        throw MasterDeviceException(err);
-    }
-}
-
-#endif
-
-/****************************************************************************/
-
 void MasterDevice::readSoe(ec_ioctl_slave_soe_read_t *data)
 {
     if (ioctl(fd, EC_IOCTL_SLAVE_SOE_READ, data) < 0) {
@@ -604,7 +584,49 @@ void MasterDevice::writeSoe(ec_ioctl_slave_soe_write_t *data)
 /****************************************************************************/
 
 #ifdef EC_EOE
-void MasterDevice::setIpParam(ec_ioctl_slave_eoe_ip_t *data)
+
+void MasterDevice::getEoeHandler(
+        ec_ioctl_eoe_handler_t *eoe,
+        uint16_t eoeHandlerIndex
+        )
+{
+    eoe->eoe_index = eoeHandlerIndex;
+
+    if (ioctl(fd, EC_IOCTL_EOE_HANDLER, eoe)) {
+        stringstream err;
+        err << "Failed to get EoE handler: " << strerror(errno);
+        throw MasterDeviceException(err);
+    }
+}
+
+#endif
+
+/****************************************************************************/
+
+#ifdef EC_EOE
+
+void MasterDevice::getIpParam(ec_ioctl_eoe_ip_t *data, uint16_t config_index)
+{
+    data->config_index = config_index;
+
+    if (ioctl(fd, EC_IOCTL_CONFIG_EOE_IP_PARAM, data) < 0) {
+        if (errno == EIO && data->result) {
+            throw MasterDeviceEoeException(data->result);
+        } else {
+            stringstream err;
+            err << "Failed to set IP parameters: " << strerror(errno);
+            throw MasterDeviceException(err);
+        }
+    }
+}
+
+#endif
+
+/****************************************************************************/
+
+#ifdef EC_EOE
+
+void MasterDevice::setIpParam(ec_ioctl_eoe_ip_t *data)
 {
     if (ioctl(fd, EC_IOCTL_SLAVE_EOE_IP_PARAM, data) < 0) {
         if (errno == EIO && data->result) {
@@ -616,6 +638,7 @@ void MasterDevice::setIpParam(ec_ioctl_slave_eoe_ip_t *data)
         }
     }
 }
+
 #endif
 
 /****************************************************************************/

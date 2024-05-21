@@ -33,6 +33,24 @@
 
 /****************************************************************************/
 
+/** Host-architecture-independent 32-bit swap function.
+ *
+ * The internal storage of struct in_addr is always big-endian.
+ * The mailbox protocol format to supply IPv4 adresses is little-endian
+ * (Yuck!). So we need a swap function, that is independent of the CPU
+ * architecture. ntohl()/htonl() can not be used, because they evaluate to
+ * NOPs if the host architecture matches the target architecture!
+ */
+void memcpy_swap32(void *dst, const void *src)
+{
+    int i;
+    for (i = 0; i < 4; i++) {
+        ((u8 *) dst)[i] = ((const u8 *) src)[3 - i];
+    }
+}
+
+/****************************************************************************/
+
 /** Maximum time to wait for a set IP parameter response.
  */
 #define EC_EOE_RESPONSE_TIMEOUT 3000 // [ms]
@@ -61,6 +79,7 @@ void ec_fsm_eoe_init(
     fsm->datagram = NULL;
     fsm->jiffies_start = 0;
     fsm->request = NULL;
+    fsm->frame_type_retries = 0;
 }
 
 /****************************************************************************/
@@ -197,26 +216,22 @@ int ec_fsm_eoe_prepare_set(
     cur += ETH_ALEN;
 
     if (req->ip_address_included) {
-        uint32_t swapped = htonl(req->ip_address);
-        memcpy(cur, &swapped, 4);
+        memcpy_swap32(cur, &req->ip_address);
     }
     cur += 4;
 
     if (req->subnet_mask_included) {
-        uint32_t swapped = htonl(req->subnet_mask);
-        memcpy(cur, &swapped, 4);
+        memcpy_swap32(cur, &req->subnet_mask);
     }
     cur += 4;
 
     if (req->gateway_included) {
-        uint32_t swapped = htonl(req->gateway);
-        memcpy(cur, &swapped, 4);
+        memcpy_swap32(cur, &req->gateway);
     }
     cur += 4;
 
     if (req->dns_included) {
-        uint32_t swapped = htonl(req->dns);
-        memcpy(cur, &swapped, 4);
+        memcpy_swap32(cur, &req->dns);
     }
     cur += 4;
 
@@ -313,6 +328,7 @@ void ec_fsm_eoe_set_ip_request(
     ec_slave_mbox_prepare_check(slave, datagram); // can not fail.
     fsm->retries = EC_FSM_RETRIES;
     fsm->state = ec_fsm_eoe_set_ip_check;
+    fsm->frame_type_retries = 10;
 }
 
 /****************************************************************************/
@@ -431,14 +447,28 @@ void ec_fsm_eoe_set_ip_response(
     frame_type = EC_READ_U8(data) & 0x0f;
 
     if (frame_type != EC_EOE_FRAMETYPE_SET_IP_RES) {
-        EC_SLAVE_ERR(slave, "Received no set IP parameter response"
-                " (frame type %x).\n", frame_type);
-        ec_print_data(data, rec_size);
-        fsm->state = ec_fsm_eoe_error;
-        return;
+        if (master->debug_level) {
+            EC_SLAVE_DBG(slave, 0, "Received no set IP parameter response"
+                    " (frame type %x).\n", frame_type);
+            ec_print_data(data, rec_size);
+        }
+        if (fsm->frame_type_retries--) {
+            // there may be an EoE segment left in the mailbox.
+            // discard it and receive again.
+            fsm->jiffies_start = fsm->datagram->jiffies_sent;
+            ec_slave_mbox_prepare_check(slave, datagram); // can not fail.
+            fsm->retries = EC_FSM_RETRIES;
+            fsm->state = ec_fsm_eoe_set_ip_check;
+            return;
+        }
+        else {
+            EC_SLAVE_ERR(slave, "Received no set IP parameter response.\n");
+            fsm->state = ec_fsm_eoe_error;
+            return;
+        }
     }
 
-    req->result = EC_READ_U16(data + 2);
+    req->result = EC_READ_U16(data + 2); // result code 0x0000 means success
 
     if (req->result) {
         fsm->state = ec_fsm_eoe_error;

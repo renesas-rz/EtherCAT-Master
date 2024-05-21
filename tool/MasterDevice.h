@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -152,12 +152,13 @@ class MasterDevice
         void requestState(uint16_t, uint8_t);
         void readFoe(ec_ioctl_slave_foe_t *);
         void writeFoe(ec_ioctl_slave_foe_t *);
-#ifdef EC_EOE
-        void getEoeHandler(ec_ioctl_eoe_handler_t *, uint16_t);
-#endif
         void readSoe(ec_ioctl_slave_soe_read_t *);
         void writeSoe(ec_ioctl_slave_soe_write_t *);
-        void setIpParam(ec_ioctl_slave_eoe_ip_t *);
+#ifdef EC_EOE
+        void getEoeHandler(ec_ioctl_eoe_handler_t *, uint16_t);
+        void getIpParam(ec_ioctl_eoe_ip_t *, uint16_t);
+        void setIpParam(ec_ioctl_eoe_ip_t *);
+#endif
 
         unsigned int getMasterCount() const {return masterCount;}
 

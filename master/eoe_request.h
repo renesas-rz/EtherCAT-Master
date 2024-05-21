@@ -51,10 +51,10 @@ typedef struct {
     uint8_t name_included;
 
     unsigned char mac_address[ETH_ALEN];
-    uint32_t ip_address;
-    uint32_t subnet_mask;
-    uint32_t gateway;
-    uint32_t dns;
+    struct in_addr ip_address;
+    struct in_addr subnet_mask;
+    struct in_addr gateway;
+    struct in_addr dns;
     char name[EC_MAX_HOSTNAME_SIZE];
 
     uint16_t result;
@@ -63,6 +63,7 @@ typedef struct {
 /****************************************************************************/
 
 void ec_eoe_request_init(ec_eoe_request_t *);
+int ec_eoe_request_valid(const ec_eoe_request_t *);
 
 /****************************************************************************/
 

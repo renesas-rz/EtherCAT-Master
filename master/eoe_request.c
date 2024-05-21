@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -51,13 +51,30 @@ void ec_eoe_request_init(
     req->name_included = 0;
 
     memset(req->mac_address, 0x00, ETH_ALEN);
-    req->ip_address = 0;
-    req->subnet_mask = 0;
-    req->gateway = 0;
-    req->dns = 0;
+    req->ip_address.s_addr = 0;
+    req->subnet_mask.s_addr = 0;
+    req->gateway.s_addr = 0;
+    req->dns.s_addr = 0;
     req->name[0] = 0x00;
 
     req->result = 0x0000;
+}
+
+/****************************************************************************/
+
+/** Checks if EoE request has something to set.
+ */
+int ec_eoe_request_valid(
+        const ec_eoe_request_t *req /**< EoE request. */
+        )
+{
+    return
+        req->mac_address_included ||
+        req->ip_address_included ||
+        req->subnet_mask_included ||
+        req->gateway_included ||
+        req->dns_included ||
+        req->name_included;
 }
 
 /****************************************************************************/

@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -140,6 +140,10 @@ struct ec_slave_config {
     struct list_head reg_requests; /**< List of register requests. */
     struct list_head soe_configs; /**< List of SoE configurations. */
     struct list_head flags; /**< List of feature flags. */
+
+#ifdef EC_EOE
+    ec_eoe_request_t eoe_ip_param_request; /**< EoE IP parameters. */
+#endif
 
     ec_coe_emerg_ring_t emerg_ring; /**< CoE emergency ring buffer. */
 };

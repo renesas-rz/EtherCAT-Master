@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -21,14 +21,16 @@
  *
  ****************************************************************************/
 
+#include "CommandConfig.h"
+#include "MasterDevice.h"
+
 #include <list>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 using namespace std;
 
-#include "CommandConfig.h"
-#include "MasterDevice.h"
+#include <arpa/inet.h>
 
 /****************************************************************************/
 
@@ -147,6 +149,9 @@ void CommandConfig::showDetailedConfigs(
     ec_ioctl_config_sdo_t sdo;
     ec_ioctl_config_idn_t idn;
     ec_ioctl_config_flag_t flag;
+#ifdef EC_EOE
+    ec_ioctl_eoe_ip_t ip;
+#endif
     string indent(doIndent ? "  " : "");
 
     for (configIter = configList.begin();
@@ -298,6 +303,45 @@ void CommandConfig::showDetailedConfigs(
         } else {
             cout << indent << "  None." << endl;
         }
+
+#ifdef EC_EOE
+        m.getIpParam(&ip, configIter->config_index);
+        if (ip.mac_address_included or ip.ip_address_included or
+                ip.subnet_mask_included or ip.gateway_included or
+                ip.dns_included or ip.name_included) {
+            char addr[32];
+            cout << indent << "EoE IP parameters:" << endl;
+            if (ip.mac_address_included) {
+                cout << indent << "  MAC address: "
+                    << hex << setfill('0') << setw(2)
+                    << ip.mac_address[0] << ":"
+                    << ip.mac_address[1] << ":"
+                    << ip.mac_address[2] << ":"
+                    << ip.mac_address[3] << ":"
+                    << ip.mac_address[4] << ":"
+                    << ip.mac_address[5] << dec << endl;
+            }
+            if (ip.ip_address_included) {
+                inet_ntop(AF_INET, &ip.ip_address, addr, sizeof(addr));
+                cout << indent << "  IP address: " << addr << endl;
+            }
+            if (ip.subnet_mask_included) {
+                inet_ntop(AF_INET, &ip.subnet_mask, addr, sizeof(addr));
+                cout << indent << "  Subnet mask: " << addr << endl;
+            }
+            if (ip.gateway_included) {
+                inet_ntop(AF_INET, &ip.gateway, addr, sizeof(addr));
+                cout << indent << "  Default gateway: " << addr << endl;
+            }
+            if (ip.dns_included) {
+                inet_ntop(AF_INET, &ip.dns, addr, sizeof(addr));
+                cout << indent << "  DNS server address: " << addr << endl;
+            }
+            if (ip.name_included) {
+                cout << indent << "  Hostname: " << ip.name << endl;
+            }
+        }
+#endif
 
         if (configIter->dc_assign_activate) {
             int i;

@@ -44,7 +44,11 @@ noinst_HEADERS = \
 	soe_request.h \
 	voe_handler.h
 
-libethercat_la_CFLAGS = -fno-strict-aliasing -Wall -I$(top_srcdir) \
+libethercat_la_CFLAGS = \
+	-fno-strict-aliasing \
+	-Wall \
+	-Wmissing-prototypes \
+	-I$(top_srcdir) \
 	-Dethercat_EXPORTS \
 	-fvisibility=hidden
 

@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -67,6 +67,7 @@ void ec_fsm_slave_config_state_assign_ethercat(ec_fsm_slave_config_t *);
 #endif
 void ec_fsm_slave_config_state_sdo_conf(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_soe_conf_preop(ec_fsm_slave_config_t *);
+void ec_fsm_slave_config_state_eoe_ip_param(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_watchdog_divider(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_watchdog(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_pdo_sync(ec_fsm_slave_config_t *);
@@ -91,6 +92,7 @@ void ec_fsm_slave_config_enter_assign_pdi(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_boot_preop(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_sdo_conf(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_soe_conf_preop(ec_fsm_slave_config_t *);
+void ec_fsm_slave_config_enter_eoe_ip_param(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_pdo_conf(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_watchdog_divider(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_enter_watchdog(ec_fsm_slave_config_t *);
@@ -117,7 +119,8 @@ void ec_fsm_slave_config_init(
         ec_fsm_change_t *fsm_change, /**< State change state machine to use. */
         ec_fsm_coe_t *fsm_coe, /**< CoE state machine to use. */
         ec_fsm_soe_t *fsm_soe, /**< SoE state machine to use. */
-        ec_fsm_pdo_t *fsm_pdo /**< PDO configuration state machine to use. */
+        ec_fsm_pdo_t *fsm_pdo, /**< PDO configuration state machine to use. */
+        ec_fsm_eoe_t *fsm_eoe /**< EoE state machine to use. */
         )
 {
     ec_sdo_request_init(&fsm->request_copy);
@@ -128,6 +131,7 @@ void ec_fsm_slave_config_init(
     fsm->fsm_coe = fsm_coe;
     fsm->fsm_soe = fsm_soe;
     fsm->fsm_pdo = fsm_pdo;
+    fsm->fsm_eoe = fsm_eoe;
 
     fsm->wait_ms = 0;
 }
@@ -901,7 +905,7 @@ void ec_fsm_slave_config_enter_soe_conf_preop(
     }
 
     // No SoE configuration to be applied in PREOP
-    ec_fsm_slave_config_enter_pdo_conf(fsm);
+    ec_fsm_slave_config_enter_eoe_ip_param(fsm);
 }
 
 /****************************************************************************/
@@ -945,6 +949,56 @@ void ec_fsm_slave_config_state_soe_conf_preop(
     }
 
     // All PREOP IDNs are now configured.
+    ec_fsm_slave_config_enter_eoe_ip_param(fsm);
+}
+
+/****************************************************************************/
+
+/** EOE_IP_PARAM entry function.
+ */
+void ec_fsm_slave_config_enter_eoe_ip_param(
+        ec_fsm_slave_config_t *fsm /**< slave state machine */
+        )
+{
+#if EC_EOE
+    ec_slave_t *slave = fsm->slave;
+    ec_eoe_request_t *request = &slave->config->eoe_ip_param_request;
+
+    if (ec_eoe_request_valid(request)) {
+        EC_SLAVE_DBG(slave, 1, "Setting EoE IP parameters...\n");
+
+        // Start EoE command
+        fsm->state = ec_fsm_slave_config_state_eoe_ip_param;
+        ec_fsm_eoe_set_ip_param(fsm->fsm_eoe, slave, request);
+        ec_fsm_eoe_exec(fsm->fsm_eoe, fsm->datagram); // execute immediately
+        return;
+    }
+#endif
+
+    ec_fsm_slave_config_enter_pdo_conf(fsm);
+}
+
+/****************************************************************************/
+
+/** Slave configuration state: EOE_IP_PARAM.
+ */
+void ec_fsm_slave_config_state_eoe_ip_param(
+        ec_fsm_slave_config_t *fsm /**< slave state machine */
+        )
+{
+    ec_slave_t *slave = fsm->slave;
+
+    if (ec_fsm_eoe_exec(fsm->fsm_eoe, fsm->datagram)) {
+        return;
+    }
+
+    if (ec_fsm_eoe_success(fsm->fsm_eoe)) {
+        EC_SLAVE_DBG(slave, 1, "Finished setting EoE IP parameters.\n");
+    }
+    else {
+        EC_SLAVE_ERR(slave, "Failed to set EoE IP parameters.\n");
+    }
+
     ec_fsm_slave_config_enter_pdo_conf(fsm);
 }
 
