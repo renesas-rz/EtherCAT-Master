@@ -24,19 +24,19 @@
  *
  * EtherCAT master application interface.
  *
- * \defgroup ApplicationInterface EtherCAT Configuration Interface
+ * \defgroup ApplicationInterface EtherCAT Application Interface (non-RT)
  *
  * Interface for configuring the EtherCAT master for realtime applications.
  * There are functions to request a master, to map process data, to
  * communicate with slaves via CoE and to configure and activate the network.
  * All methods in this group should be used before the application switches to
- * operational (real-time) mode by calling ecrt_master_activate(). After
- * that, only calls to the functions in \ref ApplicationInterfaceRT are
- * allowed. The real-time operational mode finishes by calling
- * ecrt_master_deactivate(). Many functions in this group are blocking and/or
- * they acquire locks. Do not use these functions in non-userspace contexts,
- * e. g. in RTAI/Xenomai Real-Time tasks or in atomic/softirq/tasklet context
- * in kernel modules. You have been warned.
+ * operation (real-time) mode by calling ecrt_master_activate(). After that,
+ * only calls to the functions in \ref ApplicationInterfaceRT are allowed. The
+ * real-time operation mode finishes by calling ecrt_master_deactivate(). Many
+ * functions in this group are blocking and/or they acquire locks. Do not use
+ * these functions in non-userspace contexts, e. g. in RTAI/Xenomai Real-Time
+ * tasks or in atomic/softirq/tasklet context in kernel modules. You have been
+ * warned.
  *
  * Changes in version 1.6.0:
  *
@@ -135,18 +135,15 @@
  *   ad-hoc via the user-space library.
  * - Added ecrt_master_reset() to initiate retrying to configure slaves.
  *
- * \defgroup ApplicationInterfaceRT EtherCAT Real Time Application Interface
+ * \defgroup ApplicationInterfaceRT EtherCAT Application Interface (RT)
  *
- * Interface to interact with the EtherCAT master with real time contraints.
+ * Interface to interact with the EtherCAT master with real-time contraints.
  *
- * After configuring the EtherCAT master,
- * the application switches to the operational mode
- * by calling ecrt_master_activate().
- * In operational mode, do not call other methods than these
- * listed in this group.
- * Many of the methods in \ref ApplicationInterface are blocking,
- * calling these in operational mode will result in a deadlock.
- *
+ * After configuring the EtherCAT master the application switches to the
+ * operation mode by calling ecrt_master_activate(). In operation mode,
+ * do not call other methods than these listed in this group. Many of the
+ * methods in \ref ApplicationInterface are blocking, calling these in
+ * real-time context mode will result in a deadlock.
  *
  * \addtogroup ApplicationInterface
  * @{
@@ -834,6 +831,8 @@ EC_PUBLIC_API int ecrt_master(
  * No memory is allocated on the heap in this function.
  *
  * \attention The pointer to this structure must point to a valid variable.
+ *
+ * \ingroup ApplicationInterfaceRT
  *
  * \return 0 in case of success, else < 0
  */
