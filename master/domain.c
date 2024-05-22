@@ -41,7 +41,14 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
 void ec_domain_clear_data(ec_domain_t *);
+int ec_domain_add_datagram_pair(ec_domain_t *, uint32_t, size_t, uint8_t *,
+        const unsigned int []);
+int shall_count(const ec_fmmu_config_t *, const ec_fmmu_config_t *);
+#if EC_MAX_NUM_DEVICES > 1
+int data_changed(uint8_t *, const ec_datagram_t *, size_t, size_t);
+#endif
 
 /****************************************************************************/
 
