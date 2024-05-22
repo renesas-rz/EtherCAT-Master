@@ -70,7 +70,11 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
 void ec_eoe_flush(ec_eoe_t *);
+int ec_eoe_send(ec_eoe_t *);
+
+/****************************************************************************/
 
 // state functions
 void ec_eoe_state_rx_start(ec_eoe_t *);

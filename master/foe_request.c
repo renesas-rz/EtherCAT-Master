@@ -42,6 +42,7 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
 void ec_foe_request_clear_data(ec_foe_request_t *);
 
 /****************************************************************************/
@@ -161,44 +162,6 @@ int ec_foe_request_timed_out(
 {
     return req->issue_timeout
         && jiffies - req->jiffies_start > HZ * req->issue_timeout / 1000;
-}
-
-/****************************************************************************/
-
-/** Set the request timeout.
- */
-void ec_foe_request_timeout(
-        ec_foe_request_t *req, /**< FoE request. */
-        uint32_t timeout /**< Timeout in ms. */
-        )
-{
-    req->issue_timeout = timeout;
-}
-
-/****************************************************************************/
-
-/** Returns a pointer to the request's data.
- *
- * \return Data pointer.
- */
-uint8_t *ec_foe_request_data(
-        ec_foe_request_t *req /**< FoE request. */
-        )
-{
-    return req->buffer;
-}
-
-/****************************************************************************/
-
-/** Returns the data size.
- *
- * \return Data size.
- */
-size_t ec_foe_request_data_size(
-        const ec_foe_request_t *req /**< FoE request. */
-        )
-{
-    return req->data_size;
 }
 
 /****************************************************************************/

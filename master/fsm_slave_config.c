@@ -52,6 +52,11 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+int ec_fsm_slave_config_running(const ec_fsm_slave_config_t *);
+
+/****************************************************************************/
+
 void ec_fsm_slave_config_state_start(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_init(ec_fsm_slave_config_t *);
 void ec_fsm_slave_config_state_clear_fmmus(ec_fsm_slave_config_t *);

@@ -42,7 +42,13 @@ extern const ec_code_msg_t al_status_messages[];
 
 /****************************************************************************/
 
-char *ec_slave_sii_string(ec_slave_t *, unsigned int);
+// prototypes for private methods
+char *ec_slave_sii_string(const ec_slave_t *, unsigned int);
+void ec_slave_find_names_for_pdo(ec_slave_t *, ec_pdo_t *);
+unsigned int ec_slave_get_previous_port(const ec_slave_t *, unsigned int);
+unsigned int ec_slave_get_next_port(const ec_slave_t *, unsigned int);
+uint32_t ec_slave_calc_rtt_sum(const ec_slave_t *);
+ec_slave_t *ec_slave_find_next_dc_slave(ec_slave_t *);
 
 /****************************************************************************/
 
@@ -570,7 +576,7 @@ int ec_slave_fetch_sii_pdos(
 */
 
 char *ec_slave_sii_string(
-        ec_slave_t *slave, /**< EtherCAT slave */
+        const ec_slave_t *slave, /**< EtherCAT slave */
         unsigned int index /**< string index */
         )
 {
@@ -805,7 +811,7 @@ void ec_slave_attach_pdo_names(
  * \return Port index.
  */
 unsigned int ec_slave_get_previous_port(
-        ec_slave_t *slave, /**< EtherCAT slave. */
+        const ec_slave_t *slave, /**< EtherCAT slave. */
         unsigned int port_index /**< Port index. */
         )
 {
@@ -835,7 +841,7 @@ unsigned int ec_slave_get_previous_port(
  * \return Port index.
  */
 unsigned int ec_slave_get_next_port(
-        ec_slave_t *slave, /**< EtherCAT slave. */
+        const ec_slave_t *slave, /**< EtherCAT slave. */
         unsigned int port_index /**< Port index. */
         )
 {
@@ -865,7 +871,7 @@ unsigned int ec_slave_get_next_port(
  * \return Round-trip-time in ns.
  */
 uint32_t ec_slave_calc_rtt_sum(
-        ec_slave_t *slave /**< EtherCAT slave. */
+        const ec_slave_t *slave /**< EtherCAT slave. */
         )
 {
     uint32_t rtt_sum = 0, rtt;

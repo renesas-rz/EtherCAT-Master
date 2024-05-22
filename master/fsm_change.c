@@ -29,17 +29,11 @@
 #include "globals.h"
 #include "master.h"
 #include "fsm_change.h"
+#include "slave_config.h"
 
 /****************************************************************************/
 
-/** Timeout while waiting for AL state change [s].
- *
- * ETG2000_S_R_V1i0i15 section 5.3.7.2 mentions 10 s as maximum AL state
- * change timeout.
- */
-#define EC_AL_STATE_CHANGE_TIMEOUT 10
-
-/****************************************************************************/
+unsigned int ec_fsm_change_timeout_ms(const ec_fsm_change_t *);
 
 void ec_fsm_change_state_start(ec_fsm_change_t *);
 void ec_fsm_change_state_check(ec_fsm_change_t *);
@@ -74,6 +68,50 @@ void ec_fsm_change_init(ec_fsm_change_t *fsm, /**< finite state machine */
 
 void ec_fsm_change_clear(ec_fsm_change_t *fsm /**< finite state machine */)
 {
+}
+
+/****************************************************************************/
+
+/** Get timeout in ms.
+ *
+ * For defaults see ETG2000_S_R_V1i0i15 section 5.3.6.2.
+ */
+unsigned int ec_fsm_change_timeout_ms(
+        const ec_fsm_change_t *fsm /**< finite state machine */
+        )
+{
+    ec_slave_state_t from = fsm->old_state;
+    ec_slave_state_t to = fsm->requested_state;
+
+    /* Search for specified timeout in slave configuration */
+    if (fsm->slave->config) {
+        unsigned int timeout_ms =
+            ec_slave_config_al_timeout(fsm->slave->config, from, to);
+        if (timeout_ms) {
+            return timeout_ms;
+        }
+    }
+
+    /* No specific timeout found. Use defaults from spec. */
+
+    if (from == EC_SLAVE_STATE_INIT &&
+            (to == EC_SLAVE_STATE_PREOP || to == EC_SLAVE_STATE_BOOT)) {
+        return 3000; // PreopTimeout
+    }
+    if ((from == EC_SLAVE_STATE_PREOP && to == EC_SLAVE_STATE_SAFEOP) ||
+            (from == EC_SLAVE_STATE_SAFEOP && to == EC_SLAVE_STATE_OP)) {
+        return 10000; // SafeopOpTimeout
+    }
+    if (to == EC_SLAVE_STATE_INIT ||
+            ((from == EC_SLAVE_STATE_OP || from == EC_SLAVE_STATE_SAFEOP)
+             && to == EC_SLAVE_STATE_PREOP)) {
+        return 5000; // BackToInitTimeout
+    }
+    if (from == EC_SLAVE_STATE_OP && to == EC_SLAVE_STATE_SAFEOP) {
+        return 200; // BackToSafeopTimeout
+    }
+
+    return 10000; // default [ms]
 }
 
 /****************************************************************************/
@@ -234,6 +272,7 @@ void ec_fsm_change_state_status(ec_fsm_change_t *fsm
 {
     ec_datagram_t *datagram = fsm->datagram;
     ec_slave_t *slave = fsm->slave;
+    unsigned int timeout_ms;
 
     if (datagram->state == EC_DATAGRAM_TIMED_OUT && fsm->retries--)
         return;
@@ -297,13 +336,15 @@ void ec_fsm_change_state_status(ec_fsm_change_t *fsm
 
     // still old state
 
+    timeout_ms = ec_fsm_change_timeout_ms(fsm);
     if (datagram->jiffies_received - fsm->jiffies_start >=
-            EC_AL_STATE_CHANGE_TIMEOUT * HZ) {
+            timeout_ms * HZ / 1000) {
         // timeout while checking
         char state_str[EC_STATE_STRING_SIZE];
         ec_state_string(fsm->requested_state, state_str, 0);
         fsm->state = ec_fsm_change_state_error;
-        EC_SLAVE_ERR(slave, "Timeout while setting state %s.\n", state_str);
+        EC_SLAVE_ERR(slave, "Timeout after %u ms while setting state %s.\n",
+                timeout_ms, state_str);
         return;
     }
 
@@ -492,6 +533,7 @@ void ec_fsm_change_state_check_ack(ec_fsm_change_t *fsm
 {
     ec_datagram_t *datagram = fsm->datagram;
     ec_slave_t *slave = fsm->slave;
+    unsigned int timeout_ms;
 
     if (datagram->state == EC_DATAGRAM_TIMED_OUT && fsm->retries--)
         return;
@@ -530,14 +572,15 @@ void ec_fsm_change_state_check_ack(ec_fsm_change_t *fsm
         return;
     }
 
+    timeout_ms = ec_fsm_change_timeout_ms(fsm);
     if (datagram->jiffies_received - fsm->jiffies_start >=
-            EC_AL_STATE_CHANGE_TIMEOUT * HZ) {
+            timeout_ms * HZ / 1000) {
         // timeout while checking
         char state_str[EC_STATE_STRING_SIZE];
         ec_state_string(slave->current_state, state_str, 0);
         fsm->state = ec_fsm_change_state_error;
-        EC_SLAVE_ERR(slave, "Timeout while acknowledging state %s.\n",
-                state_str);
+        EC_SLAVE_ERR(slave, "Timeout after %u ms while acknowledging"
+                " state %s.\n", timeout_ms, state_str);
         return;
     }
 

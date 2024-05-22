@@ -56,6 +56,7 @@
 
 int __init ec_gen_init_module(void);
 void __exit ec_gen_cleanup_module(void);
+void ec_gen_poll(struct net_device *);
 
 /****************************************************************************/
 
@@ -87,10 +88,17 @@ typedef struct {
     uint8_t dev_addr[ETH_ALEN];
 } ec_gen_interface_desc_t;
 
+int ec_gen_device_init(ec_gen_device_t *);
+void ec_gen_device_clear(ec_gen_device_t *);
+int ec_gen_device_create_socket(ec_gen_device_t *, ec_gen_interface_desc_t *);
+int ec_gen_device_offer(ec_gen_device_t *, ec_gen_interface_desc_t *);
 int ec_gen_device_open(ec_gen_device_t *);
 int ec_gen_device_stop(ec_gen_device_t *);
 int ec_gen_device_start_xmit(ec_gen_device_t *, struct sk_buff *);
 void ec_gen_device_poll(ec_gen_device_t *);
+
+int offer_device(ec_gen_interface_desc_t *);
+void clear_devices(void);
 
 /****************************************************************************/
 

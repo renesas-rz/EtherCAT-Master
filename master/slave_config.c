@@ -45,6 +45,25 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+int ec_slave_config_prepare_fmmu(ec_slave_config_t *, ec_domain_t *, uint8_t,
+        ec_direction_t);
+void ec_slave_config_load_default_mapping(const ec_slave_config_t *,
+        ec_pdo_t *);
+
+/****************************************************************************/
+
+/** EtherCAT application-layer transition timeout.
+ */
+typedef struct {
+    struct list_head list;
+    ec_slave_state_t from;
+    ec_slave_state_t to;
+    unsigned int timeout_ms;
+} ec_al_timeout_t;
+
+/****************************************************************************/
+
 /** Slave configuration constructor.
  *
  * See ecrt_master_slave_config() for the usage of the \a alias and \a
@@ -89,6 +108,7 @@ void ec_slave_config_init(
     INIT_LIST_HEAD(&sc->voe_handlers);
     INIT_LIST_HEAD(&sc->soe_configs);
     INIT_LIST_HEAD(&sc->flags);
+    INIT_LIST_HEAD(&sc->al_timeouts);
 
 #ifdef EC_EOE
     ec_eoe_request_init(&sc->eoe_ip_param_request);
@@ -113,6 +133,7 @@ void ec_slave_config_clear(
     ec_reg_request_t *reg, *next_reg;
     ec_soe_request_t *soe, *next_soe;
     ec_flag_t *flag, *next_flag;
+    ec_al_timeout_t *timeout, *next_timeout;
 
     ec_slave_config_detach(sc);
 
@@ -167,6 +188,12 @@ void ec_slave_config_clear(
         list_del(&flag->list);
         ec_flag_clear(flag);
         kfree(flag);
+    }
+
+    // free all AL timeouts
+    list_for_each_entry_safe(timeout, next_timeout, &sc->al_timeouts, list) {
+        list_del(&timeout->list);
+        kfree(timeout);
     }
 
     ec_coe_emerg_ring_clear(&sc->emerg_ring);
@@ -623,6 +650,26 @@ ec_flag_t *ec_slave_config_find_flag(
     }
 
     return NULL;
+}
+
+/****************************************************************************/
+
+/** Return an AL state timeout.
+ *
+ * \return Search result, or 0.
+ */
+unsigned int ec_slave_config_al_timeout(const ec_slave_config_t *sc,
+        ec_slave_state_t from, ec_slave_state_t to)
+{
+    ec_al_timeout_t *timeout;
+
+    list_for_each_entry(timeout, &sc->al_timeouts, list) {
+        if (timeout->from == from && timeout->to == to) {
+            return timeout->timeout_ms;
+        }
+    }
+
+    return 0;
 }
 
 /*****************************************************************************
@@ -1504,6 +1551,64 @@ int ecrt_slave_config_eoe_hostname(ec_slave_config_t *sc,
 
 /****************************************************************************/
 
+int ecrt_slave_config_state_timeout(ec_slave_config_t *sc,
+        ec_al_state_t from, ec_al_state_t to, unsigned int timeout_ms)
+{
+    ec_al_timeout_t *timeout;
+    ec_slave_state_t from_state, to_state;
+
+    if (from != EC_AL_STATE_INIT && from != EC_AL_STATE_PREOP &&
+            from != EC_AL_STATE_SAFEOP && from != EC_AL_STATE_OP) {
+        EC_CONFIG_ERR(sc, "Invalid from state %i.\n", from);
+        return -EINVAL;
+    }
+    if (to != EC_AL_STATE_INIT && to != EC_AL_STATE_PREOP &&
+            to != EC_AL_STATE_SAFEOP && to != EC_AL_STATE_OP) {
+        EC_CONFIG_ERR(sc, "Invalid to state %i.\n", to);
+        return -EINVAL;
+    }
+
+    from_state = (ec_slave_state_t) from;
+    to_state = (ec_slave_state_t) to;
+
+    /* try to find an already configured timeout. */
+    list_for_each_entry(timeout, &sc->al_timeouts, list) {
+        if (timeout->from == from_state && timeout->to == to_state) {
+            if (timeout_ms == 0) {
+                // delete configured value
+                list_del(&timeout->list);
+                kfree(timeout);
+                return 0;
+            }
+            timeout->timeout_ms = timeout_ms;
+            return 0;
+        }
+    }
+
+    if (timeout_ms == 0) {
+        return 0;
+    }
+
+    /* no timeout found. create one. */
+    if (!(timeout = (ec_al_timeout_t *)
+          kmalloc(sizeof(ec_al_timeout_t), GFP_KERNEL))) {
+        EC_CONFIG_ERR(sc, "Failed to allocate memory for"
+                " AL timeout configuration!\n");
+        return -ENOMEM;
+    }
+
+    timeout->from = from_state;
+    timeout->to = to_state;
+    timeout->timeout_ms = timeout_ms;
+
+    down(&sc->master->master_sem);
+    list_add_tail(&timeout->list, &sc->al_timeouts);
+    up(&sc->master->master_sem);
+    return 0;
+}
+
+/****************************************************************************/
+
 /** \cond */
 
 EXPORT_SYMBOL(ecrt_slave_config_sync_manager);
@@ -1540,6 +1645,7 @@ EXPORT_SYMBOL(ecrt_slave_config_eoe_default_gateway);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_dns_address);
 EXPORT_SYMBOL(ecrt_slave_config_eoe_hostname);
 #endif
+EXPORT_SYMBOL(ecrt_slave_config_state_timeout);
 
 /** \endcond */
 

@@ -140,6 +140,7 @@ struct ec_slave_config {
     struct list_head reg_requests; /**< List of register requests. */
     struct list_head soe_configs; /**< List of SoE configurations. */
     struct list_head flags; /**< List of feature flags. */
+    struct list_head al_timeouts; /**< List of specific AL state timeouts. */
 
 #ifdef EC_EOE
     ec_eoe_request_t eoe_ip_param_request; /**< EoE IP parameters. */
@@ -186,6 +187,9 @@ ec_voe_handler_t *ecrt_slave_config_create_voe_handler_err(
         ec_slave_config_t *, size_t);
 ec_reg_request_t *ecrt_slave_config_create_reg_request_err(
         ec_slave_config_t *, size_t);
+
+unsigned int ec_slave_config_al_timeout(const ec_slave_config_t *,
+        ec_slave_state_t, ec_slave_state_t);
 
 /****************************************************************************/
 

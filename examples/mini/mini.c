@@ -182,6 +182,21 @@ static ec_voe_handler_t *voe;
 
 /****************************************************************************/
 
+void check_domain1_state(void);
+void check_master_state(void);
+void check_slave_config_states(void);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+void cyclic_task(struct timer_list *);
+#else
+void cyclic_task(unsigned long);
+#endif
+void send_callback(void *);
+void receive_callback(void *);
+int init_mini_module(void);
+void cleanup_mini_module(void);
+
+/****************************************************************************/
+
 void check_domain1_state(void)
 {
     ec_domain_state_t ds;
