@@ -3332,6 +3332,46 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
 
 /****************************************************************************/
 
+/** Sets an AL state transition timeout.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_sc_state_timeout(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg, /**< ioctl() argument. */
+        ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
+        )
+{
+    ec_ioctl_sc_state_timeout_t ioctl;
+    ec_slave_config_t *sc;
+    int ret;
+
+    if (unlikely(!ctx->requested)) {
+        return -EPERM;
+    }
+
+    if (copy_from_user(&ioctl, (void __user *) arg, sizeof(ioctl))) {
+        return -EFAULT;
+    }
+
+    if (down_interruptible(&master->master_sem)) {
+        return -EINTR;
+    }
+
+    if (!(sc = ec_master_get_config(master, ioctl.config_index))) {
+        up(&master->master_sem);
+        return -ENOENT;
+    }
+
+    up(&master->master_sem); /** \todo sc could be invalidated */
+
+    ret = ecrt_slave_config_state_timeout(sc, ioctl.from_state,
+            ioctl.to_state, ioctl.timeout_ms);
+    return ret;
+}
+
+/****************************************************************************/
+
 #ifdef EC_EOE
 
 /** Configures EoE IP parameters.
@@ -5492,6 +5532,13 @@ static long ec_ioctl_nrt
                 break;
             }
             ret = ec_ioctl_sc_flag(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_STATE_TIMEOUT:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_state_timeout(master, arg, ctx);
             break;
 #ifdef EC_EOE
         case EC_IOCTL_SC_EOE_IP_PARAM:

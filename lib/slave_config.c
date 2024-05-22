@@ -1038,3 +1038,27 @@ int ecrt_slave_config_eoe_hostname(ec_slave_config_t *sc,
 #endif // EC_EOE
 
 /****************************************************************************/
+
+int ecrt_slave_config_state_timeout(ec_slave_config_t *sc,
+        ec_al_state_t from_state, ec_al_state_t to_state,
+        unsigned int timeout_ms)
+{
+    ec_ioctl_sc_state_timeout_t io = {};
+    int ret;
+
+    io.config_index = sc->index;
+    io.from_state = from_state;
+    io.to_state = to_state;
+    io.timeout_ms = timeout_ms;
+
+    ret = ioctl(sc->master->fd, EC_IOCTL_SC_STATE_TIMEOUT, &io);
+    if (EC_IOCTL_IS_ERROR(ret)) {
+        fprintf(stderr, "Failed to configure AL state timeout: %s\n",
+                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
+    }
+
+    return 0;
+}
+
+/****************************************************************************/
