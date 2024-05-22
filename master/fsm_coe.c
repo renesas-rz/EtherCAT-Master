@@ -59,6 +59,19 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+void ec_canopen_abort_msg(const ec_slave_t *, uint32_t);
+int ec_fsm_coe_check_emergency(const ec_fsm_coe_t *, const uint8_t *, size_t);
+int ec_fsm_coe_prepare_dict(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_dict_prepare_desc(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_dict_prepare_entry(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_prepare_down_start(ec_fsm_coe_t *, ec_datagram_t *);
+void ec_fsm_coe_down_prepare_segment_request(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_prepare_up(ec_fsm_coe_t *, ec_datagram_t *);
+void ec_fsm_coe_up_prepare_segment_request(ec_fsm_coe_t *, ec_datagram_t *);
+
+/****************************************************************************/
+
 void ec_fsm_coe_dict_start(ec_fsm_coe_t *, ec_datagram_t *);
 void ec_fsm_coe_dict_request(ec_fsm_coe_t *, ec_datagram_t *);
 void ec_fsm_coe_dict_check(ec_fsm_coe_t *, ec_datagram_t *);
@@ -267,7 +280,7 @@ int ec_fsm_coe_success(
  * \return The data were an emergency request.
  */
 int ec_fsm_coe_check_emergency(
-        ec_fsm_coe_t *fsm, /**< Finite state machine */
+        const ec_fsm_coe_t *fsm, /**< Finite state machine */
         const uint8_t *data, /**< CoE mailbox data. */
         size_t size /**< CoE mailbox data size. */
         )

@@ -33,6 +33,27 @@
 
 /****************************************************************************/
 
+/** Maximum time to wait for a set IP parameter response.
+ */
+#define EC_EOE_RESPONSE_TIMEOUT 3000 // [ms]
+
+/****************************************************************************/
+
+// prototypes for private functions
+void memcpy_swap32(void *, const void *);
+
+int ec_fsm_eoe_prepare_set(ec_fsm_eoe_t *, ec_datagram_t *);
+
+void ec_fsm_eoe_set_ip_start(ec_fsm_eoe_t *, ec_datagram_t *);
+void ec_fsm_eoe_set_ip_request(ec_fsm_eoe_t *, ec_datagram_t *);
+void ec_fsm_eoe_set_ip_check(ec_fsm_eoe_t *, ec_datagram_t *);
+void ec_fsm_eoe_set_ip_response(ec_fsm_eoe_t *, ec_datagram_t *);
+
+void ec_fsm_eoe_end(ec_fsm_eoe_t *, ec_datagram_t *);
+void ec_fsm_eoe_error(ec_fsm_eoe_t *, ec_datagram_t *);
+
+/****************************************************************************/
+
 /** Host-architecture-independent 32-bit swap function.
  *
  * The internal storage of struct in_addr is always big-endian.
@@ -48,22 +69,6 @@ void memcpy_swap32(void *dst, const void *src)
         ((u8 *) dst)[i] = ((const u8 *) src)[3 - i];
     }
 }
-
-/****************************************************************************/
-
-/** Maximum time to wait for a set IP parameter response.
- */
-#define EC_EOE_RESPONSE_TIMEOUT 3000 // [ms]
-
-/****************************************************************************/
-
-void ec_fsm_eoe_set_ip_start(ec_fsm_eoe_t *, ec_datagram_t *);
-void ec_fsm_eoe_set_ip_request(ec_fsm_eoe_t *, ec_datagram_t *);
-void ec_fsm_eoe_set_ip_check(ec_fsm_eoe_t *, ec_datagram_t *);
-void ec_fsm_eoe_set_ip_response(ec_fsm_eoe_t *, ec_datagram_t *);
-
-void ec_fsm_eoe_end(ec_fsm_eoe_t *, ec_datagram_t *);
-void ec_fsm_eoe_error(ec_fsm_eoe_t *, ec_datagram_t *);
 
 /****************************************************************************/
 

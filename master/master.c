@@ -97,8 +97,18 @@ const unsigned int rate_intervals[] = {
 
 /****************************************************************************/
 
+void ec_master_clear_config(ec_master_t *);
 void ec_master_clear_slave_configs(ec_master_t *);
 void ec_master_clear_domains(ec_master_t *);
+int ec_master_thread_start(ec_master_t *, int (*)(void *), const char *);
+void ec_master_thread_stop(ec_master_t *);
+void ec_master_inject_external_datagrams(ec_master_t *);
+ec_datagram_t *ec_master_get_external_datagram(ec_master_t *);
+void ec_master_exec_slave_fsms(ec_master_t *);
+void ec_master_send_datagrams(ec_master_t *, ec_device_index_t);
+int ec_master_calc_topology_rec(ec_master_t *, ec_slave_t *, unsigned int *);
+void ec_master_calc_topology(ec_master_t *);
+void ec_master_calc_transmission_delays(ec_master_t *);
 static int ec_master_idle_thread(void *);
 static int ec_master_operation_thread(void *);
 #ifdef EC_EOE

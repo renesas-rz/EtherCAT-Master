@@ -35,6 +35,19 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+int ec_fsm_slave_scan_running(const ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_sii_size(ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_assign_sii(ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_datalink(ec_fsm_slave_scan_t *);
+#ifdef EC_REGALIAS
+void ec_fsm_slave_scan_enter_regalias(ec_fsm_slave_scan_t *);
+#endif
+void ec_fsm_slave_scan_enter_preop(ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_pdos(ec_fsm_slave_scan_t *);
+
+/****************************************************************************/
+
 void ec_fsm_slave_scan_state_start(ec_fsm_slave_scan_t *);
 void ec_fsm_slave_scan_state_address(ec_fsm_slave_scan_t *);
 void ec_fsm_slave_scan_state_state(ec_fsm_slave_scan_t *);
@@ -56,13 +69,6 @@ void ec_fsm_slave_scan_state_pdos(ec_fsm_slave_scan_t *);
 
 void ec_fsm_slave_scan_state_end(ec_fsm_slave_scan_t *);
 void ec_fsm_slave_scan_state_error(ec_fsm_slave_scan_t *);
-
-void ec_fsm_slave_scan_enter_datalink(ec_fsm_slave_scan_t *);
-#ifdef EC_REGALIAS
-void ec_fsm_slave_scan_enter_regalias(ec_fsm_slave_scan_t *);
-#endif
-void ec_fsm_slave_scan_enter_preop(ec_fsm_slave_scan_t *);
-void ec_fsm_slave_scan_enter_pdos(ec_fsm_slave_scan_t *);
 
 /****************************************************************************/
 
@@ -115,7 +121,9 @@ void ec_fsm_slave_scan_start(
    \return false, if state machine has terminated
 */
 
-int ec_fsm_slave_scan_running(const ec_fsm_slave_scan_t *fsm /**< slave state machine */)
+int ec_fsm_slave_scan_running(
+        const ec_fsm_slave_scan_t *fsm /**< slave state machine */
+        )
 {
     return fsm->state != ec_fsm_slave_scan_state_end
         && fsm->state != ec_fsm_slave_scan_state_error;

@@ -34,6 +34,14 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+void ec_fsm_pdo_entry_print(const ec_fsm_pdo_entry_t *);
+int ec_fsm_pdo_entry_running(const ec_fsm_pdo_entry_t *);
+ec_pdo_entry_t *ec_fsm_pdo_entry_conf_next_entry(const ec_fsm_pdo_entry_t *,
+        const struct list_head *);
+
+/****************************************************************************/
+
 void ec_fsm_pdo_entry_read_state_start(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 void ec_fsm_pdo_entry_read_state_count(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 void ec_fsm_pdo_entry_read_state_entry(ec_fsm_pdo_entry_t *, ec_datagram_t *);
@@ -82,7 +90,7 @@ void ec_fsm_pdo_entry_clear(
 /** Print the current and desired PDO mapping.
  */
 void ec_fsm_pdo_entry_print(
-        ec_fsm_pdo_entry_t *fsm /**< PDO mapping state machine. */
+        const ec_fsm_pdo_entry_t *fsm /**< PDO mapping state machine. */
         )
 {
     printk(KERN_CONT "Currently mapped PDO entries: ");

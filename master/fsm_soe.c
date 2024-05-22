@@ -56,6 +56,14 @@ enum {
 
 /****************************************************************************/
 
+// prototypes for private methods
+void ec_print_soe_error(const ec_slave_t *, uint16_t);
+void ec_fsm_soe_print_error(ec_fsm_soe_t *);
+int ec_fsm_soe_prepare_read(ec_fsm_soe_t *, ec_datagram_t *);
+void ec_fsm_soe_write_next_fragment(ec_fsm_soe_t *, ec_datagram_t *);
+
+/****************************************************************************/
+
 void ec_fsm_soe_read_start(ec_fsm_soe_t *, ec_datagram_t *);
 void ec_fsm_soe_read_request(ec_fsm_soe_t *, ec_datagram_t *);
 void ec_fsm_soe_read_check(ec_fsm_soe_t *, ec_datagram_t *);

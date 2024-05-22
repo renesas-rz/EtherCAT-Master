@@ -34,6 +34,14 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+void ec_fsm_pdo_print(const ec_fsm_pdo_t *);
+int ec_fsm_pdo_running(const ec_fsm_pdo_t *);
+ec_pdo_t *ec_fsm_pdo_conf_action_next_pdo(const ec_fsm_pdo_t *,
+        const struct list_head *);
+
+/****************************************************************************/
+
 void ec_fsm_pdo_read_state_start(ec_fsm_pdo_t *, ec_datagram_t *);
 void ec_fsm_pdo_read_state_pdo_count(ec_fsm_pdo_t *, ec_datagram_t *);
 void ec_fsm_pdo_read_state_pdo(ec_fsm_pdo_t *, ec_datagram_t *);
@@ -94,7 +102,7 @@ void ec_fsm_pdo_clear(
 /** Print the current and desired PDO assignment.
  */
 void ec_fsm_pdo_print(
-        ec_fsm_pdo_t *fsm /**< PDO configuration state machine. */
+        const ec_fsm_pdo_t *fsm /**< PDO configuration state machine. */
         )
 {
     printk(KERN_CONT "Currently assigned PDOs: ");

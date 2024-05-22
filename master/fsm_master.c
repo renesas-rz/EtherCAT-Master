@@ -44,6 +44,18 @@
 
 /****************************************************************************/
 
+// prototypes for private methods
+void ec_fsm_master_restart(ec_fsm_master_t *);
+int ec_fsm_master_action_process_sii(ec_fsm_master_t *);
+int ec_fsm_master_action_process_int_request(ec_fsm_master_t *);
+void ec_fsm_master_action_idle(ec_fsm_master_t *);
+void ec_fsm_master_action_next_slave_state(ec_fsm_master_t *);
+void ec_fsm_master_action_configure(ec_fsm_master_t *);
+u64 ec_fsm_master_dc_offset32(ec_fsm_master_t *, u64, u64, unsigned long);
+u64 ec_fsm_master_dc_offset64(ec_fsm_master_t *, u64, u64, unsigned long);
+
+/****************************************************************************/
+
 void ec_fsm_master_state_start(ec_fsm_master_t *);
 void ec_fsm_master_state_broadcast(ec_fsm_master_t *);
 void ec_fsm_master_state_read_state(ec_fsm_master_t *);
