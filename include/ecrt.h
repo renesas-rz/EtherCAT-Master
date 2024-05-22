@@ -2014,8 +2014,9 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
  *
  * Change the maximum allowed time for a slave to make an application-layer
  * state transition for the given state transition (for example from PREOP to
- * SAFEOP). The default timeout is 10 s. Some transitions of specific slaves
- * may take longer.
+ * SAFEOP). The default values are defined in ETG.2000.
+ *
+ * A timeout value of zero ms will restore the default value.
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
