@@ -49,6 +49,9 @@
  *   ecrt_slave_config_eoe_dns_address(),
  *   ecrt_slave_config_eoe_hostname() and the EC_HAVE_SET_IP
  *   definition to check for its existence.
+ * - Added ecrt_slave_config_state_timeout() to set the application-layer
+ *   state change timeout and EC_HAVE_STATE_TIMEOUT to check for its
+ *   existence.
  *
  * Changes since version 1.5.2:
  *
@@ -251,6 +254,10 @@
  * available.
  */
 #define EC_HAVE_SET_IP
+
+/** Defined, if the method ecrt_slave_config_state_timeout() is available.
+ */
+#define EC_HAVE_STATE_TIMEOUT
 
 /****************************************************************************/
 
@@ -2001,6 +2008,26 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns_address(
 EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
         ec_slave_config_t *sc, /**< Slave configuration. */
         const char *name /**< Zero-terminated host name. */
+        );
+
+/** Sets the application-layer state transition timeout in ms.
+ *
+ * Change the maximum allowed time for a slave to make an application-layer
+ * state transition for the given state transition (for example from PREOP to
+ * SAFEOP). The default timeout is 10 s. Some transitions of specific slaves
+ * may take longer.
+ *
+ * This method has to be called in non-realtime context before
+ * ecrt_master_activate().
+ *
+ * \retval  0 Success.
+ * \retval <0 Error code.
+ */
+EC_PUBLIC_API int ecrt_slave_config_state_timeout(
+        ec_slave_config_t *sc, /**< Slave configuration. */
+        ec_al_state_t from_state, /**< Initial state. */
+        ec_al_state_t to_state, /**< Target state. */
+        unsigned int timeout_ms /**< Timeout in [ms]. */
         );
 
 /*****************************************************************************
