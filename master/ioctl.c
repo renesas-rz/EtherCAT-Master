@@ -3386,7 +3386,6 @@ static ATTRIBUTES int ec_ioctl_sc_ip(
 {
     ec_ioctl_eoe_ip_t io;
     ec_slave_config_t *sc;
-    uint8_t *key;
 
     if (unlikely(!ctx->requested)) {
         return -EPERM;
@@ -3397,13 +3396,11 @@ static ATTRIBUTES int ec_ioctl_sc_ip(
     }
 
     if (down_interruptible(&master->master_sem)) {
-        kfree(key);
         return -EINTR;
     }
 
     if (!(sc = ec_master_get_config(master, io.config_index))) {
         up(&master->master_sem);
-        kfree(key);
         return -ENOENT;
     }
 

@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------------------
 #
-#  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT Master.
 #
@@ -106,5 +106,7 @@ REV := $(shell if test -s $(src)/../revision; then \
 	fi)
 
 CFLAGS_module.o := -DREV=$(REV)
+
+KBUILD_CFLAGS += -Wmaybe-uninitialized
 
 #-----------------------------------------------------------------------------
