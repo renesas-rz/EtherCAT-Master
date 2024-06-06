@@ -821,8 +821,7 @@ EC_PUBLIC_API int ecrt_master_select_reference_clock(
 
 /** Obtains master information.
  *
- * No memory is allocated on the heap in
- * this function.
+ * No memory is allocated on the heap in this function.
  *
  * \apiusage{master_any,rt_safe}
  *
@@ -843,7 +842,6 @@ EC_PUBLIC_API int ecrt_master(
  * \apiusage{master_any,rt_safe}
  *
  * \attention The pointer to this structure must point to a valid variable.
- *
  *
  * \return 0 in case of success, else < 0
  */
@@ -1192,6 +1190,7 @@ EC_PUBLIC_API int ecrt_master_link_state(
  * the slaves' SYNC0/1 interrupts. It should be called constantly at the same
  * point of the realtime cycle. So it is recommended to call it at the start
  * of the calculations to avoid deviancies due to changing execution times.
+ * Avoid calling this method before the realtime cycle is established.
  *
  * The time is used when setting the slaves' <tt>System Time Offset</tt> and
  * <tt>Cyclic Operation Start Time</tt> registers and when synchronizing the
@@ -1202,7 +1201,7 @@ EC_PUBLIC_API int ecrt_master_link_state(
  * epoch time can be done with the EC_TIMEVAL2NANO() macro, but is not
  * necessary, since the absolute value is not of any interest.
  *
- * \apiusage{master_any,rt_safe}
+ * \apiusage{master_op,rt_safe}
  *
  * \return Zero on success, otherwise negative error code.
  */
@@ -2168,6 +2167,10 @@ EC_PUBLIC_API int ecrt_domain_reg_pdo_entry_list(
         );
 
 /** Returns the current size of the domain's process data.
+ *
+ * The domain size is calculated after master activation.
+ *
+ * \apiusage{master_op,rt_safe}
  *
  * \return Size of the process data image, or a negative error code.
  */
