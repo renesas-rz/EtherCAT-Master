@@ -24,19 +24,13 @@
  *
  * EtherCAT master application interface.
  *
- * \defgroup ApplicationInterface EtherCAT Application Interface (non-RT)
+ * \defgroup ApplicationInterface EtherCAT Application Interface
  *
- * Interface for configuring the EtherCAT master for realtime applications.
- * There are functions to request a master, to map process data, to
- * communicate with slaves via CoE and to configure and activate the network.
- * All methods in this group should be used before the application switches to
- * operation (real-time) mode by calling ecrt_master_activate(). After that,
- * only calls to the functions in \ref ApplicationInterfaceRT are allowed. The
- * real-time operation mode finishes by calling ecrt_master_deactivate(). Many
- * functions in this group are blocking and/or they acquire locks. Do not use
- * these functions in non-userspace contexts, e. g. in RTAI/Xenomai Real-Time
- * tasks or in atomic/softirq/tasklet context in kernel modules. You have been
- * warned.
+ * EtherCAT interface for realtime applications. This interface is designed
+ * for realtime modules that want to use EtherCAT. There are functions to
+ * request a master, to map process data, to communicate with slaves via CoE
+ * and to configure and activate the bus.
+ *
  *
  * Changes in version 1.6.0:
  *
@@ -138,17 +132,6 @@
  *   ad-hoc via the user-space library.
  * - Added ecrt_master_reset() to initiate retrying to configure slaves.
  *
- * \defgroup ApplicationInterfaceRT EtherCAT Application Interface (RT)
- *
- * Interface to interact with the EtherCAT master with real-time contraints.
- *
- * After configuring the EtherCAT master the application switches to the
- * operation mode by calling ecrt_master_activate(). In operation mode,
- * do not call other methods than these listed in this group. Many of the
- * methods in \ref ApplicationInterface are blocking, calling these in
- * real-time context mode will result in a deadlock.
- *
- * \addtogroup ApplicationInterface
  * @{
  */
 
@@ -646,6 +629,8 @@ extern "C" {
 
 /** Returns the version magic of the realtime interface.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Value of ECRT_VERSION_MAGIC() at EtherCAT master compile time.
  */
 EC_PUBLIC_API unsigned int ecrt_version_magic(void);
@@ -662,6 +647,8 @@ EC_PUBLIC_API unsigned int ecrt_version_magic(void);
  * use EtherCAT. The function takes the index of the master as its argument.
  * The first master has index 0, the n-th master has index n - 1. The number
  * of masters has to be specified when loading the master module.
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return Pointer to the reserved master, otherwise \a NULL.
  */
@@ -680,6 +667,8 @@ EC_PUBLIC_API ec_master_t *ecrt_request_master(
  *
  * For convenience, the function ecrt_request_master() can be used.
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \return Pointer to the opened master, otherwise \a NULL.
  */
 EC_PUBLIC_API ec_master_t *ecrt_open_master(
@@ -697,6 +686,8 @@ EC_PUBLIC_API ec_master_t *ecrt_open_master(
  * realtime context.
  *
  * If the master was activated, ecrt_master_deactivate() is called internally.
+ *
+ * \apiusage{master_any,blocking}
  */
 EC_PUBLIC_API void ecrt_release_master(
         ec_master_t *master /**< EtherCAT master */
@@ -712,6 +703,8 @@ EC_PUBLIC_API void ecrt_release_master(
  *
  * Before an application can use PDO/domain registration functions or SDO
  * request functions on the master, it has to reserve one for exclusive use.
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return 0 in case of success, else < 0
  */
@@ -738,6 +731,8 @@ EC_PUBLIC_API int ecrt_master_reserve(
  * The task of the receive callback (\a receive_cb) is to decide, if a call to
  * ecrt_master_receive() is allowed and to execute it respectively.
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \attention This method has to be called before ecrt_master_activate().
  */
 void ecrt_master_callbacks(
@@ -759,6 +754,8 @@ void ecrt_master_callbacks(
  *
  * This method allocates memory and should be called in non-realtime context
  * before ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return Pointer to the new domain on success, else NULL.
  */
@@ -793,6 +790,8 @@ EC_PUBLIC_API ec_domain_t *ecrt_master_create_domain(
  * This method allocates memory and should be called in non-realtime context
  * before ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval >0 Pointer to the slave configuration structure.
  * \retval NULL in the error case.
  */
@@ -810,6 +809,8 @@ EC_PUBLIC_API ec_slave_config_t *ecrt_master_slave_config(
  * configuration pointer is NULL, then the first slave with DC functionality
  * will provide the reference clock.
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_master_select_reference_clock(
@@ -822,6 +823,8 @@ EC_PUBLIC_API int ecrt_master_select_reference_clock(
  *
  * No memory is allocated on the heap in
  * this function.
+ *
+ * \apiusage{master_any,rt_safe}
  *
  * \attention The pointer to this structure must point to a valid variable.
  *
@@ -837,9 +840,10 @@ EC_PUBLIC_API int ecrt_master(
  *
  * No memory is allocated on the heap in this function.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \attention The pointer to this structure must point to a valid variable.
  *
- * \ingroup ApplicationInterfaceRT
  *
  * \return 0 in case of success, else < 0
  */
@@ -854,6 +858,8 @@ EC_PUBLIC_API int ecrt_master_scan_progress(
  * Tries to find the slave with the given ring position. The obtained
  * information is stored in a structure. No memory is allocated on the heap in
  * this function.
+ *
+ * \apiusage{master_any,blocking}
  *
  * \attention The pointer to this structure must point to a valid variable.
  *
@@ -874,6 +880,8 @@ EC_PUBLIC_API int ecrt_master_get_slave(
  * manager. The \a pdos field of the return value is left empty. Use
  * ecrt_master_get_pdo() to get the PDO information.
  *
+ * \apiusage{master_any,blocking}
+ *
  * \return zero on success, else non-zero
  */
 EC_PUBLIC_API int ecrt_master_get_sync_manager(
@@ -891,6 +899,8 @@ EC_PUBLIC_API int ecrt_master_get_sync_manager(
  * value is left empty. Use ecrt_master_get_pdo_entry() to get the PDO
  * entry information.
  *
+ * \apiusage{master_any,blocking}
+ *
  * \retval zero on success, else non-zero
  */
 EC_PUBLIC_API int ecrt_master_get_pdo(
@@ -906,6 +916,8 @@ EC_PUBLIC_API int ecrt_master_get_pdo(
  *
  * Fills a given ec_pdo_entry_info_t structure with the attributes of a
  * currently mapped PDO entry of the given PDO.
+ *
+ * \apiusage{master_any,blocking}
  *
  * \retval zero on success, else non-zero
  */
@@ -927,6 +939,8 @@ EC_PUBLIC_API int ecrt_master_get_pdo_entry(
  * until the request has been processed and may not be called in realtime
  * context.
  *
+ * \apiusage{master_any,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -947,6 +961,8 @@ EC_PUBLIC_API int ecrt_master_sdo_download(
  * until the request has been processed and may not be called in realtime
  * context.
  *
+ * \apiusage{master_any,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -964,6 +980,8 @@ EC_PUBLIC_API int ecrt_master_sdo_download_complete(
  * This request is processed by the master state machine. This method blocks,
  * until the request has been processed and may not be called in realtime
  * context.
+ *
+ * \apiusage{master_any,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -984,6 +1002,8 @@ EC_PUBLIC_API int ecrt_master_sdo_upload(
  * Starts writing an IDN and blocks until the request was processed, or an
  * error occurred.
  *
+ * \apiusage{master_any,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1002,6 +1022,8 @@ EC_PUBLIC_API int ecrt_master_write_idn(
  *
  * Starts reading an IDN and blocks until the request was processed, or an
  * error occurred.
+ *
+ * \apiusage{master_any,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1027,6 +1049,8 @@ EC_PUBLIC_API int ecrt_master_read_idn(
  * members. It tells the master state machine that the configuration is
  * now to be applied to the network.
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \attention After this function has been called, the realtime application is
  * in charge of cyclically calling ecrt_master_send() and
  * ecrt_master_receive() to ensure network communication. Before calling this
@@ -1048,6 +1072,8 @@ EC_PUBLIC_API int ecrt_master_activate(
  * ecrt_slave_config_create_voe_handler() are freed, so pointers to them
  * become invalid.
  *
+ * \apiusage{master_op,blocking}
+ *
  * This method should not be called in realtime context.
  * \return 0 on success, otherwise negative error code.
  * \retval 0 Success.
@@ -1063,6 +1089,8 @@ EC_PUBLIC_API int ecrt_master_deactivate(
  * to a frame by the master state machine. When the master is configured with
  * --enable-hrtimers, this is used to calculate the scheduling of the master
  * thread.
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval 0 on success.
  * \retval <0 Error code.
@@ -1080,7 +1108,8 @@ EC_PUBLIC_API int ecrt_master_set_send_interval(
  * Has to be called cyclically by the application after ecrt_master_activate()
  * has returned.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_master_send(
@@ -1097,7 +1126,8 @@ EC_PUBLIC_API int ecrt_master_send(
  * Has to be called cyclically by the realtime application after
  * ecrt_master_activate() has returned.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_master_receive(
@@ -1109,6 +1139,9 @@ EC_PUBLIC_API int ecrt_master_receive(
  *
  * This method has to be called in the send callback function passed via
  * ecrt_master_callbacks() to allow the sending of non-application datagrams.
+ *
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  * \retval -EAGAIN Lock could not be acquired, try again later.
  */
@@ -1123,6 +1156,9 @@ int ecrt_master_send_ext(
  *
  * This method returns a global state. For the link-specific states in a
  * redundant network topology, use the ecrt_master_link_state() method.
+ *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_master_state(
@@ -1133,6 +1169,8 @@ EC_PUBLIC_API int ecrt_master_state(
 /** Reads the current state of a redundant link.
  *
  * Stores the link state information in the given \a state structure.
+ *
+ * \apiusage{master_any,rt_safe}
  *
  * \return Zero on success, otherwise negative error code.
  */
@@ -1164,7 +1202,8 @@ EC_PUBLIC_API int ecrt_master_link_state(
  * epoch time can be done with the EC_TIMEVAL2NANO() macro, but is not
  * necessary, since the absolute value is not of any interest.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_master_application_time(
@@ -1177,7 +1216,8 @@ EC_PUBLIC_API int ecrt_master_application_time(
  * The reference clock will by synchronized to the application time provided
  * by the last call off ecrt_master_application_time().
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  * \retval 0 Success.
  * \retval -ENXIO No reference clock found.
@@ -1194,7 +1234,8 @@ EC_PUBLIC_API int ecrt_master_sync_reference_clock(
  * Has to be called by the application after ecrt_master_activate()
  * has returned.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Zero on success, otherwise negative error code.
  * \retval 0 Success.
  * \retval -ENXIO No reference clock found.
@@ -1211,7 +1252,8 @@ EC_PUBLIC_API int ecrt_master_sync_reference_clock_to(
  * Has to be called by the application after ecrt_master_activate()
  * has returned.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  * \retval 0 Success.
  * \retval -ENXIO No reference clock found.
@@ -1236,6 +1278,8 @@ EC_PUBLIC_API int ecrt_master_sync_slave_clocks(
  * activation), when the ecrt_master_sync_slave_clocks() method is called
  * cyclically.
  *
+ * \apiusage{master_op,rt_safe}
+ *
  * \retval 0 success, system time was written into \a time.
  * \retval -ENXIO No reference clock found.
  * \retval -EIO Slave synchronization datagram was not received.
@@ -1251,7 +1295,9 @@ EC_PUBLIC_API int ecrt_master_reference_clock_time(
  * 0x092c) to get an upper estimation of the DC synchrony. The result can be
  * checked with the ecrt_master_sync_monitor_process() method.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
+ * \return Zero on success, otherwise a negative error code.
  */
 EC_PUBLIC_API int ecrt_master_sync_monitor_queue(
         ec_master_t *master /**< EtherCAT master. */
@@ -1263,9 +1309,10 @@ EC_PUBLIC_API int ecrt_master_sync_monitor_queue(
  * ecrt_master_sync_monitor_queue(), the result can be queried with this
  * method.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
  *
- * \return Upper estimation of the maximum time difference in ns.
+ * \return Upper estimation of the maximum time difference in ns, -1 on error.
+ * \retval (uint32_t)-1 Error.
  */
 EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
         const ec_master_t *master /**< EtherCAT master. */
@@ -1281,7 +1328,8 @@ EC_PUBLIC_API uint32_t ecrt_master_sync_monitor_process(
  * Calling this method only makes sense in realtime context (after
  * activation), because slaves will not be configured before.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_master_reset(
@@ -1300,6 +1348,8 @@ EC_PUBLIC_API int ecrt_master_reset(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \return zero on success, else non-zero
  */
 EC_PUBLIC_API int ecrt_slave_config_sync_manager(
@@ -1314,6 +1364,8 @@ EC_PUBLIC_API int ecrt_slave_config_sync_manager(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return 0 on success, otherwise negative error code.
  */
@@ -1335,6 +1387,8 @@ EC_PUBLIC_API int ecrt_slave_config_watchdog(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \see ecrt_slave_config_pdos()
  * \return zero on success, else non-zero
  */
@@ -1354,6 +1408,8 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_assign_add(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \see ecrt_slave_config_pdos()
  * \return 0 on success, otherwise negative error code.
  */
@@ -1367,6 +1423,8 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_assign_clear(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \see ecrt_slave_config_pdos()
  * \return zero on success, else non-zero
@@ -1388,6 +1446,8 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_add(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \see ecrt_slave_config_pdos()
  * \return 0 on success, otherwise negative error code.
@@ -1466,6 +1526,8 @@ EC_PUBLIC_API int ecrt_slave_config_pdo_mapping_clear(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \return zero on success, else non-zero
  */
 EC_PUBLIC_API int ecrt_slave_config_pdos(
@@ -1491,6 +1553,8 @@ EC_PUBLIC_API int ecrt_slave_config_pdos(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval >=0 Success: Offset of the PDO entry's process data.
  * \retval  <0 Error code.
  */
@@ -1512,6 +1576,8 @@ EC_PUBLIC_API int ecrt_slave_config_reg_pdo_entry(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval >=0 Success: Offset of the PDO entry's process data.
  * \retval  <0 Error code.
@@ -1537,6 +1603,8 @@ EC_PUBLIC_API int ecrt_slave_config_reg_pdo_entry_pos(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \attention The \a sync1_shift time is ignored.
  * \return 0 on success, otherwise negative error code.
@@ -1572,6 +1640,8 @@ EC_PUBLIC_API int ecrt_slave_config_dc(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1590,6 +1660,8 @@ EC_PUBLIC_API int ecrt_slave_config_sdo(
  *
  * \see ecrt_slave_config_sdo().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1607,6 +1679,8 @@ EC_PUBLIC_API int ecrt_slave_config_sdo8(
  *
  * \see ecrt_slave_config_sdo().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1623,6 +1697,8 @@ EC_PUBLIC_API int ecrt_slave_config_sdo16(
  * ecrt_master_activate().
  *
  * \see ecrt_slave_config_sdo().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1644,6 +1720,8 @@ EC_PUBLIC_API int ecrt_slave_config_sdo32(
  *
  * \see ecrt_slave_config_sdo().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1661,6 +1739,8 @@ EC_PUBLIC_API int ecrt_slave_config_complete_sdo(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return 0 on success, or negative error code.
  */
@@ -1683,7 +1763,7 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_size(
  * \return 0 on success (record popped), or negative error code (i. e.
  * -ENOENT, if ring is empty).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,any_context}
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_pop(
         ec_slave_config_t *sc, /**< Slave configuration. */
@@ -1696,9 +1776,10 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_pop(
  * Calling this method makes only sense in realtime context (after master
  * activation).
  *
+ * \apiusage{master_op,any_context}
+ *
  * \return 0 on success, or negative error code.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_clear(
         ec_slave_config_t *sc /**< Slave configuration. */
@@ -1713,9 +1794,10 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_clear(
  * Calling this method makes only sense in realtime context (after master
  * activation).
  *
+ * \apiusage{master_op,any_context}
+ *
  * \return Number of overruns since last clear, or negative error code.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API int ecrt_slave_config_emerg_overruns(
         const ec_slave_config_t *sc /**< Slave configuration. */
@@ -1728,6 +1810,8 @@ EC_PUBLIC_API int ecrt_slave_config_emerg_overruns(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return New SDO request, or NULL on error.
  */
@@ -1745,6 +1829,8 @@ EC_PUBLIC_API ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \return New SoE request, or NULL on error.
  */
@@ -1768,6 +1854,8 @@ EC_PUBLIC_API ec_soe_request_t *ecrt_slave_config_create_soe_request(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \return New VoE handler, or NULL on error.
  */
 EC_PUBLIC_API ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
@@ -1787,6 +1875,8 @@ EC_PUBLIC_API ec_voe_handler_t *ecrt_slave_config_create_voe_handler(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \return New register request, or NULL on error.
  */
 EC_PUBLIC_API ec_reg_request_t *ecrt_slave_config_create_reg_request(
@@ -1803,10 +1893,13 @@ EC_PUBLIC_API ec_reg_request_t *ecrt_slave_config_create_reg_request(
  * \attention If the state of process data exchange shall be monitored in
  * realtime, ecrt_domain_state() should be used.
  *
+ * \apiusage{master_op,rt_safe}
+ *
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \retval  0 Success.
+ * \retval <0 Error code.
  */
 EC_PUBLIC_API int ecrt_slave_config_state(
         const ec_slave_config_t *sc, /**< Slave configuration */
@@ -1831,6 +1924,8 @@ EC_PUBLIC_API int ecrt_slave_config_state(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1864,6 +1959,8 @@ EC_PUBLIC_API int ecrt_slave_config_idn(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1880,6 +1977,8 @@ EC_PUBLIC_API int ecrt_slave_config_flag(
  *
  * The MAC address is stored in the slave configuration object and will be
  * written to the slave during the configuration process.
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1917,6 +2016,8 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_mac_address(
  * \endcode
  *
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1939,6 +2040,8 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_ip_address(
  * See ecrt_slave_config_eoe_ip_address() on how to convert string-coded masks
  * to `struct in_addr`.
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -1960,6 +2063,8 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_subnet_mask(
  *
  * See ecrt_slave_config_eoe_ip_address() on how to convert string-coded IPv4
  * addresses to `struct in_addr`.
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -1984,6 +2089,8 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_default_gateway(
  * See ecrt_slave_config_eoe_ip_address() on how to convert string-coded IPv4
  * addresses to `struct in_addr`.
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -2003,6 +2110,8 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_dns_address(
  * The maximum size of the host name is 32 bytes (including the zero
  * terminator).
  *
+ * \apiusage{master_idle,blocking}
+ *
  * \retval  0 Success.
  * \retval <0 Error code.
  */
@@ -2021,6 +2130,8 @@ EC_PUBLIC_API int ecrt_slave_config_eoe_hostname(
  *
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
+ *
+ * \apiusage{master_idle,blocking}
  *
  * \retval  0 Success.
  * \retval <0 Error code.
@@ -2045,6 +2156,9 @@ EC_PUBLIC_API int ecrt_slave_config_state_timeout(
  *
  * \attention The registration array has to be terminated with an empty
  *            structure, or one with the \a index field set to zero!
+ *
+ * \apiusage{master_idle,blocking}
+ *
  * \return 0 on success, else non-zero.
  */
 EC_PUBLIC_API int ecrt_domain_reg_pdo_entry_list(
@@ -2074,6 +2188,7 @@ EC_PUBLIC_API size_t ecrt_domain_size(
  * This method has to be called in non-realtime context before
  * ecrt_master_activate().
  *
+ * \apiusage{master_idle,blocking}
  */
 void ecrt_domain_external_memory(
         ec_domain_t *domain, /**< Domain. */
@@ -2094,6 +2209,8 @@ void ecrt_domain_external_memory(
  * - In userspace context: This method has to be called after
  * ecrt_master_activate() to get the mapped domain process data memory.
  *
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Pointer to the process data memory.
  */
 EC_PUBLIC_API uint8_t *ecrt_domain_data(
@@ -2107,7 +2224,8 @@ EC_PUBLIC_API uint8_t *ecrt_domain_data(
  * is expected to receive the domain datagrams in order to make
  * ecrt_domain_state() return the result of the last process data exchange.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_domain_process(
@@ -2119,7 +2237,8 @@ EC_PUBLIC_API int ecrt_domain_process(
  * Call this function to mark the domain's datagrams for exchanging at the
  * next call of ecrt_master_send().
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_domain_queue(
@@ -2132,7 +2251,8 @@ EC_PUBLIC_API int ecrt_domain_queue(
  *
  * Using this method, the process data exchange can be monitored in realtime.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_domain_state(
@@ -2155,7 +2275,8 @@ EC_PUBLIC_API int ecrt_domain_state(
  * activation). To initialize the SDO request, the index and subindex can be
  * set via ecrt_slave_config_create_sdo_request().
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_sdo_request_index(
@@ -2174,6 +2295,9 @@ EC_PUBLIC_API int ecrt_sdo_request_index(
  *
  * The timeout should be defined in non-realtime context, but can also be
  * changed afterwards.
+ *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_sdo_request_timeout(
@@ -2206,9 +2330,10 @@ EC_PUBLIC_API int ecrt_sdo_request_timeout(
  * This method is meant to be called in realtime context (after master
  * activation), but can also be used to initialize data before.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Pointer to the internal SDO data memory.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API uint8_t *ecrt_sdo_request_data(
         const ec_sdo_request_t *req /**< SDO request. */
@@ -2223,9 +2348,10 @@ EC_PUBLIC_API uint8_t *ecrt_sdo_request_data(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return SDO data size in bytes.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API size_t ecrt_sdo_request_data_size(
         const ec_sdo_request_t *req /**< SDO request. */
@@ -2239,9 +2365,10 @@ EC_PUBLIC_API size_t ecrt_sdo_request_data_size(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Request state.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API ec_request_state_t ecrt_sdo_request_state(
 #ifdef __KERNEL__
@@ -2258,7 +2385,8 @@ EC_PUBLIC_API ec_request_state_t ecrt_sdo_request_state(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  * \retval -EINVAL Invalid input data, e.g. data size == 0.
  * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_sdo_request()
@@ -2280,7 +2408,8 @@ EC_PUBLIC_API int ecrt_sdo_request_write(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_sdo_request_read(
@@ -2301,7 +2430,8 @@ EC_PUBLIC_API int ecrt_sdo_request_read(
  * activation). To initialize the SoE request, the drive_no and IDN can be
  * set via ecrt_slave_config_create_soe_request().
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_soe_request_idn(
@@ -2320,6 +2450,9 @@ EC_PUBLIC_API int ecrt_soe_request_idn(
  *
  * The timeout should be defined in non-realtime context, but can also be
  * changed afterwards.
+ *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_soe_request_timeout(
@@ -2352,9 +2485,10 @@ EC_PUBLIC_API int ecrt_soe_request_timeout(
  * This method is meant to be called in realtime context (after master
  * activation), but can also be used to initialize data before.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Pointer to the internal IDN data memory.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API uint8_t *ecrt_soe_request_data(
         const ec_soe_request_t *req /**< SoE request. */
@@ -2365,6 +2499,8 @@ EC_PUBLIC_API uint8_t *ecrt_soe_request_data(
  * When the SoE request is created, the data size is set to the size of the
  * reserved memory. After a read operation the size is set to the size of the
  * read data. The size is not modified in any other situation.
+ *
+ * \apiusage{master_any,rt_safe}
  *
  * \return IDN data size in bytes.
  */
@@ -2382,7 +2518,7 @@ EC_PUBLIC_API size_t ecrt_soe_request_data_size(
  * In the user-space implementation, the method fetches the size of the
  * incoming data, so the request object is not const.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
  */
 EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
 #ifdef __KERNEL__
@@ -2399,7 +2535,8 @@ EC_PUBLIC_API ec_request_state_t ecrt_soe_request_state(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  * \retval -EINVAL Invalid input data, e.g. data size == 0.
  * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_soe_request()
@@ -2421,7 +2558,8 @@ EC_PUBLIC_API int ecrt_soe_request_write(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_soe_request_read(
@@ -2443,7 +2581,8 @@ EC_PUBLIC_API int ecrt_soe_request_read(
  * activation) to initialize the header data, but it is also safe to
  * change the header later on in realtime context.
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_any,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_voe_handler_send_header(
@@ -2463,7 +2602,8 @@ EC_PUBLIC_API int ecrt_voe_handler_send_header(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_voe_handler_received_header(
@@ -2490,6 +2630,8 @@ EC_PUBLIC_API int ecrt_voe_handler_received_header(
  * avoided by reserving enough memory via the \a size parameter of
  * ecrt_slave_config_create_voe_handler().
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Pointer to the internal memory.
  */
 EC_PUBLIC_API uint8_t *ecrt_voe_handler_data(
@@ -2505,6 +2647,8 @@ EC_PUBLIC_API uint8_t *ecrt_voe_handler_data(
  * reserved memory. At a write operation, the data size is set to the number
  * of bytes to write. After a read operation the size is set to the size of
  * the read data. The size is not modified in any other situation.
+ *
+ * \apiusage{master_any,rt_safe}
  *
  * \return Data size in bytes.
  */
@@ -2522,7 +2666,8 @@ EC_PUBLIC_API size_t ecrt_voe_handler_data_size(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_voe_handler
  *                  too small.
@@ -2550,7 +2695,8 @@ EC_PUBLIC_API int ecrt_voe_handler_write(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_voe_handler_read(
@@ -2576,7 +2722,8 @@ EC_PUBLIC_API int ecrt_voe_handler_read(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  */
 EC_PUBLIC_API int ecrt_voe_handler_read_nosync(
@@ -2593,7 +2740,8 @@ EC_PUBLIC_API int ecrt_voe_handler_read_nosync(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  */
 EC_PUBLIC_API ec_request_state_t ecrt_voe_handler_execute(
         ec_voe_handler_t *voe /**< VoE handler. */
@@ -2623,9 +2771,10 @@ EC_PUBLIC_API ec_request_state_t ecrt_voe_handler_execute(
  * This method is meant to be called in realtime context (after master
  * activation), but can also be used to initialize data before.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \return Pointer to the internal memory.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
         const ec_reg_request_t *req /**< Register request. */
@@ -2636,9 +2785,10 @@ EC_PUBLIC_API uint8_t *ecrt_reg_request_data(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
+ * \apiusage{master_op,rt_safe}
+ *
  * \return Request state.
  *
- * \ingroup ApplicationInterfaceRT
  */
 EC_PUBLIC_API ec_request_state_t ecrt_reg_request_state(
         const ec_reg_request_t *req /**< Register request. */
@@ -2655,7 +2805,8 @@ EC_PUBLIC_API ec_request_state_t ecrt_reg_request_state(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_reg_request
  *              too small.
@@ -2677,7 +2828,8 @@ EC_PUBLIC_API int ecrt_reg_request_write(
  * This method is meant to be called in realtime context (after master
  * activation).
  *
- * \ingroup ApplicationInterfaceRT
+ * \apiusage{master_op,rt_safe}
+ *
  * \return 0 on success, otherwise negative error code.
  * \retval -ENOBUFS Reserved memory in ecrt_slave_config_create_reg_request
  *              too small.
@@ -2841,6 +2993,8 @@ EC_PUBLIC_API int ecrt_reg_request_read(
 
 /** Read a 32-bit floating-point value from EtherCAT data.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \param data EtherCAT data pointer
  * \return EtherCAT data value
  */
@@ -2854,6 +3008,8 @@ EC_PUBLIC_API float ecrt_read_real(const void *data);
 #define EC_READ_REAL(DATA) ecrt_read_real(DATA)
 
 /** Read a 64-bit floating-point value from EtherCAT data.
+ *
+ * \apiusage{master_any,rt_safe}
  *
  * \param data EtherCAT data pointer
  * \return EtherCAT data value
@@ -2949,6 +3105,8 @@ EC_PUBLIC_API double ecrt_read_lreal(const void *data);
 
 /** Write a 32-bit floating-point value to EtherCAT data.
  *
+ * \apiusage{master_any,rt_safe}
+ *
  * \param data EtherCAT data pointer
  * \param value new value
  */
@@ -2962,6 +3120,8 @@ EC_PUBLIC_API void ecrt_write_real(void *data, float value);
 #define EC_WRITE_REAL(DATA, VAL) ecrt_write_real(DATA, VAL)
 
 /** Write a 64-bit floating-point value to EtherCAT data.
+ *
+ * \apiusage{master_any,rt_safe}
  *
  * \param data EtherCAT data pointer
  * \param value new value
