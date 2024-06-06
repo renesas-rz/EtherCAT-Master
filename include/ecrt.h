@@ -1110,6 +1110,7 @@ EC_PUBLIC_API int ecrt_master_receive(
  * This method has to be called in the send callback function passed via
  * ecrt_master_callbacks() to allow the sending of non-application datagrams.
  * \return Zero on success, otherwise negative error code.
+ * \retval -EAGAIN Lock could not be acquired, try again later.
  */
 int ecrt_master_send_ext(
         ec_master_t *master /**< EtherCAT master. */

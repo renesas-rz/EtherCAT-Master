@@ -2534,7 +2534,7 @@ int ecrt_master_send_ext(ec_master_t *master)
     ec_datagram_t *datagram, *next;
 
     if (down_trylock(&master->ext_queue_sem))
-        return;
+        return -EAGAIN;
 
     list_for_each_entry_safe(datagram, next, &master->ext_datagram_queue,
             ext_queue) {
