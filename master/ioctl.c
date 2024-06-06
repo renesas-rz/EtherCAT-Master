@@ -62,8 +62,13 @@
 #else
 # define ec_ioctl_lock(lock)   rt_mutex_lock(lock)
 # define ec_ioctl_unlock(lock) rt_mutex_unlock(lock)
-# define ec_ioctl_lock_interruptible(lock) \
-         rt_mutex_lock_interruptible(lock)
+#  if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#   define ec_ioctl_lock_interruptible(lock) \
+           rt_mutex_lock_interruptible(lock)
+#  else
+#   define ec_ioctl_lock_interruptible(lock) \
+           rt_mutex_lock_interruptible(lock, 0)
+# endif
 # define ec_copy_to_user(to, from, n, ctx) copy_to_user(to, from, n)
 # define ec_copy_from_user(to, from, n, ctx) copy_from_user(to, from, n)
 #endif  // EC_IOCTL_RTDM

@@ -52,6 +52,14 @@
 #include "ethernet.h"
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#  define ec_rt_lock_interruptible(lock) \
+          rt_mutex_lock_interruptible(lock)
+#else
+#  define ec_rt_lock_interruptible(lock) \
+          rt_mutex_lock_interruptible(lock, 0)
+#endif
+
 #include "master.h"
 
 /****************************************************************************/
@@ -542,7 +550,7 @@ void ec_master_internal_send_cb(
         )
 {
     ec_master_t *master = (ec_master_t *) cb_data;
-    if (rt_mutex_lock_interruptible(&master->io_mutex))
+    if (ec_rt_lock_interruptible(&master->io_mutex))
         return;
     ecrt_master_send_ext(master);
     rt_mutex_unlock(&master->io_mutex);
@@ -557,7 +565,7 @@ void ec_master_internal_receive_cb(
         )
 {
     ec_master_t *master = (ec_master_t *) cb_data;
-    if (rt_mutex_lock_interruptible(&master->io_mutex))
+    if (ec_rt_lock_interruptible(&master->io_mutex))
         return;
     ecrt_master_receive(master);
     rt_mutex_unlock(&master->io_mutex);
@@ -1538,7 +1546,7 @@ static int ec_master_idle_thread(void *priv_data)
         ec_datagram_output_stats(&master->fsm_datagram);
 
         // receive
-        if (rt_mutex_lock_interruptible(&master->io_mutex))
+        if (ec_rt_lock_interruptible(&master->io_mutex))
             break;
         ecrt_master_receive(master);
         rt_mutex_unlock(&master->io_mutex);
@@ -1555,7 +1563,7 @@ static int ec_master_idle_thread(void *priv_data)
         up(&master->master_sem);
 
         // queue and send
-        if (rt_mutex_lock_interruptible(&master->io_mutex))
+        if (ec_rt_lock_interruptible(&master->io_mutex))
             break;
         if (fsm_exec) {
             ec_master_queue_datagram(master, &master->fsm_datagram);
