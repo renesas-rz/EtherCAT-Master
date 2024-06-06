@@ -52,7 +52,8 @@
 #include "ethernet.h"
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0) || \
+    (defined(CONFIG_PREEMPT_RT_FULL) && LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
 #  define ec_rt_lock_interruptible(lock) \
           rt_mutex_lock_interruptible(lock)
 #else

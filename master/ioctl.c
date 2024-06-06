@@ -62,7 +62,8 @@
 #else
 # define ec_ioctl_lock(lock)   rt_mutex_lock(lock)
 # define ec_ioctl_unlock(lock) rt_mutex_unlock(lock)
-#  if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)
+#  if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0) || \
+      (defined(CONFIG_PREEMPT_RT_FULL) && LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
 #   define ec_ioctl_lock_interruptible(lock) \
            rt_mutex_lock_interruptible(lock)
 #  else
