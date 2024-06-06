@@ -41,7 +41,7 @@
 
 #define EC_GEN_RX_BUF_SIZE 1600
 
-#ifdef CONFIG_SUSE_KERNEL
+#if defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
 #include <linux/suse_version.h>
 #else
 #  ifndef SUSE_VERSION
