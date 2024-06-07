@@ -971,8 +971,35 @@ comments of this header. There is also a Doxygen-generated online version at
     escapeinside={//*}{\^^M},
     language=C,
     keywordstyle=\textbf,
-    commentstyle=\color{blue}
+    commentstyle=\color{blue},
+    numbers=left,
+    caption={Application Interface Header ecrt.h}
 ]{../include/ecrt.h}
+
+%------------------------------------------------------------------------------
+
+\section{Userspace Application Example}
+\label{sec:example}
+
+There are multiple examples of how to use the application interface included
+in the master sources (under \textit{examples/}). This section lists a very
+common application, the usage of the master from the user-space. The example
+code reserves an EtherCAT master, creates slave configurations and domains and
+goes into cyclic mode, where the \lstinline+cyclic_task()+ function is called
+repeatedly. For more general information on how to do real-time programming
+under Linux, please have a look at the code examples in
+\url{https://gitlab.com/etherlab.org/realtime}.
+
+\lstinputlisting[
+    basicstyle=\ttfamily\scriptsize,
+    texcl=false,
+    escapeinside={//*}{\^^M},
+    language=C,
+    keywordstyle=\textbf,
+    commentstyle=\color{blue},
+    numbers=left,
+    caption={Userspace application example example/user/main.c}
+]{../examples/user/main.c}
 
 %------------------------------------------------------------------------------
 
@@ -2689,7 +2716,7 @@ be used both in kernel and in user context.
 
 The following minimal example shows how to build a program with EtherCAT
 functionality. An entire example can be found in the \textit{examples/user/}
-path of the master sources.
+path of the master sources and in \autoref{sec:example}.
 
 \begin{lstlisting}[language=C]
 #include <ecrt.h>
