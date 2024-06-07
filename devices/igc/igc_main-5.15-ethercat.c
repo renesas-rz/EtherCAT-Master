@@ -2248,11 +2248,7 @@ static int __igc_xdp_run_prog(struct igc_adapter *adapter,
 		return IGC_XDP_REDIRECT;
 		break;
 	default:
-#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL == 5
-		bpf_warn_invalid_xdp_action(adapter->netdev, prog, act);
-#else
 		bpf_warn_invalid_xdp_action(act);
-#endif
 		fallthrough;
 	case XDP_ABORTED:
 out_failure:
