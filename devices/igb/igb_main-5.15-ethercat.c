@@ -8112,7 +8112,7 @@ static int igb_poll(struct napi_struct *napi, int budget)
 	bool clean_complete = true;
 	int work_done = 0;
 
-	if (get_ecdev(q_vector->adapter)) {
+	if (q_vector->adapter->ecdev) {
 		return -EBUSY;
 	}
 
