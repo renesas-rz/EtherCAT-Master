@@ -1,13 +1,13 @@
 -------------------------------------------------------------------------------
 
-$Id$
-
 vim: spelllang=en spell tw=78
 
 -------------------------------------------------------------------------------
 
-Changes since 1.5.2:
+Changes in 1.5.3:
 
+* Added the ecrt_slave_config_flag() to the application interface.
+* Added SoE IDN requests in application interface.
 * Fixed FoE timeout calculation bug.
 
 Changes in 1.5.2:

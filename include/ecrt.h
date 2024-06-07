@@ -37,7 +37,7 @@
  * request a master, to map process data, to communicate with slaves via CoE
  * and to configure and activate the bus.
  *
- * Changes since version 1.5.2:
+ * Changes in version 1.5.3:
  *
  * - Added the ecrt_slave_config_flag() method and the EC_HAVE_FLAGS
  *   definition to check for its existence.
