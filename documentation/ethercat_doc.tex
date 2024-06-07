@@ -634,9 +634,9 @@ physical memory to logical process data images.
 The application interface provides functions and data structures for
 applications to access an EtherCAT master. The complete documentation of the
 interface is included as Doxygen~\cite{doxygen} comments in the header file
-\textit{include/ecrt.h}. It can either be read directly from the file
-comments, or as a more comfortable HTML documentation. The HTML generation is
-described in \autoref{sec:gendoc}.
+\textit{include/ecrt.h} (see \autoref{sec:ecrt}). It can either be read
+directly from the file comments, or as a more comfortable HTML documentation.
+The HTML generation is described in \autoref{sec:gendoc}.
 
 The following sections cover a general description of the application
 interface.
@@ -952,6 +952,27 @@ shift times. The AssignActivate word is slave-specific and has to be taken
 from the XML slave description (\lstinline+Device+ $\rightarrow$
 \lstinline+Dc+), where also typical sync signal configurations ``OpModes'' can
 be found.
+
+%------------------------------------------------------------------------------
+
+\section{Application Interface Header}
+\label{sec:ecrt}
+\index{Application Interface}
+
+The application interface of the EtherCAT master is defined in the header file
+\textit{include/ecrt.h} (acronym for ``EtherCAT Real-Time'') which is listed
+in this section. The calling conventions of all methods are documented in the
+comments of this header. There is also a Doxygen-generated online version at
+\url{https://docs.etherlab.org}.
+
+\lstinputlisting[
+    basicstyle=\ttfamily\scriptsize,
+    texcl=false,
+    escapeinside={//*}{\^^M},
+    language=C,
+    keywordstyle=\textbf,
+    commentstyle=\color{blue}
+]{../include/ecrt.h}
 
 %------------------------------------------------------------------------------
 
@@ -2663,8 +2684,8 @@ installation prefix as \textit{libethercat.a} (for static linking),
 
 \subsection{Using the Library}
 
-The application interface header \textit{ecrt.h} can be used both in kernel
-and in user context.
+The application interface header \textit{ecrt.h} (see \autoref{sec:ecrt}) can
+be used both in kernel and in user context.
 
 The following minimal example shows how to build a program with EtherCAT
 functionality. An entire example can be found in the \textit{examples/user/}
@@ -2805,7 +2826,8 @@ To force an application to use the RTDM interface instead of the normal
 character device, it has to be linked with the \textit{libethercat\_rtdm}
 library instead of \textit{libethercat}. The use of the
 \textit{libethercat\_rtdm} is transparent, so the EtherCAT header
-\textit{ecrt.h} with the complete API can be used as usual.
+\textit{ecrt.h} (see \autoref{sec:ecrt}) with the complete API can be used as
+usual.
 
 To make the example in \autoref{lst:linker-user} use the RTDM library, the
 linker command has to be altered as follows:
