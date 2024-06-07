@@ -493,7 +493,7 @@ EXTRA_DIST = \
 	phy-3.2-ethercat.c \
 	phy-3.2-orig.c \
 	phy-3.4-ethercat.c \
-	phy-3.4-orig.c
+	phy-3.4-orig.c \
 	phy-3.6-ethercat.c \
 	phy-3.6-orig.c \
 	phy-3.8-ethercat.c \
