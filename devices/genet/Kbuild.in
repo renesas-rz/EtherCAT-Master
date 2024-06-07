@@ -23,6 +23,9 @@
 #
 #-----------------------------------------------------------------------------
 
+src := @abs_srcdir@
+ccflags-y := -I@abs_top_builddir@
+
 TOPDIR := $(src)/../..
 
 REV := $(shell if test -s $(TOPDIR)/revision; then \
