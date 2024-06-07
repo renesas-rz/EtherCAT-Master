@@ -32,7 +32,8 @@ SUBDIRS = \
 	e1000 \
 	e1000e \
 	igb \
-	igc
+	igc \
+	ti-am65-cpsw-nuss
 
 # using HEADERS to enable tags target
 noinst_HEADERS = \

@@ -570,6 +570,53 @@ fi
 AC_SUBST(KERNEL_R8169,[$kernel_r8169])
 
 #------------------------------------------------------------------------------
+# ti-am65-cpsw-nuss driver
+#------------------------------------------------------------------------------
+
+AC_ARG_ENABLE([am65cpsw],
+    AS_HELP_STRING([--enable-am65cpsw],
+                   [Enable ti-am65-cpsw-nuss driver]),
+    [
+        case "${enableval}" in
+            yes) enableam65cpsw=1
+                ;;
+            no) enableam65cpsw=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-am65cpsw])
+                ;;
+        esac
+    ],
+    [enableam65cpsw=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_AM65CPSW, test "x$enableam65cpsw" = "x1")
+AC_SUBST(ENABLE_AM65CPSW,[$enableam65cpsw])
+
+AC_ARG_WITH([am65cpsw-kernel],
+    AS_HELP_STRING([--with-am65cpsw-kernel=<X.Y.Z>],
+                   [ti-am65-cpsw-nuss kernel (only if differing)]
+    ),
+    [
+        kernelam65cpsw=[$withval]
+    ],
+    [
+        kernelam65cpsw=$linuxversion
+    ]
+)
+
+if test "x${enableam65cpsw}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for ti-am65-cpsw-nuss driver])
+
+    if test ! -f "${srcdir}/devices/ti-am65-cpsw-nuss/am65-cpsw-nuss-${kerneligc}-orig.c"; then
+        AC_MSG_ERROR([kernel $kerneligc not available for ti-am65-cpsw-nuss driver!])
+    fi
+
+    AC_MSG_RESULT([$kernelam65cpsw])
+fi
+
+AC_SUBST(KERNEL_AM65CPSW,[$kernelam65cpsw])
+
+#------------------------------------------------------------------------------
 # CCAT driver
 #------------------------------------------------------------------------------
 
@@ -1278,6 +1325,8 @@ AC_CONFIG_FILES([
         devices/igb/Makefile
         devices/igc/Kbuild
         devices/igc/Makefile
+	devices/ti-am65-cpsw-nuss/Kbuild
+	devices/ti-am65-cpsw-nuss/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile
