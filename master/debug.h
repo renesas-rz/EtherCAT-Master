@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,27 +17,21 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Network interface for debugging purposes.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_DEBUG_H__
 #define __EC_DEBUG_H__
 
 #include "../devices/ecdev.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Debugging network interface.
  */
@@ -53,7 +45,7 @@ typedef struct
 }
 ec_debug_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_debug_init(ec_debug_t *, ec_device_t *, const char *);
 void ec_debug_clear(ec_debug_t *);
@@ -63,4 +55,4 @@ void ec_debug_send(ec_debug_t *, const uint8_t *, size_t);
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/

@@ -1,8 +1,6 @@
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #
-#  $Id$
-#
-#  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT Master.
 #
@@ -21,15 +19,12 @@
 #
 #  ---
 #
-#  The license mentioned above concerns the source code only. Using the EtherCAT
-#  technology and brand is only permitted in compliance with the industrial
-#  property and similar rights of Beckhoff Automation GmbH.
-#
-#  ---
-#
 #  vi: syntax=make
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+src := @abs_srcdir@
+ccflags-y := -I@abs_top_builddir@
 
 obj-m := ec_master.o
 
@@ -74,7 +69,7 @@ ec_master-objs := \
 	voe_handler.o
 
 ifeq (@ENABLE_EOE@,1)
-ec_master-objs += ethernet.o
+ec_master-objs += eoe_request.o ethernet.o fsm_eoe.o
 endif
 
 ifeq (@ENABLE_DEBUG_IF@,1)
@@ -83,18 +78,24 @@ endif
 
 ifeq (@ENABLE_RTDM@,1)
 
+ifeq (@ENABLE_XENOMAI_V3@, 1)
+ec_master-objs += rtdm_xenomai_v3.o
+else
 ec_master-objs += rtdm.o
+endif
 
 ifeq (@ENABLE_XENOMAI@, 1)
-CFLAGS_rtdm.o := -I@XENOMAI_DIR@/include
+CFLAGS_rtdm.o := @XENOMAI_RTDM_CFLAGS@
+CFLAGS_rtdm-ioctl.o := @XENOMAI_RTDM_CFLAGS@
 endif
 
 ifeq (@ENABLE_RTAI@, 1)
-CFLAGS_rtdm.o := -I@RTAI_DIR@/include
+CFLAGS_rtdm.o := @RTAI_KERNEL_CFLAGS@
+CFLAGS_rtdm-ioctl.o := @RTAI_KERNEL_CFLAGS@
 endif
 
 ec_master-objs += rtdm-ioctl.o
-CFLAGS_rtdm-ioctl.o := -DEC_IOCTL_RTDM
+CFLAGS_rtdm-ioctl.o += -DEC_IOCTL_RTDM
 
 endif # ENABLE_RTDM
 
@@ -106,4 +107,6 @@ REV := $(shell if test -s $(src)/../revision; then \
 
 CFLAGS_module.o := -DREV=$(REV)
 
-#------------------------------------------------------------------------------
+KBUILD_CFLAGS += -Wmaybe-uninitialized
+
+#-----------------------------------------------------------------------------

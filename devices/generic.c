@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT generic Ethernet device module.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/device.h>
@@ -49,16 +41,28 @@
 
 #define EC_GEN_RX_BUF_SIZE 1600
 
-/*****************************************************************************/
+#if defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+#include <linux/suse_version.h>
+#else
+#  ifndef SUSE_VERSION
+#    define SUSE_VERSION 0
+#  endif
+#  ifndef SUSE_PATCHLEVEL
+#    define SUSE_PATCHLEVEL 0
+#  endif
+#endif
+
+/****************************************************************************/
 
 int __init ec_gen_init_module(void);
 void __exit ec_gen_cleanup_module(void);
+void ec_gen_poll(struct net_device *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("EtherCAT master generic Ethernet device module");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(EC_MASTER_VERSION);
@@ -84,12 +88,19 @@ typedef struct {
     uint8_t dev_addr[ETH_ALEN];
 } ec_gen_interface_desc_t;
 
+int ec_gen_device_init(ec_gen_device_t *);
+void ec_gen_device_clear(ec_gen_device_t *);
+int ec_gen_device_create_socket(ec_gen_device_t *, ec_gen_interface_desc_t *);
+int ec_gen_device_offer(ec_gen_device_t *, ec_gen_interface_desc_t *);
 int ec_gen_device_open(ec_gen_device_t *);
 int ec_gen_device_stop(ec_gen_device_t *);
 int ec_gen_device_start_xmit(ec_gen_device_t *, struct sk_buff *);
 void ec_gen_device_poll(ec_gen_device_t *);
 
-/*****************************************************************************/
+int offer_device(ec_gen_interface_desc_t *);
+void clear_devices(void);
+
+/****************************************************************************/
 
 static int ec_gen_netdev_open(struct net_device *dev)
 {
@@ -97,7 +108,7 @@ static int ec_gen_netdev_open(struct net_device *dev)
     return ec_gen_device_open(gendev);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int ec_gen_netdev_stop(struct net_device *dev)
 {
@@ -105,7 +116,7 @@ static int ec_gen_netdev_stop(struct net_device *dev)
     return ec_gen_device_stop(gendev);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int ec_gen_netdev_start_xmit(
         struct sk_buff *skb,
@@ -116,7 +127,7 @@ static int ec_gen_netdev_start_xmit(
     return ec_gen_device_start_xmit(gendev, skb);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_gen_poll(struct net_device *dev)
 {
@@ -124,17 +135,15 @@ void ec_gen_poll(struct net_device *dev)
     ec_gen_device_poll(gendev);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 static const struct net_device_ops ec_gen_netdev_ops = {
     .ndo_open       = ec_gen_netdev_open,
     .ndo_stop       = ec_gen_netdev_stop,
     .ndo_start_xmit = ec_gen_netdev_start_xmit,
 };
-#endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Init generic device.
  */
@@ -159,13 +168,7 @@ int ec_gen_device_init(
         return -ENOMEM;
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     dev->netdev->netdev_ops = &ec_gen_netdev_ops;
-#else
-    dev->netdev->open = ec_gen_netdev_open;
-    dev->netdev->stop = ec_gen_netdev_stop;
-    dev->netdev->hard_start_xmit = ec_gen_netdev_start_xmit;
-#endif
 
     priv = netdev_priv(dev->netdev);
     *priv = dev;
@@ -173,7 +176,7 @@ int ec_gen_device_init(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear generic device.
  */
@@ -195,7 +198,7 @@ void ec_gen_device_clear(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Creates a network socket.
  */
@@ -243,7 +246,7 @@ int ec_gen_device_create_socket(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Offer generic device to master.
  */
@@ -255,7 +258,7 @@ int ec_gen_device_offer(
     int ret = 0;
 
     dev->used_netdev = desc->netdev;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0) || (SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5)
     eth_hw_addr_set(dev->netdev, desc->dev_addr);
 #else
     memcpy(dev->netdev->dev_addr, desc->dev_addr, ETH_ALEN);
@@ -278,7 +281,7 @@ int ec_gen_device_offer(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Open the device.
  */
@@ -289,7 +292,7 @@ int ec_gen_device_open(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Stop the device.
  */
@@ -300,7 +303,7 @@ int ec_gen_device_stop(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_gen_device_start_xmit(
         ec_gen_device_t *dev,
@@ -323,7 +326,7 @@ int ec_gen_device_start_xmit(
     return ret == len ? NETDEV_TX_OK : NETDEV_TX_BUSY;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Polls the device.
  */
@@ -353,7 +356,7 @@ void ec_gen_device_poll(
     } while (budget);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Offer device.
  */
@@ -385,7 +388,7 @@ int offer_device(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear devices.
  */
@@ -400,7 +403,7 @@ void clear_devices(void)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Module initialization.
  *
@@ -420,14 +423,14 @@ int __init ec_gen_init_module(void)
     INIT_LIST_HEAD(&generic_devices);
     INIT_LIST_HEAD(&descs);
 
-    read_lock(&dev_base_lock);
-    for_each_netdev(&init_net, netdev) {
+    rcu_read_lock();
+    for_each_netdev_rcu(&init_net, netdev) {
         if (netdev->type != ARPHRD_ETHER)
             continue;
         desc = kmalloc(sizeof(ec_gen_interface_desc_t), GFP_ATOMIC);
         if (!desc) {
             ret = -ENOMEM;
-            read_unlock(&dev_base_lock);
+            rcu_read_unlock();
             goto out_err;
         }
         strncpy(desc->name, netdev->name, IFNAMSIZ);
@@ -436,7 +439,7 @@ int __init ec_gen_init_module(void)
         memcpy(desc->dev_addr, netdev->dev_addr, ETH_ALEN);
         list_add_tail(&desc->list, &descs);
     }
-    read_unlock(&dev_base_lock);
+    rcu_read_unlock();
 
     list_for_each_entry_safe(desc, next, &descs, list) {
         ret = offer_device(desc);
@@ -456,7 +459,7 @@ out_err:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Module cleanup.
  *
@@ -468,7 +471,7 @@ void __exit ec_gen_cleanup_module(void)
     printk(KERN_INFO PFX "Unloading.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -477,4 +480,4 @@ module_exit(ec_gen_cleanup_module);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

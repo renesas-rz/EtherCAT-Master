@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -20,17 +18,11 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include "include/ecrt.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 struct ec_sdo_request {
     ec_sdo_request_t *next; /**< List header. */
@@ -43,8 +35,8 @@ struct ec_sdo_request {
     size_t data_size; /**< Size of SDO data. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_sdo_request_clear(ec_sdo_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/

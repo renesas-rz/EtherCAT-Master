@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2014  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <iostream>
@@ -35,14 +27,14 @@ using namespace std;
 #include "CommandXml.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandXml::CommandXml():
     Command("xml", "Generate slave information XML.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandXml::helpString(const string &binaryBaseName) const
 {
@@ -224,4 +216,4 @@ void CommandXml::generateSlaveXml(
         << in << "</EtherCATInfo>" << endl;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

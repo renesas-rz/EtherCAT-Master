@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,13 +17,7 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  *
@@ -40,14 +32,14 @@
  * frames through connected devices.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __ECDEV_H__
 #define __ECDEV_H__
 
 #include <linux/netdevice.h>
 
-/*****************************************************************************/
+/****************************************************************************/
 
 struct ec_device;
 typedef struct ec_device ec_device_t; /**< \see ec_device */
@@ -56,17 +48,17 @@ typedef struct ec_device ec_device_t; /**< \see ec_device */
  */
 typedef void (*ec_pollfunc_t)(struct net_device *);
 
-/******************************************************************************
+/*****************************************************************************
  * Offering/withdrawal functions
- *****************************************************************************/
+ ****************************************************************************/
 
 ec_device_t *ecdev_offer(struct net_device *net_dev, ec_pollfunc_t poll,
         struct module *module);
 void ecdev_withdraw(ec_device_t *device);
 
-/******************************************************************************
+/*****************************************************************************
  * Device methods
- *****************************************************************************/
+ ****************************************************************************/
 
 int ecdev_open(ec_device_t *device);
 void ecdev_close(ec_device_t *device);
@@ -74,6 +66,6 @@ void ecdev_receive(ec_device_t *device, const void *data, size_t size);
 void ecdev_set_link(ec_device_t *device, uint8_t state);
 uint8_t ecdev_get_link(const ec_device_t *device);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

@@ -1,6 +1,4 @@
-#----------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2010  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -19,15 +17,9 @@
 #  with the IgH EtherCAT Master; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
 #  vim: tw=78
 #
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 Name: @PACKAGE@
 Version: @VERSION@
@@ -42,9 +34,9 @@ BuildRoot: /tmp/%{name}-%{version}
 
 BuildRequires: %kernel_module_package_buildreqs
 
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Main Package
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 Summary: IgH EtherCAT Master
 Group: EtherLab
@@ -56,9 +48,9 @@ http://etherlab.org/en/ethercat.
 
 %kernel_module_package
 
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Development package
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 %package devel
 
@@ -70,7 +62,7 @@ This is an open-source EtherCAT master implementation for Linux 2.6. See the
 FEATURES file for a list of features. For more information, see
 http://etherlab.org/en/ethercat.
 
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 %prep
 %setup
@@ -126,4 +118,4 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/lib/libethercat.a
 /usr/lib/libethercat.la
 
-#----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

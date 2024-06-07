@@ -1,6 +1,3 @@
-
-/* $Id$ */
-
 digraph slaveconf {
     node [fontname="Helvetica"]
     edge [fontname="Helvetica", fontsize="12"]
@@ -58,12 +55,28 @@ digraph slaveconf {
 
     enter_sdo_conf [shape=point, label=""]
     enter_sdo_conf -> enter_pdo_sync [label="No config\nattached"]
-    enter_sdo_conf -> enter_pdo_conf [label="No SDOs\nconfigured"]
+    enter_sdo_conf -> enter_soe_conf_preop [label="No SDOs\nconfigured"]
     enter_sdo_conf -> sdo_conf [weight=10]
 
     sdo_conf
     sdo_conf -> reconfigure
-    sdo_conf -> enter_pdo_conf [weight=10]
+    sdo_conf -> enter_soe_conf_preop [weight=10]
+
+    enter_soe_conf_preop [shape=point, label=""]
+    enter_soe_conf_preop -> enter_pdo_sync [label="No config\nattached"]
+    enter_soe_conf_preop -> enter_eoe_ip_param [label="No IDNs\nconfigured"]
+    enter_soe_conf_preop -> soe_conf_preop [weight=10]
+
+    soe_conf_preop
+    soe_conf_preop -> reconfigure
+    soe_conf_preop -> enter_eoe_ip_param [weight=10]
+
+    enter_eoe_ip_param [shape=point, label=""]
+    enter_eoe_ip_param -> enter_pdo_conf [label="No IP parameters"]
+    enter_eoe_ip_param -> eoe_ip_param [weight=10]
+
+    eoe_ip_param
+    eoe_ip_param -> enter_pdo_conf [weight=10]
 
     enter_pdo_conf [shape=point, label=""]
     enter_pdo_conf -> pdo_conf [weight=10]

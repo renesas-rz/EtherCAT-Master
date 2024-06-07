@@ -17,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <errno.h>
@@ -322,7 +316,7 @@ int main(int argc, char **argv)
     struct sched_param param = {};
     param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 
-    printf("Using priority %i.", param.sched_priority);
+    printf("Using priority %i.\n", param.sched_priority);
     if (sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
         perror("sched_setscheduler failed");
     }

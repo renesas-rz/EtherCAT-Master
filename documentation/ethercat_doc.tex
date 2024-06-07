@@ -57,7 +57,7 @@
 
 \input{git}
 
-\newcommand{\masterversion}{1.5.2}
+\newcommand{\masterversion}{\gittag}
 \newcommand{\linenum}[1]{\normalfont\textcircled{\tiny #1}}
 
 \makeindex
@@ -634,9 +634,9 @@ physical memory to logical process data images.
 The application interface provides functions and data structures for
 applications to access an EtherCAT master. The complete documentation of the
 interface is included as Doxygen~\cite{doxygen} comments in the header file
-\textit{include/ecrt.h}. It can either be read directly from the file
-comments, or as a more comfortable HTML documentation. The HTML generation is
-described in \autoref{sec:gendoc}.
+\textit{include/ecrt.h} (see \autoref{sec:ecrt}). It can either be read
+directly from the file comments, or as a more comfortable HTML documentation.
+The HTML generation is described in \autoref{sec:gendoc}.
 
 The following sections cover a general description of the application
 interface.
@@ -952,6 +952,54 @@ shift times. The AssignActivate word is slave-specific and has to be taken
 from the XML slave description (\lstinline+Device+ $\rightarrow$
 \lstinline+Dc+), where also typical sync signal configurations ``OpModes'' can
 be found.
+
+%------------------------------------------------------------------------------
+
+\section{Application Interface Header}
+\label{sec:ecrt}
+\index{Application Interface}
+
+The application interface of the EtherCAT master is defined in the header file
+\textit{include/ecrt.h} (acronym for ``EtherCAT Real-Time'') which is listed
+in this section. The calling conventions of all methods are documented in the
+comments of this header. There is also a Doxygen-generated online version at
+\url{https://docs.etherlab.org}.
+
+\lstinputlisting[
+    basicstyle=\ttfamily\scriptsize,
+    texcl=false,
+    escapeinside={//*}{\^^M},
+    language=C,
+    keywordstyle=\textbf,
+    commentstyle=\color{blue},
+    numbers=left,
+    caption={Application Interface Header ecrt.h}
+]{../include/ecrt.h}
+
+%------------------------------------------------------------------------------
+
+\section{Userspace Application Example}
+\label{sec:example}
+
+There are multiple examples of how to use the application interface included
+in the master sources (under \textit{examples/}). This section lists a very
+common application, the usage of the master from the user-space. The example
+code reserves an EtherCAT master, creates slave configurations and domains and
+goes into cyclic mode, where the \lstinline+cyclic_task()+ function is called
+repeatedly. For more general information on how to do real-time programming
+under Linux, please have a look at the code examples in
+\url{https://gitlab.com/etherlab.org/realtime}.
+
+\lstinputlisting[
+    basicstyle=\ttfamily\scriptsize,
+    texcl=false,
+    escapeinside={//*}{\^^M},
+    language=C,
+    keywordstyle=\textbf,
+    commentstyle=\color{blue},
+    numbers=left,
+    caption={Userspace application example example/user/main.c}
+]{../examples/user/main.c}
 
 %------------------------------------------------------------------------------
 
@@ -2058,6 +2106,9 @@ index and Y is the decimal alias address.
 
 \end{description}
 
+For some hints on how to configure these virtual interfaces, see
+\autoref{sec:eoe-config}.
+
 Frames sent to these interfaces are forwarded to the associated slaves by the
 master. Frames, that are received by the slaves, are fetched by the master and
 forwarded to the virtual interfaces.
@@ -2183,11 +2234,54 @@ is executed each timer interrupt. This guarantees a constant bandwidth, but
 poses the new problem of concurrent access to the master. The locking
 mechanisms needed for this are introduced in \autoref{sec:concurr}.
 
-\paragraph{Automatic Configuration}
+\subsection{EoE Interface Configuration}
+\label{sec:eoe-config}
 
-By default, slaves are left in PREOP state, if no configuration is applied. If
-an EoE interface link is set to ``up'', the requested slave's
-application-layer state is automatically set to OP.
+The configuration of the EoE network interfaces is a matter of using standard
+Linux networking infrastructure commands like \lstinline+ifconfig+,
+\lstinline+ip+ and \lstinline+brctl+. Though this lies not in the scope of
+this document, some hints and examples are provided in this section.
+
+In the below examples it is assumed, that there are two slaves (0 and 1) with
+EoE support in the bus. The first decision to make is whether to use a bridged
+or routed environment.
+
+\paragraph{Bridging} A common solution is to create a bridge containing all EoE
+interfaces:
+
+\begin{lstlisting}
+$ `\textbf{brctl addbr br0}`
+$ `\textbf{ip addr add 192.168.100.1/24 dev br0}`
+$ `\textbf{brctl addif br0 eoe0s0}`
+$ `\textbf{brctl addif br0 eoe0s1}`
+\end{lstlisting}
+
+The above example allows to access IPv4 nodes using subnet 192.168.100.0/24
+connected to the EtherCAT bus via EoE. Please note, that the example only
+contains ad-hoc configuration commands: If the bus topology changes, the EoE
+interfaces are re-created and have to be added to the bridge again. Therefore
+it is highly recommended to use the networking configuration infrastructure of
+the used Linux distribution to store this configuration permanently, so that
+appearing EoE devices are added automatically.
+
+\paragraph{Routing} Another possibility is to create an IP subnet for each EoE
+interface:
+
+\begin{lstlisting}
+$ `\textbf{ip addr add 192.168.200.1/24 dev eoe0s0}`
+$ `\textbf{ip addr add 192.168.201.1/24 dev eoe0s1}`
+$ `\textbf{echo 1 > /proc/sys/net/ipv4/ip\_forward}`
+\end{lstlisting}
+
+This example is again only an ad-hoc configuration (see above). Please note,
+that it is necessary to set the default gateways properly on the IP nodes
+connected to the EoE slaves, if they shall be able to communicate between the
+different EoE interfaces / IP networks.
+
+\paragraph{Setting IP Parameters} If IP address and other parameters of the
+EoE remote nodes (not the EoE interfaces on the master side) have to be set,
+this can be achieved via the \lstinline+ethercat ip+ command-line tool (see
+\autoref{sec:ipparam}).
 
 %------------------------------------------------------------------------------
 
@@ -2444,6 +2538,28 @@ created, if the \lstinline+udev+ Package is installed. See
 
 %------------------------------------------------------------------------------
 
+\subsection{Setting Ethernet-over-EtherCAT IP Parameters}
+\label{sec:ipparam}
+
+Slaves can have own IP stack implementations accessible via EoE. Since some of
+them do not provide other mechanisms to set IP parameters (because they only
+have an EtherCAT interface), there is a possibility to set the below
+parameters via EoE:
+
+\begin{itemize}
+\item Ethernet MAC address\footnote{The MAC address of the virtual EoE remote
+interface, not the one of the EtherCAT interface.},
+\item IPv4 address,
+\item IPv4 subnet mask,
+\item IPv4 default gateway,
+\item IPv4 DNS server,
+\item DNS host name.
+\end{itemize}
+
+\lstinputlisting[basicstyle=\ttfamily\footnotesize]{external/ethercat_ip}
+
+%------------------------------------------------------------------------------
+
 \subsection{Master and Ethernet Devices}
 
 \lstinputlisting[basicstyle=\ttfamily\footnotesize]{external/ethercat_master}
@@ -2595,12 +2711,12 @@ installation prefix as \textit{libethercat.a} (for static linking),
 
 \subsection{Using the Library}
 
-The application interface header \textit{ecrt.h} can be used both in kernel
-and in user context.
+The application interface header \textit{ecrt.h} (see \autoref{sec:ecrt}) can
+be used both in kernel and in user context.
 
 The following minimal example shows how to build a program with EtherCAT
 functionality. An entire example can be found in the \textit{examples/user/}
-path of the master sources.
+path of the master sources and in \autoref{sec:example}.
 
 \begin{lstlisting}[language=C]
 #include <ecrt.h>
@@ -2737,7 +2853,8 @@ To force an application to use the RTDM interface instead of the normal
 character device, it has to be linked with the \textit{libethercat\_rtdm}
 library instead of \textit{libethercat}. The use of the
 \textit{libethercat\_rtdm} is transparent, so the EtherCAT header
-\textit{ecrt.h} with the complete API can be used as usual.
+\textit{ecrt.h} (see \autoref{sec:ecrt}) with the complete API can be used as
+usual.
 
 To make the example in \autoref{lst:linker-user} use the RTDM library, the
 linker command has to be altered as follows:
@@ -3054,8 +3171,8 @@ There are several ways to get the master software:
 \begin{enumerate}
 
 \item An official release (for example \masterversion), can be downloaded from
-the master's website\footnote{\url{http://etherlab.org/en/ethercat/index.php}}
-at~the EtherLab project~\cite{etherlab} as a tarball.
+the master's website\footnote{\url{https://etherlab.org/ethercat}}
+at the EtherLab project~\cite{etherlab} as a tarball.
 
 \item The most recent development revision (and moreover any other revision)
 can be obtained via the Git~\cite{git} repository on the master's
@@ -3375,7 +3492,7 @@ KERNEL=="EtherCAT[0-9]*", MODE="0664", GROUP="users"
 
 \bibitem{etherlab} Ingenieurgemeinschaft IgH: EtherLab -- Open Source Toolkit
 for rapid realtime code generation under Linux with Simulink/RTW and EtherCAT
-technology. \url{http://etherlab.org/en}, 2008.
+technology. \url{https://etherlab.org}, 2024.
 
 \bibitem{dlspec} IEC 61158-4-12: Data-link Protocol Specification.
 International Electrotechnical Commission (IEC), 2005.

@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -20,20 +18,14 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT domain methods.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -43,14 +35,14 @@
 #include "domain.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_domain_clear(ec_domain_t *domain)
 {
     // nothing to do
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ecrt_domain_reg_pdo_entry_list(ec_domain_t *domain,
         const ec_pdo_entry_reg_t *regs)
@@ -74,7 +66,7 @@ int ecrt_domain_reg_pdo_entry_list(ec_domain_t *domain,
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_domain_size(const ec_domain_t *domain)
 {
@@ -89,56 +81,42 @@ size_t ecrt_domain_size(const ec_domain_t *domain)
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-uint8_t *ecrt_domain_data(ec_domain_t *domain)
+uint8_t *ecrt_domain_data(const ec_domain_t *domain)
 {
-    if (!domain->process_data) {
-        int offset = 0;
-
-        offset = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_OFFSET,
-                domain->index);
-        if (EC_IOCTL_IS_ERROR(offset)) {
-            fprintf(stderr, "Failed to get domain offset: %s\n",
-                    strerror(EC_IOCTL_ERRNO(offset)));
-            return NULL;
-        }
-
-        domain->process_data = domain->master->process_data + offset;
-    }
-
     return domain->process_data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_domain_process(ec_domain_t *domain)
+int ecrt_domain_process(ec_domain_t *domain)
 {
     int ret;
 
     ret = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_PROCESS, domain->index);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to process domain: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_domain_queue(ec_domain_t *domain)
+int ecrt_domain_queue(ec_domain_t *domain)
 {
     int ret;
 
     ret = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_QUEUE, domain->index);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to queue domain: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
+int ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
 {
     ec_ioctl_domain_state_t data;
     int ret;
@@ -148,9 +126,9 @@ void ecrt_domain_state(const ec_domain_t *domain, ec_domain_state_t *state)
 
     ret = ioctl(domain->master->fd, EC_IOCTL_DOMAIN_STATE, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to get domain state: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

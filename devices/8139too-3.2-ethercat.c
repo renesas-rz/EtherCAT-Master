@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,22 +17,16 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *  vim: noexpandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT driver for RTL8139-compatible NICs.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /*
   Former documentation:
@@ -657,7 +649,7 @@ struct rtl8139_private {
 	ec_device_t *ecdev;
 };
 
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("RealTek RTL-8139 EtherCAT driver");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(EC_MASTER_VERSION);

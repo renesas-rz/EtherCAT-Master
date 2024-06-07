@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2017  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -21,15 +19,12 @@
 #
 #  ---
 #
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#  ---
-#
 #  vim: syntax=make
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+src := @abs_srcdir@
+ccflags-y := -I@abs_top_builddir@
 
 TOPDIR := $(src)/../..
 
@@ -54,7 +49,11 @@ ifeq (@ENABLE_IGC@,1)
 		igc_mac-@KERNEL_IGC@-ethercat.o \
 		igc_phy-@KERNEL_IGC@-ethercat.o \
 		igc_ethtool-@KERNEL_IGC@-ethercat.o \
-		igc_nvm-@KERNEL_IGC@-ethercat.o 
+		igc_nvm-@KERNEL_IGC@-ethercat.o
+
+ifeq (@ENABLE_DRIVER_RESOURCE_VERIFYING@,1)
+	ccflags-y := -DEC_ENABLE_DRIVER_RESOURCE_VERIFYING
+endif
 
 	CFLAGS_igc_main-@KERNEL_IGC@-ethercat.o = -DREV=$(REV)
 endif
@@ -63,4 +62,4 @@ KBUILD_EXTRA_SYMBOLS := \
 	@abs_top_builddir@/$(LINUX_SYMVERS) \
 	@abs_top_builddir@/master/$(LINUX_SYMVERS)
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

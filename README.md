@@ -20,10 +20,10 @@ information, see http://etherlab.org/en/ethercat.
 or contact
 
 >>>
-Dipl.-Ing. (FH) Florian Pose <fp@igh.de>  
-Ingenieurgemeinschaft IgH  
-Nordsternstraße 66  
-D-45329 Essen  
+Dipl.-Ing. (FH) Florian Pose <fp@igh.de>
+Ingenieurgemeinschaft IgH
+Nordsternstraße 66
+D-45329 Essen
 http://igh.de
 >>>
 
@@ -101,11 +101,6 @@ You should have received a copy of the GNU General Public License along with
 the IgH EtherCAT Master; if not, write to the Free Software Foundation, Inc.,
 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
----
-
-The license mentioned above concerns the source code only. Using the EtherCAT
-technology and brand is only permitted in compliance with the industrial
-property and similar rights of Beckhoff Automation GmbH.
 
 # Coding Style
 

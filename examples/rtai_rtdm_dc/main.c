@@ -1,9 +1,7 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C)      2011  IgH Andreas Stewering-Bone
- *                     2012  Florian Pose <fp@igh-essen.com>
+ *                     2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master
  *
@@ -19,13 +17,7 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <sched.h>
 #include <stdio.h>
@@ -46,7 +38,7 @@ RT_TASK *task;
 
 static unsigned int cycle_ns = 1000000; /* 1 ms */
 
-static int run = 1;
+static volatile sig_atomic_t run = 1;
 
 /****************************************************************************/
 
@@ -180,7 +172,7 @@ RTIME system2count(
     return nano2count(ret);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Synchronise the distributed clocks
  */
@@ -206,7 +198,7 @@ void sync_distributed_clocks(void)
     ecrt_master_sync_slave_clocks(master);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Return the sign of a number
  *
@@ -218,7 +210,7 @@ void sync_distributed_clocks(void)
     ({ typeof (val) _val = (val); \
     ((_val > 0) - (_val < 0)); })
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Update the master time based on ref slaves time diff
  *
@@ -436,18 +428,18 @@ void my_cyclic(void)
     stop_rt_timer();
 }
 
-/****************************************************************************
+/*****************************************************************************
  * Signal handler
- ***************************************************************************/
+ ****************************************************************************/
 
 void signal_handler(int sig)
 {
     run = 0;
 }
 
-/****************************************************************************
+/*****************************************************************************
  * Main function
- ***************************************************************************/
+ ****************************************************************************/
 
 int main(int argc, char *argv[])
 {

@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,33 +17,19 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/timer.h>
 #include <linux/interrupt.h>
 #include <linux/err.h>
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 #include <linux/slab.h>
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
-#include <linux/semaphore.h>
-#else
-#include <asm/semaphore.h>
-#endif
+#include <linux/spinlock.h>
 
 #include "../../include/ecrt.h" // EtherCAT realtime interface
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // Module parameters
 #define FREQUENCY 100
@@ -59,12 +43,12 @@
 
 #define PFX "ec_mini: "
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // EtherCAT
 static ec_master_t *master = NULL;
 static ec_master_state_t master_state = {};
-struct semaphore master_sem;
+static spinlock_t master_spinlock;
 
 static ec_domain_t *domain1 = NULL;
 static ec_domain_state_t domain1_state = {};
@@ -75,7 +59,7 @@ static ec_slave_config_state_t sc_ana_in_state = {};
 // Timer
 static struct timer_list timer;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // process data
 static uint8_t *domain1_pd; // process data memory
@@ -107,7 +91,7 @@ const static ec_pdo_entry_reg_t domain1_regs[] = {
 static unsigned int counter = 0;
 static unsigned int blink = 0;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if CONFIGURE_PDOS
 
@@ -186,7 +170,7 @@ static ec_sync_info_t el2004_syncs[] = {
 };
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if SDO_ACCESS
 static ec_sdo_request_t *sdo;
@@ -196,15 +180,30 @@ static ec_sdo_request_t *sdo;
 static ec_voe_handler_t *voe;
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
+
+void check_domain1_state(void);
+void check_master_state(void);
+void check_slave_config_states(void);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+void cyclic_task(struct timer_list *);
+#else
+void cyclic_task(unsigned long);
+#endif
+void send_callback(void *);
+void receive_callback(void *);
+int init_mini_module(void);
+void cleanup_mini_module(void);
+
+/****************************************************************************/
 
 void check_domain1_state(void)
 {
     ec_domain_state_t ds;
 
-    down(&master_sem);
+    spin_lock(&master_spinlock);
     ecrt_domain_state(domain1, &ds);
-    up(&master_sem);
+    spin_unlock(&master_spinlock);
 
     if (ds.working_counter != domain1_state.working_counter)
         printk(KERN_INFO PFX "Domain1: WC %u.\n", ds.working_counter);
@@ -214,15 +213,15 @@ void check_domain1_state(void)
     domain1_state = ds;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_master_state(void)
 {
     ec_master_state_t ms;
 
-    down(&master_sem);
+    spin_lock(&master_spinlock);
     ecrt_master_state(master, &ms);
-    up(&master_sem);
+    spin_unlock(&master_spinlock);
 
     if (ms.slaves_responding != master_state.slaves_responding)
         printk(KERN_INFO PFX "%u slave(s).\n", ms.slaves_responding);
@@ -234,15 +233,15 @@ void check_master_state(void)
     master_state = ms;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_slave_config_states(void)
 {
     ec_slave_config_state_t s;
 
-    down(&master_sem);
+    spin_lock(&master_spinlock);
     ecrt_slave_config_state(sc_ana_in, &s);
-    up(&master_sem);
+    spin_unlock(&master_spinlock);
 
     if (s.al_state != sc_ana_in_state.al_state)
         printk(KERN_INFO PFX "AnaIn: State 0x%02X.\n", s.al_state);
@@ -255,7 +254,7 @@ void check_slave_config_states(void)
     sc_ana_in_state = s;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if SDO_ACCESS
 void read_sdo(void)
@@ -280,7 +279,7 @@ void read_sdo(void)
 }
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if VOE_ACCESS
 void read_voe(void)
@@ -305,7 +304,7 @@ void read_voe(void)
 }
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
 void cyclic_task(struct timer_list *t)
@@ -314,10 +313,10 @@ void cyclic_task(unsigned long data)
 #endif
 {
     // receive process data
-    down(&master_sem);
+    spin_lock(&master_spinlock);
     ecrt_master_receive(master);
     ecrt_domain_process(domain1);
-    up(&master_sem);
+    spin_unlock(&master_spinlock);
 
     // check process data state (optional)
     check_domain1_state();
@@ -350,37 +349,37 @@ void cyclic_task(unsigned long data)
     EC_WRITE_U8(domain1_pd + off_dig_out, blink ? 0x06 : 0x09);
 
     // send process data
-    down(&master_sem);
+    spin_lock(&master_spinlock);
     ecrt_domain_queue(domain1);
     ecrt_master_send(master);
-    up(&master_sem);
+    spin_unlock(&master_spinlock);
 
     // restart timer
     timer.expires += HZ / FREQUENCY;
     add_timer(&timer);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void send_callback(void *cb_data)
 {
     ec_master_t *m = (ec_master_t *) cb_data;
-    down(&master_sem);
+    spin_lock_bh(&master_spinlock);
     ecrt_master_send_ext(m);
-    up(&master_sem);
+    spin_unlock_bh(&master_spinlock);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void receive_callback(void *cb_data)
 {
     ec_master_t *m = (ec_master_t *) cb_data;
-    down(&master_sem);
+    spin_lock_bh(&master_spinlock);
     ecrt_master_receive(m);
-    up(&master_sem);
+    spin_unlock_bh(&master_spinlock);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int __init init_mini_module(void)
 {
@@ -401,7 +400,7 @@ int __init init_mini_module(void)
         goto out_return;
     }
 
-    sema_init(&master_sem, 1);
+    spin_lock_init(&master_spinlock);
     ecrt_master_callbacks(master, send_callback, receive_callback, master);
 
     printk(KERN_INFO PFX "Registering domain...\n");
@@ -520,7 +519,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void __exit cleanup_mini_module(void)
 {
@@ -538,13 +537,13 @@ void __exit cleanup_mini_module(void)
     printk(KERN_INFO PFX "Unloading.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("EtherCAT minimal test environment");
 
 module_init(init_mini_module);
 module_exit(cleanup_mini_module);
 
-/*****************************************************************************/
+/****************************************************************************/

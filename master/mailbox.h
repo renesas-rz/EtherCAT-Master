@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,35 +17,31 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Mailbox functionality.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_MAILBOX_H__
 #define __EC_MAILBOX_H__
 
 #include "slave.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Size of the mailbox header.
  */
 #define EC_MBOX_HEADER_SIZE 6
 
 /** Mailbox types.
+ *
+ * These are used in the 'Type' field of the mailbox header.
  */
-enum ec_mbox_types {
+enum {
     EC_MBOX_TYPE_EOE = 0x02,
     EC_MBOX_TYPE_COE = 0x03,
     EC_MBOX_TYPE_FOE = 0x04,
@@ -55,7 +49,7 @@ enum ec_mbox_types {
     EC_MBOX_TYPE_VOE = 0x0f,
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 uint8_t *ec_slave_mbox_prepare_send(const ec_slave_t *, ec_datagram_t *,
                                     uint8_t, size_t);
@@ -65,6 +59,6 @@ int      ec_slave_mbox_prepare_fetch(const ec_slave_t *, ec_datagram_t *);
 uint8_t *ec_slave_mbox_fetch(const ec_slave_t *, const ec_datagram_t *,
                              uint8_t *, size_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

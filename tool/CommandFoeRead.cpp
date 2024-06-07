@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- *  $Id: CommandFoeRead.cpp,v 4f682084c643 2010/10/25 08:12:26 fp $
- *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <string.h>
@@ -37,14 +29,14 @@ using namespace std;
 #include "foe.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandFoeRead::CommandFoeRead():
     FoeCommand("foe_read", "Read a file from a slave via FoE.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandFoeRead::helpString(const string &binaryBaseName) const
 {
@@ -89,7 +81,7 @@ void CommandFoeRead::execute(const StringVector &args)
     }
 
     MasterDevice m(getSingleMasterIndex());
-    m.open(MasterDevice::Read);
+    m.open(MasterDevice::ReadWrite);
     slaves = selectedSlaves(m);
 
     if (slaves.size() != 1) {
@@ -135,4 +127,4 @@ void CommandFoeRead::execute(const StringVector &args)
     delete [] data.buffer;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

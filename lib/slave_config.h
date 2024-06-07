@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -18,17 +18,11 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include "include/ecrt.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 struct ec_slave_config {
     ec_slave_config_t *next;
@@ -42,8 +36,8 @@ struct ec_slave_config {
     ec_voe_handler_t *first_voe_handler;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_slave_config_clear(ec_slave_config_t *);
 
-/*****************************************************************************/
+/****************************************************************************/

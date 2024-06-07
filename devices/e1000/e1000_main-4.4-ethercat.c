@@ -138,6 +138,7 @@ static struct net_device_stats * e1000_get_stats(struct net_device *netdev);
 static int e1000_change_mtu(struct net_device *netdev, int new_mtu);
 static int e1000_set_mac(struct net_device *netdev, void *p);
 void ec_poll(struct net_device *);
+static void ec_kick_watchdog(struct irq_work *work);
 static irqreturn_t e1000_intr(int irq, void *data);
 static bool e1000_clean_tx_irq(struct e1000_adapter *adapter,
 			       struct e1000_tx_ring *tx_ring);
@@ -223,7 +224,7 @@ static struct pci_driver e1000_driver = {
 	.err_handler = &e1000_err_handler
 };
 
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("EtherCAT-capable Intel(R) PRO/1000 Network Driver");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
@@ -527,9 +528,7 @@ static void e1000_down_and_stop(struct e1000_adapter *adapter)
 {
 	set_bit(__E1000_DOWN, &adapter->flags);
 
-	if (!adapter->ecdev) {
-		cancel_delayed_work_sync(&adapter->watchdog_task);
-	}
+	cancel_delayed_work_sync(&adapter->watchdog_task);
 
 	/*
 	 * Since the watchdog task can reschedule other tasks, we should cancel
@@ -1253,6 +1252,7 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	// offer device to EtherCAT master module
 	adapter->ecdev = ecdev_offer(netdev, ec_poll, THIS_MODULE);
 	if (adapter->ecdev) {
+		init_irq_work(&adapter->ec_watchdog_kicker, ec_kick_watchdog);
 		err = ecdev_open(adapter->ecdev);
 		if (err) {
 			ecdev_withdraw(adapter->ecdev);
@@ -1326,6 +1326,9 @@ static void e1000_remove(struct pci_dev *pdev)
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
 	bool disable_dev;
+
+	if (adapter->ecdev)
+		irq_work_sync(&adapter->ec_watchdog_kicker);
 
 	e1000_down_and_stop(adapter);
 	e1000_release_manageability(adapter);
@@ -3857,12 +3860,20 @@ void e1000_update_stats(struct e1000_adapter *adapter)
 	}
 }
 
+static void ec_kick_watchdog(struct irq_work *work)
+{
+	struct e1000_adapter *adapter =
+		container_of(work, struct e1000_adapter, ec_watchdog_kicker);
+
+	schedule_delayed_work(&adapter->watchdog_task, 1);
+}
+
 void ec_poll(struct net_device *netdev)
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	if (jiffies - adapter->ec_watchdog_jiffies >= 2 * HZ) {
-		e1000_watchdog(&adapter->watchdog_task.work);
 		adapter->ec_watchdog_jiffies = jiffies;
+		irq_work_queue(&adapter->ec_watchdog_kicker);
 	}
 
 	e1000_intr(0, netdev);

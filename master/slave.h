@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_SLAVE_H__
 #define __EC_SLAVE_H__
@@ -47,7 +39,7 @@
 #include "sdo.h"
 #include "fsm_slave.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Convenience macro for printing slave-specific information to syslog.
  *
@@ -111,7 +103,7 @@
         } \
     } while (0)
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave port.
  */
@@ -125,7 +117,7 @@ typedef struct {
                                  this port [ns]. */
 } ec_slave_port_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave information interface data.
  */
@@ -169,7 +161,7 @@ typedef struct {
     struct list_head pdos; /**< SII [RT]XPDO categories. */
 } ec_sii_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT slave.
  */
@@ -228,13 +220,14 @@ struct ec_slave
 
     struct list_head sdo_requests; /**< SDO access requests. */
     struct list_head reg_requests; /**< Register access requests. */
-    struct list_head foe_requests; /**< FoE write requests. */
-    struct list_head soe_requests; /**< SoE write requests. */
+    struct list_head foe_requests; /**< FoE requests. */
+    struct list_head soe_requests; /**< SoE requests. */
+    struct list_head eoe_requests; /**< EoE set IP parameter requests. */
 
     ec_fsm_slave_t fsm; /**< Slave state machine. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // slave construction/destruction
 void ec_slave_init(ec_slave_t *, ec_master_t *, ec_device_index_t,
@@ -268,6 +261,6 @@ void ec_slave_attach_pdo_names(ec_slave_t *);
 void ec_slave_calc_port_delays(ec_slave_t *);
 void ec_slave_calc_transmission_delays_rec(ec_slave_t *, uint32_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

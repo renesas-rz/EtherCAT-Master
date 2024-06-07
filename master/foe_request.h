@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2008  Olav Zarges, imc Messsysteme GmbH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT FoE request structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FOE_REQUEST_H__
 #define __EC_FOE_REQUEST_H__
@@ -43,7 +35,7 @@
 
 #include "globals.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** FoE request.
  */
@@ -69,7 +61,7 @@ typedef struct {
     uint32_t error_code; /**< Error code from an FoE Error Request. */
 } ec_foe_request_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_foe_request_init(ec_foe_request_t *, uint8_t *file_name);
 void ec_foe_request_clear(ec_foe_request_t *);
@@ -81,6 +73,6 @@ int ec_foe_request_timed_out(const ec_foe_request_t *);
 void ec_foe_request_write(ec_foe_request_t *);
 void ec_foe_request_read(ec_foe_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

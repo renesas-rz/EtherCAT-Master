@@ -935,7 +935,7 @@ static int igb_request_msix(struct igb_adapter *adapter)
 	struct net_device *netdev = adapter->netdev;
 	int i, err = 0, vector = 0, free_vector = 0;
 
-	if (adapter->ecdev) {
+	if (get_ecdev(adapter)) {
 		return 0;
 	}
 
@@ -1036,8 +1036,7 @@ static void igb_reset_q_vector(struct igb_adapter *adapter, int v_idx)
 	if (q_vector->rx.ring)
 		adapter->rx_ring[q_vector->rx.ring->queue_index] = NULL;
 
-	if (!adapter->ecdev)
-		netif_napi_del(&q_vector->napi);
+	netif_napi_del(&q_vector->napi);
 
 }
 
@@ -1218,10 +1217,8 @@ static int igb_alloc_q_vector(struct igb_adapter *adapter,
 		return -ENOMEM;
 
 	/* initialize NAPI */
-	if (!adapter->ecdev) {
-		netif_napi_add(adapter->netdev, &q_vector->napi,
-				igb_poll, 64);
-	}
+	netif_napi_add(adapter->netdev, &q_vector->napi,
+			igb_poll, 64);
 
 	/* tie q_vector and adapter together */
 	adapter->q_vector[v_idx] = q_vector;
@@ -1439,7 +1436,7 @@ static int igb_request_irq(struct igb_adapter *adapter)
 
 	igb_assign_vector(adapter->q_vector[0], 0);
 
-	if (!adapter->ecdev && adapter->flags & IGB_FLAG_HAS_MSI) {
+	if (!get_ecdev(adapter) && adapter->flags & IGB_FLAG_HAS_MSI) {
 		err = request_irq(pdev->irq, igb_intr_msi, 0,
 				  netdev->name, adapter);
 		if (!err)
@@ -1450,7 +1447,7 @@ static int igb_request_irq(struct igb_adapter *adapter)
 		adapter->flags &= ~IGB_FLAG_HAS_MSI;
 	}
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		err = request_irq(pdev->irq, igb_intr, IRQF_SHARED,
 				netdev->name, adapter);
 
@@ -1465,7 +1462,7 @@ request_done:
 
 static void igb_free_irq(struct igb_adapter *adapter)
 {
-	if (adapter->ecdev)
+	if (get_ecdev(adapter))
 		return;
 	if (adapter->flags & IGB_FLAG_HAS_MSIX) {
 		int vector = 0, i;
@@ -1505,7 +1502,7 @@ static void igb_irq_disable(struct igb_adapter *adapter)
 	wr32(E1000_IMC, ~0);
 	wrfl();
 
-	if (adapter->ecdev) {
+	if (get_ecdev(adapter)) {
 		/* skip synchronizing IRQs */
 		return;
 	}
@@ -1527,7 +1524,7 @@ static void igb_irq_enable(struct igb_adapter *adapter)
 {
 	struct e1000_hw *hw = &adapter->hw;
 
-	if (adapter->ecdev)
+	if (get_ecdev(adapter))
 		return;
 
 	if (adapter->flags & IGB_FLAG_HAS_MSIX) {
@@ -2145,7 +2142,7 @@ int igb_up(struct igb_adapter *adapter)
 
 	clear_bit(__IGB_DOWN, &adapter->state);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		for (i = 0; i < adapter->num_q_vectors; i++)
 			napi_enable(&(adapter->q_vector[i]->napi));
 	}
@@ -2168,7 +2165,7 @@ int igb_up(struct igb_adapter *adapter)
 		wr32(E1000_CTRL_EXT, reg_data);
 	}
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_tx_start_all_queues(adapter->netdev);
 
 		/* start the watchdog. */
@@ -2202,7 +2199,7 @@ void igb_down(struct igb_adapter *adapter)
 
 	igb_nfc_filter_exit(adapter);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_carrier_off(netdev);
 		netif_tx_stop_all_queues(netdev);
 	}
@@ -2220,7 +2217,7 @@ void igb_down(struct igb_adapter *adapter)
 	adapter->flags &= ~IGB_FLAG_NEED_LINK_UPDATE;
 
 	for (i = 0; i < adapter->num_q_vectors; i++) {
-		if (!adapter->ecdev && adapter->q_vector[i]) {
+		if (!get_ecdev(adapter) && adapter->q_vector[i]) {
 			napi_synchronize(&adapter->q_vector[i]->napi);
 			napi_disable(&adapter->q_vector[i]->napi);
 		}
@@ -2443,7 +2440,7 @@ void igb_reset(struct igb_adapter *adapter)
 			break;
 		}
 	}
-	if (!adapter->ecdev && !netif_running(adapter->netdev))
+	if (!get_ecdev(adapter) && !netif_running(adapter->netdev))
 		igb_power_down_link(adapter);
 
 	igb_update_mng_vlan(adapter);
@@ -2907,7 +2904,7 @@ static int igb_xdp_setup(struct net_device *dev, struct netdev_bpf *bpf)
 static int igb_xdp(struct net_device *dev, struct netdev_bpf *xdp)
 {
 	struct igb_adapter *adapter = netdev_priv(dev);
-	if (adapter->ecdev)
+	if (get_ecdev(adapter))
 		return -EBUSY;
 
 
@@ -2976,7 +2973,7 @@ static int igb_xdp_xmit(struct net_device *dev, int n,
 	int nxmit = 0;
 	int i;
 
-	if (adapter->ecdev)
+	if (get_ecdev(adapter))
 		return -EBUSY;
 
 	if (unlikely(test_bit(__IGB_DOWN, &adapter->state)))
@@ -3044,6 +3041,14 @@ static const struct net_device_ops igb_netdev_ops = {
 	.ndo_xdp_xmit		= igb_xdp_xmit,
 };
 
+static void ec_kick_watchdog(struct irq_work *work)
+{
+	struct igb_adapter *adapter =
+		container_of(work, struct igb_adapter, ec_watchdog_kicker);
+
+	schedule_work(&adapter->watchdog_task);
+}
+
 /**
 * ec_poll - EtherCAT poll routine
 * @netdev: net device structure
@@ -3058,12 +3063,8 @@ void ec_poll(struct net_device *netdev)
 	int budget = 64;
 
 	if (jiffies - adapter->ec_watchdog_jiffies >= 2 * HZ) {
-		struct e1000_hw *hw = &adapter->hw;
-		bool link;
-		hw->mac.get_link_status = true;
-		link = igb_has_link(adapter);
-		ecdev_set_link(adapter->ecdev, link);
 		adapter->ec_watchdog_jiffies = jiffies;
+		irq_work_queue(&adapter->ec_watchdog_kicker);
 	}
 
 	for (i = 0; i < adapter->num_q_vectors; i++) {
@@ -3274,6 +3275,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	adapter = netdev_priv(netdev);
 	adapter->netdev = netdev;
 	adapter->pdev = pdev;
+	adapter->ecdev_initialized = 0;
 	hw = &adapter->hw;
 	hw->back = adapter;
 	adapter->msg_enable = netif_msg_init(debug, DEFAULT_MSG_ENABLE);
@@ -3557,11 +3559,13 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	igb_get_hw_control(adapter);
 
 
-	adapter->ecdev = ecdev_offer(netdev, ec_poll, THIS_MODULE);
-	if (adapter->ecdev) {
-		err = ecdev_open(adapter->ecdev);
+	adapter->ecdev_ = ecdev_offer(netdev, ec_poll, THIS_MODULE);
+	adapter->ecdev_initialized = 1;
+	if (get_ecdev(adapter)) {
+		init_irq_work(&adapter->ec_watchdog_kicker, ec_kick_watchdog);
+		err = ecdev_open(get_ecdev(adapter));
 		if (err) {
-			ecdev_withdraw(adapter->ecdev);
+			ecdev_withdraw(get_ecdev(adapter));
 			goto err_register;
 		}
 		adapter->ec_watchdog_jiffies = jiffies;
@@ -3861,9 +3865,10 @@ static void igb_remove(struct pci_dev *pdev)
 	struct igb_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;
 
-	if (adapter->ecdev) {
-		ecdev_close(adapter->ecdev);
-		ecdev_withdraw(adapter->ecdev);
+	if (get_ecdev(adapter)) {
+		ecdev_close(get_ecdev(adapter));
+		irq_work_sync(&adapter->ec_watchdog_kicker);
+		ecdev_withdraw(get_ecdev(adapter));
 	}
 
 	pm_runtime_get_noresume(&pdev->dev);
@@ -3900,7 +3905,7 @@ static void igb_remove(struct pci_dev *pdev)
 	igb_disable_sriov(pdev);
 #endif
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		unregister_netdev(netdev);
 	}
 
@@ -4143,8 +4148,8 @@ static int __igb_open(struct net_device *netdev, bool resuming)
 	if (!resuming)
 		pm_runtime_get_sync(&pdev->dev);
 
-	if (adapter->ecdev) {
-		ecdev_set_link(adapter->ecdev, 0);
+	if (get_ecdev(adapter)) {
+		ecdev_set_link(get_ecdev(adapter), 0);
 	} else {
 		netif_carrier_off(netdev);
 	}
@@ -4172,7 +4177,7 @@ static int __igb_open(struct net_device *netdev, bool resuming)
 	if (err)
 		goto err_req_irq;
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		/* Notify the stack of the actual queue counts. */
 		err = netif_set_real_num_tx_queues(adapter->netdev,
 						adapter->num_tx_queues);
@@ -4188,7 +4193,7 @@ static int __igb_open(struct net_device *netdev, bool resuming)
 	/* From here on the code is the same as igb_up() */
 	clear_bit(__IGB_DOWN, &adapter->state);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		for (i = 0; i < adapter->num_q_vectors; i++)
 			napi_enable(&(adapter->q_vector[i]->napi));
 	}
@@ -4207,14 +4212,14 @@ static int __igb_open(struct net_device *netdev, bool resuming)
 		wr32(E1000_CTRL_EXT, reg_data);
 	}
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_tx_start_all_queues(netdev);
 	}
 
 	if (!resuming)
 		pm_runtime_put(&pdev->dev);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		/* start the watchdog. */
 		hw->mac.get_link_status = 1;
 		schedule_work(&adapter->watchdog_task);
@@ -4444,7 +4449,7 @@ int igb_setup_rx_resources(struct igb_ring *rx_ring)
 	struct device *dev = rx_ring->dev;
 	int size, res;
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		/* XDP RX-queue info */
 		if (xdp_rxq_info_is_reg(&rx_ring->xdp_rxq))
 			xdp_rxq_info_unreg(&rx_ring->xdp_rxq);
@@ -4476,7 +4481,7 @@ int igb_setup_rx_resources(struct igb_ring *rx_ring)
 	rx_ring->next_to_clean = 0;
 	rx_ring->next_to_use = 0;
 
-	if (!adapter->ecdev)
+	if (!get_ecdev(adapter))
 		rx_ring->xdp_prog = adapter->xdp_prog;
 
 	return 0;
@@ -4783,7 +4788,7 @@ void igb_configure_rx_ring(struct igb_adapter *adapter,
 	int reg_idx = ring->reg_idx;
 	u32 rxdctl = 0;
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		xdp_rxq_info_unreg_mem_model(&ring->xdp_rxq);
 		WARN_ON(xdp_rxq_info_reg_mem_model(&ring->xdp_rxq,
 						MEM_TYPE_PAGE_SHARED, NULL));
@@ -4923,7 +4928,7 @@ static void igb_clean_tx_ring(struct igb_ring *tx_ring)
 
 		/* Free all the Tx ring sk_buffs */
 		struct igb_adapter *adapter = netdev_priv(tx_ring->netdev);
-		if (!adapter->ecdev) {
+		if (!get_ecdev(adapter)) {
 			dev_kfree_skb_any(tx_buffer->skb);
 		}
 
@@ -5533,7 +5538,15 @@ static void igb_watchdog_task(struct work_struct *work)
 	u32 connsw;
 	u16 phy_data, retry_count = 20;
 
+	if (get_ecdev(adapter))
+		hw->mac.get_link_status = true;
+
 	link = igb_has_link(adapter);
+
+	if (get_ecdev(adapter)) {
+		ecdev_set_link(get_ecdev(adapter), link);
+		return;
+	}
 
 	if (adapter->flags & IGB_FLAG_NEED_LINK_UPDATE) {
 		if (time_after(jiffies, (adapter->link_check_timeout + HZ)))
@@ -6182,7 +6195,7 @@ static int __igb_maybe_stop_tx(struct igb_ring *tx_ring, const u16 size)
 	struct net_device *netdev = tx_ring->netdev;
 	struct igb_adapter *adapter = netdev_priv(netdev);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_stop_subqueue(netdev, tx_ring->queue_index);
 	}
 
@@ -6199,7 +6212,7 @@ static int __igb_maybe_stop_tx(struct igb_ring *tx_ring, const u16 size)
 		return -EBUSY;
 
 	/* A reprieve! */
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netif_wake_subqueue(netdev, tx_ring->queue_index);
 	}
 
@@ -6355,7 +6368,7 @@ dma_error:
 				 DMA_TO_DEVICE);
 	dma_unmap_len_set(tx_buffer, len, 0);
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		dev_kfree_skb_any(tx_buffer->skb);
 		tx_buffer->skb = NULL;
 	}
@@ -6473,7 +6486,7 @@ netdev_tx_t igb_xmit_frame_ring(struct sk_buff *skb,
 	first->bytecount = skb->len;
 	first->gso_segs = 1;
 
-	if (unlikely(!adapter->ecdev && 
+	if (unlikely(!get_ecdev(adapter) &&
 				skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP)) {
 
 		if (adapter->tstamp_config.tx_type == HWTSTAMP_TX_ON &&
@@ -6512,12 +6525,12 @@ netdev_tx_t igb_xmit_frame_ring(struct sk_buff *skb,
 	return NETDEV_TX_OK;
 
 out_drop:
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		dev_kfree_skb_any(first->skb);
 		first->skb = NULL;
 	}
 cleanup_tx_tstamp:
-	if (unlikely(!adapter->ecdev && tx_flags & IGB_TX_FLAGS_TSTAMP)) {
+	if (unlikely(!get_ecdev(adapter) && tx_flags & IGB_TX_FLAGS_TSTAMP)) {
 		dev_kfree_skb_any(adapter->ptp_tx_skb);
 		adapter->ptp_tx_skb = NULL;
 		if (adapter->hw.mac.type == e1000_82576)
@@ -8115,6 +8128,10 @@ static int igb_poll(struct napi_struct *napi, int budget)
 	bool clean_complete = true;
 	int work_done = 0;
 
+	if (get_ecdev(q_vector->adapter)) {
+		return -EBUSY;
+	}
+
 #ifdef CONFIG_IGB_DCA
 	if (q_vector->adapter->flags & IGB_FLAG_DCA_ENABLED)
 		igb_update_dca(q_vector);
@@ -8189,7 +8206,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
 		total_packets += tx_buffer->gso_segs;
 
 		/* free the skb */
-		if (!adapter->ecdev) {
+		if (!get_ecdev(adapter)) {
 			if (tx_buffer->type == IGB_TYPE_SKB)
 				napi_consume_skb(tx_buffer->skb, napi_budget);
 			else
@@ -8243,7 +8260,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
 		budget--;
 	} while (likely(budget));
 
-	if (!adapter->ecdev) {
+	if (!get_ecdev(adapter)) {
 		netdev_tx_completed_queue(txring_txq(tx_ring),
 					total_packets, total_bytes);
 	}
@@ -8256,7 +8273,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
 	q_vector->tx.total_bytes += total_bytes;
 	q_vector->tx.total_packets += total_packets;
 
-	if (!adapter->ecdev && 
+	if (!get_ecdev(adapter) &&
 			test_bit(IGB_RING_FLAG_TX_DETECT_HANG, &tx_ring->flags)) {
 		struct e1000_hw *hw = &adapter->hw;
 
@@ -8300,7 +8317,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
 	}
 
 #define TX_WAKE_THRESHOLD (DESC_NEEDED * 2)
-	if (unlikely(!adapter->ecdev && total_packets &&
+	if (unlikely(!get_ecdev(adapter) && total_packets &&
 	    netif_carrier_ok(tx_ring->netdev) &&
 	    igb_desc_unused(tx_ring) >= TX_WAKE_THRESHOLD)) {
 		/* Make sure that anybody stopping the queue after this
@@ -8838,9 +8855,9 @@ static int igb_clean_rx_irq(struct igb_q_vector *q_vector, const int budget)
 		rx_buffer = igb_get_rx_buffer(rx_ring, size, &rx_buf_pgcnt);
 		pktbuf = page_address(rx_buffer->page) + rx_buffer->page_offset;
 
-		if (adapter->ecdev) {
+		if (get_ecdev(adapter)) {
 			unsigned int size = le16_to_cpu(rx_desc->wb.upper.length);
-			ecdev_receive(adapter->ecdev, pktbuf, size);
+			ecdev_receive(get_ecdev(adapter), pktbuf, size);
 			adapter->ec_watchdog_jiffies = jiffies;
 			igb_reuse_rx_page(rx_ring, rx_buffer);
 		} else {
@@ -8903,11 +8920,11 @@ static int igb_clean_rx_irq(struct igb_q_vector *q_vector, const int budget)
 		if (igb_is_non_eop(rx_ring, rx_desc))
 			continue;
 
-		if (adapter->ecdev) {
+		if (get_ecdev(adapter)) {
 			total_packets++;
 			continue;
 		}
-		
+
 		/* verify the packet layout is correct */
 		if (igb_cleanup_headers(rx_ring, rx_desc, skb)) {
 			skb = NULL;

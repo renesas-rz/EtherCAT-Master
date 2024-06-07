@@ -17,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <iostream>
@@ -33,14 +27,14 @@ using namespace std;
 #include "CommandCrc.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandCrc::CommandCrc():
     Command("crc", "CRC error register diagnosis.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandCrc::helpString(const string &binaryBaseName) const
 {
@@ -92,7 +86,7 @@ void CommandCrc::execute(const StringVector &args)
     }
 
     MasterDevice m(getSingleMasterIndex());
-    m.open(reset ? MasterDevice::ReadWrite : MasterDevice::Read);
+    m.open(MasterDevice::ReadWrite);
 
     ec_ioctl_master_t master;
     m.getMaster(&master);
@@ -177,4 +171,4 @@ void CommandCrc::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

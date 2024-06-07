@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave state machines.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include "globals.h"
 #include "master.h"
@@ -41,7 +33,20 @@
 
 #include "fsm_slave_scan.h"
 
-/*****************************************************************************/
+/****************************************************************************/
+
+// prototypes for private methods
+int ec_fsm_slave_scan_running(const ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_sii_size(ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_assign_sii(ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_datalink(ec_fsm_slave_scan_t *);
+#ifdef EC_REGALIAS
+void ec_fsm_slave_scan_enter_regalias(ec_fsm_slave_scan_t *);
+#endif
+void ec_fsm_slave_scan_enter_preop(ec_fsm_slave_scan_t *);
+void ec_fsm_slave_scan_enter_pdos(ec_fsm_slave_scan_t *);
+
+/****************************************************************************/
 
 void ec_fsm_slave_scan_state_start(ec_fsm_slave_scan_t *);
 void ec_fsm_slave_scan_state_address(ec_fsm_slave_scan_t *);
@@ -65,14 +70,7 @@ void ec_fsm_slave_scan_state_pdos(ec_fsm_slave_scan_t *);
 void ec_fsm_slave_scan_state_end(ec_fsm_slave_scan_t *);
 void ec_fsm_slave_scan_state_error(ec_fsm_slave_scan_t *);
 
-void ec_fsm_slave_scan_enter_datalink(ec_fsm_slave_scan_t *);
-#ifdef EC_REGALIAS
-void ec_fsm_slave_scan_enter_regalias(ec_fsm_slave_scan_t *);
-#endif
-void ec_fsm_slave_scan_enter_preop(ec_fsm_slave_scan_t *);
-void ec_fsm_slave_scan_enter_pdos(ec_fsm_slave_scan_t *);
-
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  */
@@ -92,7 +90,7 @@ void ec_fsm_slave_scan_init(
     ec_fsm_sii_init(&fsm->fsm_sii, fsm->datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -102,7 +100,7 @@ void ec_fsm_slave_scan_clear(ec_fsm_slave_scan_t *fsm /**< slave state machine *
     ec_fsm_sii_clear(&fsm->fsm_sii);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * Start slave scan state machine.
@@ -117,19 +115,21 @@ void ec_fsm_slave_scan_start(
     fsm->state = ec_fsm_slave_scan_state_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    \return false, if state machine has terminated
 */
 
-int ec_fsm_slave_scan_running(const ec_fsm_slave_scan_t *fsm /**< slave state machine */)
+int ec_fsm_slave_scan_running(
+        const ec_fsm_slave_scan_t *fsm /**< slave state machine */
+        )
 {
     return fsm->state != ec_fsm_slave_scan_state_end
         && fsm->state != ec_fsm_slave_scan_state_error;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Executes the current state of the state machine.
@@ -150,7 +150,7 @@ int ec_fsm_slave_scan_exec(ec_fsm_slave_scan_t *fsm /**< slave state machine */)
     return ec_fsm_slave_scan_running(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    \return true, if the state machine terminated gracefully
@@ -161,9 +161,9 @@ int ec_fsm_slave_scan_success(const ec_fsm_slave_scan_t *fsm /**< slave state ma
     return fsm->state == ec_fsm_slave_scan_state_end;
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  slave scan state machine
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    Slave scan state: START.
@@ -180,7 +180,7 @@ void ec_fsm_slave_scan_state_start(ec_fsm_slave_scan_t *fsm /**< slave state mac
     fsm->state = ec_fsm_slave_scan_state_address;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: ADDRESS.
@@ -218,7 +218,7 @@ void ec_fsm_slave_scan_state_address(
     fsm->state = ec_fsm_slave_scan_state_state;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: STATE.
@@ -264,7 +264,7 @@ void ec_fsm_slave_scan_state_state(
     fsm->state = ec_fsm_slave_scan_state_base;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave scan state: BASE.
  */
@@ -336,7 +336,7 @@ void ec_fsm_slave_scan_state_base(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: DC CAPABILITIES.
@@ -381,7 +381,7 @@ void ec_fsm_slave_scan_state_dc_cap(
     fsm->state = ec_fsm_slave_scan_state_dc_times;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: DC TIMES.
@@ -420,7 +420,7 @@ void ec_fsm_slave_scan_state_dc_times(
     ec_fsm_slave_scan_enter_datalink(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan entry function: DATALINK.
@@ -440,7 +440,7 @@ void ec_fsm_slave_scan_enter_datalink(
     fsm->state = ec_fsm_slave_scan_state_datalink;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Enter slave scan state SII_SIZE.
  */
@@ -459,7 +459,7 @@ void ec_fsm_slave_scan_enter_sii_size(
     fsm->state(fsm); // execute state immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_SII_ASSIGN
 
@@ -483,7 +483,7 @@ void ec_fsm_slave_scan_enter_assign_sii(
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: DATALINK.
@@ -533,7 +533,7 @@ void ec_fsm_slave_scan_state_datalink(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_SII_ASSIGN
 
@@ -571,7 +571,7 @@ continue_with_sii_size:
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: SII SIZE.
@@ -648,7 +648,7 @@ alloc_sii:
     ec_fsm_sii_exec(&fsm->fsm_sii); // execute state immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave scan state: SII DATA.
@@ -875,7 +875,7 @@ end:
     fsm->state = ec_fsm_slave_scan_state_error;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_REGALIAS
 
@@ -896,7 +896,7 @@ void ec_fsm_slave_scan_enter_regalias(
     fsm->state = ec_fsm_slave_scan_state_regalias;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave scan state: REGALIAS.
  */
@@ -934,7 +934,7 @@ void ec_fsm_slave_scan_state_regalias(
 
 #endif // defined EC_REGALIAS
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Enter slave scan state PREOP.
  */
@@ -972,7 +972,7 @@ void ec_fsm_slave_scan_enter_preop(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave scan state: PREOP.
  */
@@ -991,7 +991,7 @@ void ec_fsm_slave_scan_state_preop(
     ec_fsm_slave_scan_enter_pdos(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave scan state: SYNC.
  */
@@ -1059,7 +1059,7 @@ void ec_fsm_slave_scan_state_sync(
     ec_fsm_slave_scan_enter_pdos(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Enter slave scan state PDOS.
  */
@@ -1075,7 +1075,7 @@ void ec_fsm_slave_scan_enter_pdos(
     ec_fsm_pdo_exec(fsm->fsm_pdo, fsm->datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Slave scan state: PDOS.
  */
@@ -1096,9 +1096,9 @@ void ec_fsm_slave_scan_state_pdos(
     fsm->state = ec_fsm_slave_scan_state_end;
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Common state functions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** State: ERROR.
  */
@@ -1108,7 +1108,7 @@ void ec_fsm_slave_scan_state_error(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: END.
  */
@@ -1118,4 +1118,4 @@ void ec_fsm_slave_scan_state_end(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/

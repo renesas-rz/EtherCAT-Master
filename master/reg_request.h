@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT register request structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_REG_REQUEST_H__
 #define __EC_REG_REQUEST_H__
@@ -41,7 +33,7 @@
 
 #include "globals.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Register request.
  */
@@ -57,11 +49,11 @@ struct ec_reg_request {
     uint16_t ring_position; /**< Ring position for emergency requests. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_reg_request_init(ec_reg_request_t *, size_t);
 void ec_reg_request_clear(ec_reg_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <iostream>
@@ -34,14 +26,14 @@ using namespace std;
 #include "CommandRegRead.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandRegRead::CommandRegRead():
     Command("reg_read", "Output a slave's register contents.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandRegRead::helpString(const string &binaryBaseName) const
 {
@@ -142,7 +134,7 @@ void CommandRegRead::execute(const StringVector &args)
     }
 
     MasterDevice m(getSingleMasterIndex());
-    m.open(MasterDevice::Read);
+    m.open(MasterDevice::ReadWrite);
     slaves = selectedSlaves(m);
 
     if (slaves.size() != 1) {
@@ -170,4 +162,4 @@ void CommandRegRead::execute(const StringVector &args)
     delete [] io.data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

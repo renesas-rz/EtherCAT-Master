@@ -1,7 +1,5 @@
 #------------------------------------------------------------------------------
 #
-#  $Id$
-#
 #  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
 #  the IgH EtherCAT Master; if not, write to the Free Software Foundation,
 #  Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
 #------------------------------------------------------------------------------
 
 noinst_PROGRAMS = ec_xenomai_example
@@ -33,13 +25,26 @@ ec_xenomai_example_SOURCES = main.c
 
 ec_xenomai_example_CFLAGS = \
 	-Wall \
-	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include
+
+ec_xenomai_example_LDFLAGS = \
+	-L$(top_builddir)/lib/.libs -lethercat_rtdm
+
+if ENABLE_XENOMAI_V3
+ec_xenomai_example_CFLAGS += \
+	-DXENOMAI_API_V3 \
+	$(XENOMAI_ALCHEMY_CFLAGS)
+
+ec_xenomai_example_LDFLAGS += \
+	$(XENOMAI_ALCHEMY_LDFLAGS)
+else
+ec_xenomai_example_CFLAGS += \
 	$(XENOMAI_NATIVE_CFLAGS) \
 	$(XENOMAI_RTDM_CFLAGS)
 
-ec_xenomai_example_LDFLAGS = \
-	-L$(top_builddir)/lib/.libs -lethercat_rtdm \
+ec_xenomai_example_LDFLAGS += \
 	$(XENOMAI_NATIVE_LDFLAGS) \
 	$(XENOMAI_RTDM_LDFLAGS)
+endif
 
 #------------------------------------------------------------------------------

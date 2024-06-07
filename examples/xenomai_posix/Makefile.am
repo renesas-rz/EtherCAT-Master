@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -15,17 +13,11 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
 #  Public License for more details.
 #
-#  You should have received a copy of the GNU General Public License along with
-#  the IgH EtherCAT Master; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#  You should have received a copy of the GNU General Public License along
+#  with the IgH EtherCAT Master; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 noinst_PROGRAMS = ec_xenomai_posix_example
 
@@ -37,9 +29,14 @@ ec_xenomai_posix_example_CFLAGS = \
 	$(XENOMAI_POSIX_CFLAGS) \
 	$(XENOMAI_RTDM_CFLAGS)
 
+if ENABLE_XENOMAI_V3
+ec_xenomai_posix_example_CFLAGS += \
+	-DXENOMAI_API_V3
+endif
+
 ec_xenomai_posix_example_LDFLAGS = \
 	-L$(top_builddir)/lib/.libs -lethercat_rtdm \
 	$(XENOMAI_POSIX_LDFLAGS) \
 	$(XENOMAI_RTDM_LDFLAGS)
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

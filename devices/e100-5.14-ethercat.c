@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2007-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,17 +17,12 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
  *
  *  ---
  *
  *  vim: noexpandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
@@ -223,7 +216,7 @@ MODULE_FIRMWARE(FIRMWARE_D101S);
 MODULE_FIRMWARE(FIRMWARE_D102E);
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_LICENSE("GPL");
 
 void e100_ec_poll(struct net_device *);
@@ -1202,7 +1195,7 @@ static int e100_configure(struct nic *nic, struct cb *cb, struct sk_buff *skb)
 		config->multicast_all = 0x1;		/* 1=accept, 0=no */
 
 	/* disable WoL when up */
-	if (nic->ecdev || 
+	if (nic->ecdev ||
 			(netif_running(nic->netdev) || !(nic->flags & wol_magic)))
 		config->magic_packet_disable = 0x1;	/* 1=off, 0=on */
 
@@ -2415,7 +2408,11 @@ static int e100_set_mac_address(struct net_device *netdev, void *p)
 	if (!is_valid_ether_addr(addr->sa_data))
 		return -EADDRNOTAVAIL;
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+	eth_hw_addr_set(netdev, addr->sa_data);
+#else
 	memcpy(netdev->dev_addr, addr->sa_data, netdev->addr_len);
+#endif
 	e100_exec_cb(nic, NULL, e100_setup_iaaddr);
 
 	return 0;
@@ -3099,7 +3096,11 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	e100_phy_init(nic);
 
+#if SUSE_VERSION == 15 && SUSE_PATCHLEVEL >= 5
+	eth_hw_addr_set(netdev, (const u8*)nic->eeprom);
+#else
 	memcpy(netdev->dev_addr, nic->eeprom, ETH_ALEN);
+#endif
 	if (!is_valid_ether_addr(netdev->dev_addr)) {
 		if (!eeprom_bad_csum_allow) {
 			netif_err(nic, probe, nic->netdev, "Invalid MAC address from EEPROM, aborting\n");

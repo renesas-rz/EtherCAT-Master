@@ -1,8 +1,6 @@
-/******************************************************************************
+/*****************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -19,35 +17,26 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT master structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_MASTER_H__
 #define __EC_MASTER_H__
 
 #include <linux/version.h>
+#include <linux/irq_work.h>
 #include <linux/list.h>
 #include <linux/timer.h>
 #include <linux/wait.h>
 #include <linux/kthread.h>
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
-#include <linux/semaphore.h>
-#else
-#include <asm/semaphore.h>
-#endif
+#include <linux/rtmutex.h>
+#include <linux/workqueue.h>
 
 #include "device.h"
 #include "domain.h"
@@ -59,7 +48,7 @@
 #include "rtdm.h"
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Convenience macro for printing master-specific information to syslog.
  *
@@ -123,7 +112,7 @@
  */
 #define EC_EXT_RING_SIZE 32
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT master phase.
  */
@@ -136,7 +125,7 @@ typedef enum {
                    application. */
 } ec_master_phase_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Cyclic statistics.
  */
@@ -148,7 +137,7 @@ typedef struct {
     unsigned long output_jiffies; /**< time of last output */
 } ec_stats_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Device statistics.
  */
@@ -179,13 +168,13 @@ typedef struct {
     unsigned long jiffies; /**< Jiffies of last statistic cycle. */
 } ec_device_stats_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #if EC_MAX_NUM_DEVICES < 1
 #error Invalid number of devices
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT master.
  *
@@ -196,11 +185,7 @@ struct ec_master {
     unsigned int reserved; /**< \a True, if the master is in use. */
 
     ec_cdev_t cdev; /**< Master character device. */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
     struct device *class_device; /**< Master class device. */
-#else
-    struct class_device *class_device; /**< Master class device. */
-#endif
 
 #ifdef EC_RTDM
     ec_rtdm_dev_t rtdm_dev; /**< RTDM device. */
@@ -248,6 +233,7 @@ struct ec_master {
     ec_slave_t *dc_ref_clock; /**< DC reference clock slave. */
 
     unsigned int scan_busy; /**< Current scan state. */
+    unsigned int scan_index; /**< Index of slave currently scanned. */
     unsigned int allow_scan; /**< \a True, if slave scanning is allowed. */
     struct semaphore scan_sem; /**< Semaphore protecting the \a scan_busy
                                  variable and the \a allow_scan flag. */
@@ -293,7 +279,7 @@ struct ec_master {
     struct list_head eoe_handlers; /**< Ethernet over EtherCAT handlers. */
 #endif
 
-    struct semaphore io_sem; /**< Semaphore used in \a IDLE phase. */
+    struct rt_mutex io_mutex;  /**< Mutex used in \a IDLE and \a OP phase. */
 
     void (*send_cb)(void *); /**< Current send datagrams callback. */
     void (*receive_cb)(void *); /**< Current receive datagrams callback. */
@@ -310,9 +296,12 @@ struct ec_master {
 
     wait_queue_head_t request_queue; /**< Wait queue for external requests
                                        from user space. */
+    struct work_struct sc_reset_work; /**< Task to reset slave configuration. */
+    struct irq_work sc_reset_work_kicker; /**< NMI-Safe kicker to trigger
+                                            reset task above. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // static funtions
 void ec_master_init_static(void);
@@ -388,6 +377,6 @@ void ec_master_internal_receive_cb(void *);
 
 extern const unsigned int rate_intervals[EC_RATE_COUNT]; // see master.c
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

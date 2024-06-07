@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <iostream>
@@ -36,14 +28,14 @@ using namespace std;
 #include "sii_crc.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandRegWrite::CommandRegWrite():
     Command("reg_write", "Write data to a slave's registers.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandRegWrite::helpString(const string &binaryBaseName) const
 {
@@ -188,7 +180,7 @@ void CommandRegWrite::execute(const StringVector &args)
     delete [] io.data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void CommandRegWrite::loadRegData(
         ec_ioctl_slave_reg_t *io,
@@ -216,4 +208,4 @@ void CommandRegWrite::loadRegData(
     contents.copy((char *) io->data, contents.size());
 }
 
-/*****************************************************************************/
+/****************************************************************************/

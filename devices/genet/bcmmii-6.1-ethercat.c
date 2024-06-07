@@ -105,8 +105,8 @@ void bcmgenet_mii_setup(struct net_device *dev)
 
 	if (phydev->link)
 		bcmgenet_mac_config(dev);
-	if (priv->ecdev)
-		ecdev_set_link(priv->ecdev, phydev->link);
+	if (get_ecdev(priv))
+		ecdev_set_link(get_ecdev(priv), phydev->link);
 	phy_print_status(phydev);
 }
 

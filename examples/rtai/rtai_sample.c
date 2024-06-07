@@ -1,8 +1,6 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  RTAI sample for the IgH EtherCAT master.
- *
- *  $Id$
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -21,13 +19,7 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 // Linux
 #include <linux/module.h>
@@ -40,7 +32,7 @@
 // EtherCAT
 #include "../../include/ecrt.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // Module parameters
 
@@ -54,7 +46,7 @@
 
 #define PFX "ec_rtai_sample: "
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // EtherCAT
 static ec_master_t *master = NULL;
@@ -71,7 +63,7 @@ static RT_TASK task;
 static SEM master_sem;
 static cycles_t t_last_cycle = 0, t_critical;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // process data
 static uint8_t *domain1_pd; // process data memory
@@ -94,7 +86,7 @@ const static ec_pdo_entry_reg_t domain1_regs[] = {
 static unsigned int counter = 0;
 static unsigned int blink = 0;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef CONFIGURE_PDOS
 static ec_pdo_entry_info_t el3162_channel1[] = {
@@ -139,7 +131,7 @@ static ec_sync_info_t el2004_syncs[] = {
 };
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_domain1_state(void)
 {
@@ -157,7 +149,7 @@ void check_domain1_state(void)
     domain1_state = ds;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_master_state(void)
 {
@@ -177,7 +169,7 @@ void check_master_state(void)
     master_state = ms;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void check_slave_config_states(void)
 {
@@ -198,7 +190,7 @@ void check_slave_config_states(void)
     sc_ana_in_state = s;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void run(long data)
 {
@@ -241,7 +233,7 @@ void run(long data)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void send_callback(void *cb_data)
 {
@@ -255,7 +247,7 @@ void send_callback(void *cb_data)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void receive_callback(void *cb_data)
 {
@@ -269,7 +261,7 @@ void receive_callback(void *cb_data)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int __init init_mod(void)
 {
@@ -313,7 +305,8 @@ int __init init_mod(void)
         goto out_release_master;
     }
 
-    if (!(sc = ecrt_master_slave_config(master, DigOutSlavePos, Beckhoff_EL2004))) {
+    if (!(sc = ecrt_master_slave_config(master, DigOutSlavePos,
+                    Beckhoff_EL2004))) {
         printk(KERN_ERR PFX "Failed to get slave configuration.\n");
         goto out_release_master;
     }
@@ -372,7 +365,7 @@ int __init init_mod(void)
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void __exit cleanup_mod(void)
 {
@@ -386,13 +379,13 @@ void __exit cleanup_mod(void)
     printk(KERN_INFO PFX "Unloading.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_DESCRIPTION("EtherCAT RTAI sample module");
 
 module_init(init_mod);
 module_exit(cleanup_mod);
 
-/*****************************************************************************/
+/****************************************************************************/

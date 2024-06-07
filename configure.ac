@@ -1,6 +1,6 @@
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #
-#  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+#  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
 #
 #  This file is part of the IgH EtherCAT Master.
 #
@@ -17,13 +17,7 @@
 #  with the IgH EtherCAT Master; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_PREREQ(2.59)
 
@@ -37,7 +31,7 @@ AC_PREREQ(2.59)
 # - Update version number below
 # - make dist-bzip2
 #
-AC_INIT([ethercat],[1.5.2],[fp@igh.de])
+AC_INIT([ethercat],[1.6.0],[fp@igh.de])
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([-Wall -Wno-override -Werror dist-bzip2 subdir-objects foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -48,18 +42,18 @@ AC_PROG_SED
 PKG_PROG_PKG_CONFIG
 PKG_INSTALLDIR()
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Global
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AM_PROG_CC_C_O
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_CXX
 AC_PROG_LIBTOOL
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Kernel modules
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build kernel modules])
 
@@ -72,7 +66,7 @@ AC_ARG_ENABLE([kernel],
                 ;;
             no) enablekernel=0
                 ;;
-            *) AC_MSG_ERROR([Invalid value for --enable-generic])
+            *) AC_MSG_ERROR([Invalid value for --enable-kernel])
                 ;;
         esac
     ],
@@ -88,9 +82,9 @@ fi
 AM_CONDITIONAL(ENABLE_KERNEL, test "x$enablekernel" = "x1")
 AC_SUBST(ENABLE_KERNEL,[$enablekernel])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Linux sources
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 if test "x$enablekernel" = "x1"; then
 
@@ -152,9 +146,9 @@ AC_MSG_RESULT([$LINUX_SOURCE_DIR (Kernel $linuxversion)])
 
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Linux module installation subdirectory
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_WITH([module-dir],
     AC_HELP_STRING(
@@ -169,9 +163,40 @@ AC_SUBST(INSTALL_MOD_DIR,[$moddir])
 AC_MSG_CHECKING([for Linux modules installation directory])
 AC_MSG_RESULT([$INSTALL_MOD_DIR])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# Native driver resource (de)allocation verifying
+#-----------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to verify native driver resources])
+
+AC_ARG_ENABLE([driver-resource-verifying],
+    AS_HELP_STRING([--enable-driver-resource-verifying],
+                   [Verify resource (de-)allocation in native drivers]),
+    [
+        case "${enableval}" in
+            yes) enableverifying=1
+                ;;
+            no) enableverifying=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-driver-resource-verifying])
+                ;;
+        esac
+    ],
+    [enableverifying=0]
+)
+
+if test "x$enableverifying" = "x1"; then
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(ENABLE_DRIVER_RESOURCE_VERIFYING, test "x$enableverifying" = "x1")
+AC_SUBST(ENABLE_DRIVER_RESOURCE_VERIFYING,[$enableverifying])
+
+#-----------------------------------------------------------------------------
 # Generic Ethernet driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([generic],
     AS_HELP_STRING([--enable-generic],
@@ -192,9 +217,9 @@ AC_ARG_ENABLE([generic],
 AM_CONDITIONAL(ENABLE_GENERIC, test "x$enablegeneric" = "x1")
 AC_SUBST(ENABLE_GENERIC,[$enablegeneric])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # 8139too driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([8139too],
     AS_HELP_STRING([--enable-8139too],
@@ -209,7 +234,7 @@ AC_ARG_ENABLE([8139too],
                 ;;
         esac
     ],
-    [enable8139too=$enablekernel]
+    [enable8139too=0] # disabled by default
 )
 
 AM_CONDITIONAL(ENABLE_8139TOO, test "x$enable8139too" = "x1")
@@ -247,9 +272,9 @@ fi
 
 AC_SUBST(KERNEL_8139TOO,[$kernel8139too])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # e100 driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([e100],
     AS_HELP_STRING([--enable-e100],
@@ -302,9 +327,9 @@ fi
 
 AC_SUBST(KERNEL_E100,[$kernele100])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # e1000 driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([e1000],
     AS_HELP_STRING([--enable-e1000],
@@ -357,9 +382,9 @@ fi
 
 AC_SUBST(KERNEL_E1000,[$kernele1000])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # e1000e driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([e1000e],
     AS_HELP_STRING([--enable-e1000e],
@@ -432,9 +457,9 @@ fi
 AC_SUBST(KERNEL_E1000E,[$kernele1000e])
 AC_SUBST(E1000E_LAYOUT, [$e1000elayout])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # genet driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([genet],
     AS_HELP_STRING([--enable-genet],
@@ -480,9 +505,9 @@ fi
 
 AC_SUBST(KERNEL_GENET,[$kernelgenet])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # igb driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([igb],
     AS_HELP_STRING([--enable-igb],
@@ -527,9 +552,10 @@ if test "x${enableigb}" = "x1"; then
 fi
 
 AC_SUBST(KERNEL_IGB,[$kerneligb])
-#------------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
 # igc driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([igc],
     AS_HELP_STRING([--enable-igc],
@@ -574,9 +600,9 @@ fi
 
 AC_SUBST(KERNEL_IGC,[$kerneligc])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # r8169 driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([r8169],
     AS_HELP_STRING([--enable-r8169],
@@ -638,9 +664,83 @@ fi
 
 AC_SUBST(KERNEL_R8169,[$kernel_r8169])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# stmmac-pci and dwmac-intel driver
+#-----------------------------------------------------------------------------
+
+enablestmmac=0
+
+AC_ARG_ENABLE([stmmac-pci],
+    AS_HELP_STRING([--enable-stmmac-pci],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enablestmmacpci=1
+                 enablestmmac=1
+                ;;
+            no) enablestmmacpci=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enablestmmacpci=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_STMMACPCI, test "x$enablestmmacpci" = "x1")
+AC_SUBST(ENABLE_STMMACPCI,[$enablestmmacpci])
+
+AC_ARG_ENABLE([dwmac-intel],
+    AS_HELP_STRING([--enable-dwmac-intel],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enabledwmacintel=1
+                 enablestmmac=1
+                ;;
+            no) enabledwmacintel=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enabledwmacintel=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_DWMACINTEL, test "x$enabledwmacintel" = "x1")
+AC_SUBST(ENABLE_DWMACINTEL,[$enabledwmacintel])
+
+AM_CONDITIONAL(ENABLE_STMMAC, test "x$enablestmmac" = "x1")
+AC_SUBST(ENABLE_STMMAC, [$enablestmmac])
+
+AC_ARG_WITH([stmmac-kernel],
+    AC_HELP_STRING(
+        [--with-stmmac-kernel=<X.Y.Z>],
+        [stmmac kernel (only if differing)]
+    ),
+    [
+        kernelstmmac=[$withval]
+    ],
+    [
+        kernelstmmac=$linuxversion
+    ]
+)
+
+if test "x${enablestmmac}" = "x1"; then
+    AC_MSG_CHECKING([for kernel for stmmac driver])
+
+    if test ! -f "${srcdir}/devices/stmmac/stmmac-${kernelstmmac}-orig.h"; then
+        AC_MSG_ERROR([kernel $kernelstmmac not available for stmmac driver!])
+    fi
+
+    AC_MSG_RESULT([$kernelstmmac])
+fi
+
+AC_SUBST(KERNEL_STMMAC,[$kernelstmmac])
+
+#-----------------------------------------------------------------------------
 # CCAT driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build the CCAT driver])
 
@@ -669,9 +769,9 @@ fi
 AM_CONDITIONAL(ENABLE_CCAT, test "x$enableccat" = "x1")
 AC_SUBST(ENABLE_CCAT,[$enableccat])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # RTAI path (optional)
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_WITH([rtai-dir],
     AC_HELP_STRING(
@@ -693,13 +793,15 @@ AC_MSG_CHECKING([for RTAI path])
 if test -z "${rtaidir}"; then
     AC_MSG_RESULT([not specified.])
 else
-    if test \! -r ${rtaidir}/include/rtai.h; then
+    if test \! -x ${rtaidir}/bin/rtai-config; then
         AC_MSG_ERROR([no RTAI installation found in ${rtaidir}!])
     fi
     AC_MSG_RESULT([$rtaidir])
 
     rtai_lxrt_cflags=`$rtaidir/bin/rtai-config --lxrt-cflags`
     rtai_lxrt_ldflags=`$rtaidir/bin/rtai-config --lxrt-ldflags`
+    rtai_module_dir=`$rtaidir/bin/rtai-config --module-dir`
+    rtai_kernel_cflags=`$rtaidir/bin/rtai-config --kernel-cflags`
 fi
 
 AC_SUBST(RTAI_DIR,[$rtaidir])
@@ -708,10 +810,12 @@ AC_SUBST(ENABLE_RTAI,[$rtai])
 
 AC_SUBST(RTAI_LXRT_CFLAGS,[$rtai_lxrt_cflags])
 AC_SUBST(RTAI_LXRT_LDFLAGS,[$rtai_lxrt_ldflags])
+AC_SUBST(RTAI_MODULE_DIR,[$rtai_module_dir])
+AC_SUBST(RTAI_KERNEL_CFLAGS,[$rtai_kernel_cflags])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Xenomai path (optional)
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_WITH([xenomai-dir],
     AC_HELP_STRING(
@@ -728,28 +832,61 @@ AC_ARG_WITH([xenomai-dir],
     ]
 )
 
+AC_ARG_WITH([xenomai-config],
+    AC_HELP_STRING(
+        [--with-xenomai-config=<CMD>],
+        [Xenomai config invokation, default to xenomai-dir/bin/xeno-config]
+    ),
+    [
+        xenomaiconfig=[$withval]
+    ],
+    [
+        xenomaiconfig="$xenomaidir/bin/xeno-config"
+    ]
+)
+
 AC_MSG_CHECKING([for Xenomai path])
 
 if test -z "${xenomaidir}"; then
     AC_MSG_RESULT([not specified.])
 else
-    if test \! -r ${xenomaidir}/include/xeno_config.h; then
+    if test \! -x ${xenomaiconfig}; then
         AC_MSG_ERROR([no Xenomai installation found in ${xenomaidir}!])
     fi
     AC_MSG_RESULT([$xenomaidir])
 
-    xeno_native_cflags=`$xenomaidir/bin/xeno-config --skin native --cflags`
-    xeno_native_ldflags=`$xenomaidir/bin/xeno-config --skin native --ldflags`
-    xeno_posix_cflags=`$xenomaidir/bin/xeno-config --skin posix --cflags`
-    xeno_posix_ldflags=`$xenomaidir/bin/xeno-config --skin posix --ldflags`
-    xeno_rtdm_cflags=`$xenomaidir/bin/xeno-config --skin rtdm --cflags`
-    xeno_rtdm_ldflags=`$xenomaidir/bin/xeno-config --skin rtdm --ldflags`
+    xenomai_ver=`$xenomaiconfig --version`
+    xenomai_ver=${xenomai_ver##\"}
+    xenomai_ver=${xenomai_ver%%\"}
+    echo "xenomai version: " $xenomai_ver
+
+    if test ${xenomai_ver%%.*} -gt 2; then
+        xeno_alchemy_cflags=`$xenomaiconfig --skin alchemy --cflags`
+        xeno_alchemy_ldflags=`$xenomaiconfig --skin alchemy --auto-init-solib --ldflags`
+        xeno_posix_ldflags=`$xenomaiconfig --skin posix --auto-init-solib --ldflags`
+        xeno_rtdm_ldflags=`$xenomaiconfig --skin rtdm --auto-init-solib --ldflags`
+        xeno_v3=1
+        xeno=0
+        AC_DEFINE([EC_RTDM_XENOMAI_V3], [1], [Use Xenomai3 RTDM flavour])
+    else
+        xeno_native_cflags=`$xenomaiconfig --skin native --cflags`
+        xeno_native_ldflags=`$xenomaiconfig --skin native --ldflags`
+        xeno_posix_ldflags=`$xenomaiconfig --skin posix --ldflags`
+        xeno_rtdm_ldflags=`$xenomaiconfig --skin rtdm --ldflags`
+    fi
+
+    xeno_posix_cflags=`$xenomaiconfig --skin posix --cflags`
+    xeno_rtdm_cflags=`$xenomaiconfig --skin rtdm --cflags`
 fi
 
 AC_SUBST(XENOMAI_DIR,[$xenomaidir])
 AM_CONDITIONAL(ENABLE_XENOMAI, test "x$xeno" = "x1")
 AC_SUBST(ENABLE_XENOMAI,[$xeno])
+AM_CONDITIONAL(ENABLE_XENOMAI_V3, test "x$xeno_v3" = "x1")
+AC_SUBST(ENABLE_XENOMAI_V3,[$xeno_v3])
 
+AC_SUBST(XENOMAI_ALCHEMY_CFLAGS,[$xeno_alchemy_cflags])
+AC_SUBST(XENOMAI_ALCHEMY_LDFLAGS,[$xeno_alchemy_ldflags])
 AC_SUBST(XENOMAI_NATIVE_CFLAGS,[$xeno_native_cflags])
 AC_SUBST(XENOMAI_NATIVE_LDFLAGS,[$xeno_native_ldflags])
 AC_SUBST(XENOMAI_POSIX_CFLAGS,[$xeno_posix_cflags])
@@ -757,9 +894,9 @@ AC_SUBST(XENOMAI_POSIX_LDFLAGS,[$xeno_posix_ldflags])
 AC_SUBST(XENOMAI_RTDM_CFLAGS,[$xeno_rtdm_cflags])
 AC_SUBST(XENOMAI_RTDM_LDFLAGS,[$xeno_rtdm_ldflags])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # RTDM interface (optional)
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_ENABLE([rtdm],
     AC_HELP_STRING(
@@ -791,9 +928,9 @@ fi
 AM_CONDITIONAL(ENABLE_RTDM, test "x$rtdm" = "x1")
 AC_SUBST(ENABLE_RTDM,[$rtdm])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Debug interface
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build the debug interface])
 
@@ -823,9 +960,9 @@ fi
 AM_CONDITIONAL(ENABLE_DEBUG_IF, test "x$dbg" = "x1")
 AC_SUBST(ENABLE_DEBUG_IF,[$dbg])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Debug ring
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build the debug ring])
 
@@ -852,9 +989,9 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Ethernet over EtherCAT support
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build with EoE support])
 
@@ -884,9 +1021,9 @@ fi
 AM_CONDITIONAL(ENABLE_EOE, test "x$eoe" = "x1")
 AC_SUBST(ENABLE_EOE,[$eoe])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # CPU timestamp counter support
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to use the CPU timestamp counter])
 
@@ -913,9 +1050,9 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # High-resolution timer support
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to use high-resolution timers for scheduling])
 
@@ -942,9 +1079,9 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Read alias address from register
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to read alias addresses from registers])
 
@@ -971,7 +1108,7 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Command-line tool
 #-----------------------------------------------------------------------------
 
@@ -1001,9 +1138,9 @@ fi
 
 AM_CONDITIONAL(BUILD_TOOL, test "x$tool" = "x1")
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Userspace library generation
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build the userspace library])
 
@@ -1031,9 +1168,9 @@ fi
 
 AM_CONDITIONAL(ENABLE_USERLIB, test "x$userlib" = "x1")
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # TTY driver
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to build the tty driver])
 
@@ -1062,9 +1199,9 @@ fi
 AM_CONDITIONAL(ENABLE_TTY, test "x$tty" = "x1")
 AC_SUBST(ENABLE_TTY,[$tty])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Slave identification wildcards
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to allow identification wildcards])
 
@@ -1092,9 +1229,9 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # Redundancy (number of devices)
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_WITH([devices],
     AC_HELP_STRING(
@@ -1124,9 +1261,9 @@ fi
 AC_DEFINE_UNQUOTED([EC_MAX_NUM_DEVICES], $devices,
     [Max. number of Ethernet devices per master])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # SII assignment
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to assign the SII to PDI])
 
@@ -1153,9 +1290,9 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # syslog output in realtime context
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to syslog in realtime context])
 
@@ -1182,9 +1319,9 @@ else
     AC_MSG_RESULT([no])
 fi
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 # systemd service support
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_ARG_WITH([systemdsystemunitdir],
     AS_HELP_STRING([--with-systemdsystemunitdir=DIR],
@@ -1211,7 +1348,7 @@ esac
 AM_CONDITIONAL(HAVE_SYSTEMD, test "x$with_systemdsystemunitdir" != "x")
 AC_SUBST(systemdsystemunitdir,[$with_systemdsystemunitdir])
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 AC_CONFIG_FILES([
         Doxyfile
@@ -1233,6 +1370,8 @@ AC_CONFIG_FILES([
         devices/igc/Makefile
         devices/r8169/Kbuild
         devices/r8169/Makefile
+        devices/stmmac/Kbuild
+        devices/stmmac/Makefile
         ethercat.spec
         examples/Kbuild
         examples/Makefile
@@ -1263,6 +1402,7 @@ AC_CONFIG_FILES([
         tty/Kbuild
         tty/Makefile
 ])
+
 AC_OUTPUT
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

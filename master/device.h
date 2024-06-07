@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT device structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_DEVICE_H__
 #define __EC_DEVICE_H__
@@ -70,7 +62,7 @@ typedef struct {
 
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    EtherCAT device.
@@ -129,7 +121,7 @@ struct ec_device
 #endif
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_device_init(ec_device_t *, ec_master_t *);
 void ec_device_clear(ec_device_t *);
@@ -153,6 +145,6 @@ void ec_device_debug_ring_append(ec_device_t *, ec_debug_frame_dir_t,
 void ec_device_debug_ring_print(const ec_device_t *);
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

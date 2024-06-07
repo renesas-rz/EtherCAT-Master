@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,13 +17,7 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/err.h>
@@ -35,14 +27,14 @@
 #include "../../include/ecrt.h" // EtherCAT realtime interface
 #include "../../include/ectty.h" // EtherCAT TTY interface
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // Optional features
 #define PFX "ec_tty_example: "
 
 #define DEBUG 0
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #define VendorIdBeckhoff 0x00000002
 #define ProductCodeBeckhoffEL6002 0x17723052
@@ -50,7 +42,7 @@
 #define VendorIdIds 0x000012ad
 #define ProductCodeIdsCSI71A 0x17723052
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef enum {
     SER_REQUEST_INIT,
@@ -114,7 +106,7 @@ typedef struct {
 
 LIST_HEAD(handlers);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /* Beckhoff EL6002
  * Vendor ID:       0x00000002
@@ -552,7 +544,8 @@ void el60xx_port_run(el60xx_port_t *port, u8 *pd)
             tx_accepted_toggle = status & 0x0001;
             if (tx_accepted_toggle != port->tx_accepted_toggle) { // ready
                 port->tx_data_size =
-                    ectty_tx_data(port->tty, port->tx_data, port->max_tx_data_size);
+                    ectty_tx_data(port->tty, port->tx_data,
+                            port->max_tx_data_size);
                 if (port->tx_data_size) {
 #if DEBUG
                     printk(KERN_INFO PFX "%s: Sending %u bytes.\n",
@@ -729,7 +722,7 @@ void el6002_run(el6002_t *el6002, u8 *pd)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void run_serial_devices(u8 *pd)
 {
@@ -740,7 +733,7 @@ void run_serial_devices(u8 *pd)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int create_el6002_handler(ec_master_t *master, ec_domain_t *domain,
         u16 position, u32 vendor, u32 product)
@@ -767,7 +760,7 @@ int create_el6002_handler(ec_master_t *master, ec_domain_t *domain,
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int create_serial_devices(ec_master_t *master, ec_domain_t *domain)
 {
@@ -821,7 +814,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void free_serial_devices(void)
 {
@@ -838,4 +831,4 @@ void free_serial_devices(void)
     printk(KERN_INFO PFX "Finished cleaning up serial devices.\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/

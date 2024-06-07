@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -19,13 +17,8 @@
 #  with the IgH EtherCAT Master; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
 include $(top_srcdir)/Makefile.kbuild
 
 SUBDIRS =
@@ -43,6 +36,11 @@ endif
 
 if ENABLE_RTDM
 if ENABLE_XENOMAI
+SUBDIRS += \
+	xenomai \
+	xenomai_posix
+endif
+if ENABLE_XENOMAI_V3
 SUBDIRS += \
 	xenomai \
 	xenomai_posix
@@ -69,4 +67,4 @@ DIST_SUBDIRS = \
 	xenomai \
 	xenomai_posix
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

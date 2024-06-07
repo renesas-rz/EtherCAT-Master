@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -20,13 +18,7 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,14 +33,14 @@
 #include "ioctl.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ecrt_version_magic(void)
 {
     return ECRT_VERSION_MAGIC;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_master_t *ecrt_request_master(unsigned int master_index)
 {
@@ -64,7 +56,7 @@ ec_master_t *ecrt_request_master(unsigned int master_index)
     return master;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #define MAX_PATH_LEN 64
 
@@ -87,8 +79,10 @@ ec_master_t *ecrt_open_master(unsigned int master_index)
     master->first_config = NULL;
 
     snprintf(path, MAX_PATH_LEN - 1,
-#ifdef USE_RTDM
+#if defined(USE_RTDM)
             "EtherCAT%u",
+#elif defined(USE_RTDM_XENOMAI_V3)
+            "/dev/rtdm/EtherCAT%u",
 #else
             "/dev/EtherCAT%u",
 #endif
@@ -128,7 +122,7 @@ out_clear:
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_release_master(ec_master_t *master)
 {
@@ -136,7 +130,7 @@ void ecrt_release_master(ec_master_t *master)
     free(master);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 float ecrt_read_real(const void *data)
 {
@@ -144,7 +138,7 @@ float ecrt_read_real(const void *data)
     return *(float *) (const void *) &raw;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 double ecrt_read_lreal(const void *data)
 {
@@ -152,18 +146,18 @@ double ecrt_read_lreal(const void *data)
     return *(double *) (const void *) &raw;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_write_real(void *data, float value)
 {
     *(uint32_t *) data = cpu_to_le32(*(uint32_t *) (void *) &value);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ecrt_write_lreal(void *data, double value)
 {
     *(uint64_t *) data = cpu_to_le64(*(uint64_t *) (void *) &value);
 }
 
-/*****************************************************************************/
+/****************************************************************************/

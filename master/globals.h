@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2021  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -16,13 +16,13 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this file. If not, see <http://www.gnu.org/licenses/>.
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Global definitions and macros.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_MASTER_GLOBALS_H__
 #define __EC_MASTER_GLOBALS_H__
@@ -30,9 +30,9 @@
 #include "../globals.h"
 #include "../include/ecrt.h"
 
-/******************************************************************************
+/*****************************************************************************
  * EtherCAT master
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Datagram timeout in microseconds. */
 #define EC_IO_TIMEOUT 500
@@ -59,9 +59,9 @@
 /** Number of statistic rate intervals to maintain. */
 #define EC_RATE_COUNT 3
 
-/******************************************************************************
+/*****************************************************************************
  * EtherCAT protocol
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Size of an EtherCAT frame header. */
 #define EC_FRAME_HEADER_SIZE 2
@@ -103,6 +103,12 @@
  **/
 #define EC_DATAGRAM_NAME_SIZE 20
 
+/** Maximum hostname size.
+ *
+ * Used inside the EoE set IP parameter request.
+ */
+#define EC_MAX_HOSTNAME_SIZE 32
+
 /** Slave state mask.
  *
  * Apply this mask to a slave state byte to get the slave state without
@@ -130,6 +136,9 @@ typedef enum {
 } ec_slave_state_t;
 
 /** Supported mailbox protocols.
+ *
+ * Not to mix up with the mailbox type field in the mailbox header defined in
+ * master/mailbox.h.
  */
 enum {
     EC_MBOX_AOE = 0x01, /**< ADS over EtherCAT */
@@ -193,7 +202,7 @@ typedef enum {
 
 extern const char *ec_device_names[2]; // only main and backup!
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Convenience macro for printing EtherCAT-specific information to syslog.
  *
@@ -235,17 +244,17 @@ extern const char *ec_device_names[2]; // only main and backup!
 #define EC_DBG(fmt, args...) \
     printk(KERN_DEBUG "EtherCAT DEBUG: " fmt, ##args)
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Absolute value.
  */
 #define EC_ABS(X) ((X) >= 0 ? (X) : -(X))
 
-/*****************************************************************************/
+/****************************************************************************/
 
 extern char *ec_master_version_str;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int ec_master_count(void);
 void ec_print_data(const uint8_t *, size_t);
@@ -256,7 +265,7 @@ int ec_mac_is_zero(const uint8_t *);
 
 ec_master_t *ecrt_request_master_err(unsigned int);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Code/Message pair.
  *
@@ -268,7 +277,7 @@ typedef struct {
     const char *message; /**< Message belonging to \a code. */
 } ec_code_msg_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Generic request state.
  *
@@ -283,11 +292,11 @@ typedef enum {
     EC_INT_REQUEST_FAILURE
 } ec_internal_request_state_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 extern const ec_request_state_t ec_request_state_translation_table[];
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Origin type.
  */
@@ -296,10 +305,10 @@ typedef enum {
     EC_ORIG_EXTERNAL /**< External. */
 } ec_origin_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_slave ec_slave_t; /**< \see ec_slave. */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

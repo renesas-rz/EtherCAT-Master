@@ -1,9 +1,7 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C)      2011  IgH Andreas Stewering-Bone
- *                     2012  Florian Pose <fp@igh-essen.com>
+ *                     2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master
  *
@@ -19,13 +17,7 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 #include <sched.h>
 #include <stdio.h>
@@ -46,7 +38,7 @@ RT_TASK *task;
 
 const static unsigned int cycle_us = 1000; /* 1 ms */
 
-static int run = 1;
+static volatile sig_atomic_t run = 1;
 
 /****************************************************************************/
 

@@ -1,6 +1,6 @@
-/******************************************************************************
+/*****************************************************************************
  *
- *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -16,21 +16,14 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ */
 
 /**
    \file
    EtherCAT master character device.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/vmalloc.h>
@@ -55,7 +48,33 @@
 #define ATTRIBUTES
 #endif
 
-/*****************************************************************************/
+#ifdef EC_IOCTL_RTDM
+# include "rtdm_details.h"
+/* RTDM does not support locking yet,
+ * therefore no send/receive callbacks are set too. */
+# define ec_ioctl_lock(lock) do {} while(0)
+# define ec_ioctl_unlock(lock) do {} while(0)
+# define ec_ioctl_lock_interruptible(lock) (0)
+# define ec_copy_to_user(to, from, n, ctx) \
+    rtdm_safe_copy_to_user(ec_ioctl_to_rtdm(ctx), to, from, n)
+# define ec_copy_from_user(to, from, n, ctx) \
+    rtdm_safe_copy_from_user(ec_ioctl_to_rtdm(ctx), to, from, n)
+#else
+# define ec_ioctl_lock(lock)   rt_mutex_lock(lock)
+# define ec_ioctl_unlock(lock) rt_mutex_unlock(lock)
+#  if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0) || \
+      (defined(CONFIG_PREEMPT_RT_FULL) && LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
+#   define ec_ioctl_lock_interruptible(lock) \
+           rt_mutex_lock_interruptible(lock)
+#  else
+#   define ec_ioctl_lock_interruptible(lock) \
+           rt_mutex_lock_interruptible(lock, 0)
+# endif
+# define ec_copy_to_user(to, from, n, ctx) copy_to_user(to, from, n)
+# define ec_copy_from_user(to, from, n, ctx) copy_from_user(to, from, n)
+#endif  // EC_IOCTL_RTDM
+
+/****************************************************************************/
 
 /** Copies a string to an ioctl structure.
  */
@@ -72,14 +91,15 @@ static void ec_ioctl_strcpy(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get module information.
  *
  * \return Zero on success, otherwise a negative error code.
  */
 static ATTRIBUTES int ec_ioctl_module(
-        void *arg /**< Userspace address to store the results. */
+        void *arg, /**< ioctl() argument. */
+        ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
     ec_ioctl_module_t data;
@@ -87,13 +107,13 @@ static ATTRIBUTES int ec_ioctl_module(
     data.ioctl_version_magic = EC_IOCTL_VERSION_MAGIC;
     data.master_count = ec_master_count();
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get master information.
  *
@@ -112,6 +132,7 @@ static ATTRIBUTES int ec_ioctl_master(
     }
 
     io.slave_count = master->slave_count;
+    io.scan_index = master->scan_index;
     io.config_count = ec_master_config_count(master);
     io.domain_count = ec_master_domain_count(master);
 #ifdef EC_EOE
@@ -191,7 +212,7 @@ static ATTRIBUTES int ec_ioctl_master(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave information.
  *
@@ -278,7 +299,7 @@ static ATTRIBUTES int ec_ioctl_slave(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave sync manager information.
  *
@@ -331,7 +352,7 @@ static ATTRIBUTES int ec_ioctl_slave_sync(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave sync manager PDO information.
  *
@@ -390,7 +411,7 @@ static ATTRIBUTES int ec_ioctl_slave_sync_pdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave sync manager PDO entry information.
  *
@@ -459,7 +480,7 @@ static ATTRIBUTES int ec_ioctl_slave_sync_pdo_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get domain information.
  *
@@ -504,7 +525,7 @@ static ATTRIBUTES int ec_ioctl_domain(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get domain FMMU information.
  *
@@ -556,7 +577,7 @@ static ATTRIBUTES int ec_ioctl_domain_fmmu(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get domain data.
  *
@@ -601,7 +622,7 @@ static ATTRIBUTES int ec_ioctl_domain_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set master debug level.
  *
@@ -615,7 +636,7 @@ static ATTRIBUTES int ec_ioctl_master_debug(
     return ec_master_debug_level(master, (unsigned long) arg);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Issue a bus scan.
  *
@@ -630,7 +651,7 @@ static ATTRIBUTES int ec_ioctl_master_rescan(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set slave state.
  *
@@ -665,7 +686,7 @@ static ATTRIBUTES int ec_ioctl_slave_state(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave SDO information.
  *
@@ -714,7 +735,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave SDO entry information.
  *
@@ -794,7 +815,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Upload SDO.
  *
@@ -840,7 +861,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo_upload(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Download SDO.
  *
@@ -888,7 +909,7 @@ static ATTRIBUTES int ec_ioctl_slave_sdo_download(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read a slave's SII.
  *
@@ -936,7 +957,7 @@ static ATTRIBUTES int ec_ioctl_slave_sii_read(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write a slave's SII.
  *
@@ -1024,7 +1045,7 @@ static ATTRIBUTES int ec_ioctl_slave_sii_write(
     return request.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read a slave's registers.
  *
@@ -1054,7 +1075,10 @@ static ATTRIBUTES int ec_ioctl_slave_reg_read(
         return ret;
     }
 
-    ecrt_reg_request_read(&request, io.address, io.size);
+    ret = ecrt_reg_request_read(&request, io.address, io.size);
+    if (ret) {
+        return ret;
+    }
 
     if (down_interruptible(&master->master_sem)) {
         ec_reg_request_clear(&request);
@@ -1103,7 +1127,7 @@ static ATTRIBUTES int ec_ioctl_slave_reg_read(
     return request.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write a slave's registers.
  *
@@ -1138,7 +1162,10 @@ static ATTRIBUTES int ec_ioctl_slave_reg_write(
         return -EFAULT;
     }
 
-    ecrt_reg_request_write(&request, io.address, io.size);
+    ret = ecrt_reg_request_write(&request, io.address, io.size);
+    if (ret) {
+        return ret;
+    }
 
     if (down_interruptible(&master->master_sem)) {
         ec_reg_request_clear(&request);
@@ -1188,7 +1215,7 @@ static ATTRIBUTES int ec_ioctl_slave_reg_write(
     return request.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration information.
  *
@@ -1247,7 +1274,7 @@ static ATTRIBUTES int ec_ioctl_config(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration PDO information.
  *
@@ -1303,7 +1330,7 @@ static ATTRIBUTES int ec_ioctl_config_pdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration PDO entry information.
  *
@@ -1368,7 +1395,7 @@ static ATTRIBUTES int ec_ioctl_config_pdo_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration SDO information.
  *
@@ -1432,7 +1459,7 @@ static ATTRIBUTES int ec_ioctl_config_sdo(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration IDN information.
  *
@@ -1496,7 +1523,7 @@ static ATTRIBUTES int ec_ioctl_config_idn(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get slave configuration feature flag information.
  *
@@ -1559,7 +1586,75 @@ static ATTRIBUTES int ec_ioctl_config_flag(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
+
+#ifdef EC_EOE
+
+/** Get configured EoE IP parameters for a given slave configuration.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_config_ip(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg /**< ioctl() argument. */
+        )
+{
+    ec_ioctl_eoe_ip_t *ioctl;
+    const ec_slave_config_t *sc;
+    const ec_eoe_request_t *req;
+
+    if (!(ioctl = kmalloc(sizeof(*ioctl), GFP_KERNEL))) {
+        return -ENOMEM;
+    }
+
+    if (copy_from_user(ioctl, (void __user *) arg, sizeof(*ioctl))) {
+        kfree(ioctl);
+        return -EFAULT;
+    }
+
+    if (down_interruptible(&master->master_sem)) {
+        kfree(ioctl);
+        return -EINTR;
+    }
+
+    if (!(sc = ec_master_get_config_const(master, ioctl->config_index))) {
+        up(&master->master_sem);
+        EC_MASTER_ERR(master, "Slave config %u does not exist!\n",
+                ioctl->config_index);
+        kfree(ioctl);
+        return -EINVAL;
+    }
+
+    req = &sc->eoe_ip_param_request;
+
+    ioctl->mac_address_included = req->mac_address_included;
+    ioctl->ip_address_included = req->ip_address_included;
+    ioctl->subnet_mask_included = req->subnet_mask_included;
+    ioctl->gateway_included = req->gateway_included;
+    ioctl->dns_included = req->dns_included;
+    ioctl->name_included = req->name_included;
+
+    memcpy(ioctl->mac_address, req->mac_address, EC_ETH_ALEN);
+    ioctl->ip_address = req->ip_address;
+    ioctl->subnet_mask = req->subnet_mask;
+    ioctl->gateway = req->gateway;
+    ioctl->dns = req->dns;
+    strncpy(ioctl->name, req->name, EC_MAX_HOSTNAME_SIZE);
+
+    up(&master->master_sem);
+
+    if (copy_to_user((void __user *) arg, ioctl, sizeof(*ioctl))) {
+        kfree(ioctl);
+        return -EFAULT;
+    }
+
+    kfree(ioctl);
+    return 0;
+}
+
+#endif
+
+/****************************************************************************/
 
 #ifdef EC_EOE
 
@@ -1613,6 +1708,91 @@ static ATTRIBUTES int ec_ioctl_eoe_handler(
 
 #endif
 
+/****************************************************************************/
+
+#ifdef EC_EOE
+/** Request EoE IP parameter setting.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_slave_eoe_ip_param(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg /**< ioctl() argument. */
+        )
+{
+    ec_ioctl_eoe_ip_t io;
+    ec_eoe_request_t req;
+    ec_slave_t *slave;
+
+    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+        return -EFAULT;
+    }
+
+    // init EoE request
+    ec_eoe_request_init(&req);
+
+    req.mac_address_included = io.mac_address_included;
+    req.ip_address_included = io.ip_address_included;
+    req.subnet_mask_included = io.subnet_mask_included;
+    req.gateway_included = io.gateway_included;
+    req.dns_included = io.dns_included;
+    req.name_included = io.name_included;
+
+    memcpy(req.mac_address, io.mac_address, EC_ETH_ALEN);
+    req.ip_address = io.ip_address;
+    req.subnet_mask = io.subnet_mask;
+    req.gateway = io.gateway;
+    req.dns = io.dns;
+    memcpy(req.name, io.name, EC_MAX_HOSTNAME_SIZE);
+
+    req.state = EC_INT_REQUEST_QUEUED;
+
+    if (down_interruptible(&master->master_sem)) {
+        return -EINTR;
+    }
+
+    if (!(slave = ec_master_find_slave(
+                    master, 0, io.slave_position))) {
+        up(&master->master_sem);
+        EC_MASTER_ERR(master, "Slave %u does not exist!\n",
+                io.slave_position);
+        return -EINVAL;
+    }
+
+    EC_MASTER_DBG(master, 1, "Scheduling EoE request.\n");
+
+    // schedule request.
+    list_add_tail(&req.list, &slave->eoe_requests);
+
+    up(&master->master_sem);
+
+    // wait for processing through FSM
+    if (wait_event_interruptible(master->request_queue,
+                req.state != EC_INT_REQUEST_QUEUED)) {
+        // interrupted by signal
+        down(&master->master_sem);
+        if (req.state == EC_INT_REQUEST_QUEUED) {
+            // abort request
+            list_del(&req.list);
+            up(&master->master_sem);
+            return -EINTR;
+        }
+        up(&master->master_sem);
+    }
+
+    // wait until master FSM has finished processing
+    wait_event(master->request_queue, req.state != EC_INT_REQUEST_BUSY);
+
+    io.result = req.result;
+
+    if (copy_to_user((void __user *) arg, &io, sizeof(io))) {
+        return -EFAULT;
+    }
+
+    return req.state == EC_INT_REQUEST_SUCCESS ? 0 : -EIO;
+}
+#endif
+
 /*****************************************************************************/
 
 /** Request the master from userspace.
@@ -1638,7 +1818,7 @@ static ATTRIBUTES int ec_ioctl_request(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a domain.
  *
@@ -1662,7 +1842,7 @@ static ATTRIBUTES int ec_ioctl_create_domain(
     return domain->index;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a slave configuration.
  *
@@ -1708,7 +1888,7 @@ static ATTRIBUTES int ec_ioctl_create_slave_config(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Select the DC reference clock.
  *
@@ -1749,7 +1929,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Activates the master.
  *
@@ -1801,7 +1981,7 @@ static ATTRIBUTES int ec_ioctl_activate(
             offset += ecrt_domain_size(domain);
         }
 
-#ifdef EC_IOCTL_RTDM
+#if defined(EC_IOCTL_RTDM) && !defined(EC_RTDM_XENOMAI_V3)
         /* RTDM uses a different approach for memory-mapping, which has to be
          * initiated by the kernel.
          */
@@ -1817,6 +1997,7 @@ static ATTRIBUTES int ec_ioctl_activate(
     io.process_data_size = ctx->process_data_size;
 
 #ifndef EC_IOCTL_RTDM
+    /* RTDM does not support locking yet. */
     ecrt_master_callbacks(master, ec_master_internal_send_cb,
             ec_master_internal_receive_cb, master);
 #endif
@@ -1832,7 +2013,7 @@ static ATTRIBUTES int ec_ioctl_activate(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Deactivates the master.
  *
@@ -1847,11 +2028,10 @@ static ATTRIBUTES int ec_ioctl_deactivate(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    ecrt_master_deactivate(master);
-    return 0;
+    return ecrt_master_deactivate(master);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set max. number of databytes in a cycle
  *
@@ -1883,7 +2063,7 @@ static ATTRIBUTES int ec_ioctl_set_send_interval(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Send frames.
  *
@@ -1895,17 +2075,21 @@ static ATTRIBUTES int ec_ioctl_send(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
 
-    down( & master->io_sem );
-    ecrt_master_send(master);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_master_send(master);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Receive frames.
  *
@@ -1917,17 +2101,21 @@ static ATTRIBUTES int ec_ioctl_receive(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
 
-    down( & master->io_sem );
-    ecrt_master_receive(master);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_master_receive(master);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the master state.
  *
@@ -1940,16 +2128,19 @@ static ATTRIBUTES int ec_ioctl_master_state(
         )
 {
     ec_master_state_t data;
+    int ret;
 
-    ecrt_master_state(master, &data);
+    ret = ecrt_master_state(master, &data);
+    if (ret)
+        return ret;
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the link state.
  *
@@ -1965,7 +2156,7 @@ static ATTRIBUTES int ec_ioctl_master_link_state(
     ec_master_link_state_t state;
     int ret;
 
-    if (copy_from_user(&ioctl, (void __user *) arg, sizeof(ioctl))) {
+    if (ec_copy_from_user(&ioctl, (void __user *) arg, sizeof(ioctl), ctx)) {
         return -EFAULT;
     }
 
@@ -1974,14 +2165,15 @@ static ATTRIBUTES int ec_ioctl_master_link_state(
         return ret;
     }
 
-    if (copy_to_user((void __user *) ioctl.state, &state, sizeof(state))) {
+    if (ec_copy_to_user((void __user *) ioctl.state,
+                        &state, sizeof(state), ctx)) {
         return -EFAULT;
     }
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the master DC application time.
  *
@@ -1998,15 +2190,14 @@ static ATTRIBUTES int ec_ioctl_app_time(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&time, (void __user *) arg, sizeof(time))) {
+    if (ec_copy_from_user(&time, (void __user *) arg, sizeof(time), ctx)) {
         return -EFAULT;
     }
 
-    ecrt_master_application_time(master, time);
-    return 0;
+    return ecrt_master_application_time(master, time);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync the reference clock.
  *
@@ -2018,17 +2209,21 @@ static ATTRIBUTES int ec_ioctl_sync_ref(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
 
-    down( & master->io_sem );
-    ecrt_master_sync_reference_clock(master);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_master_sync_reference_clock(master);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync the reference clock.
  *
@@ -2040,22 +2235,25 @@ static ATTRIBUTES int ec_ioctl_sync_ref_to(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
     uint64_t time;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&time, (void __user *) arg, sizeof(time))) {
+    if (ec_copy_from_user(&time, (void __user *) arg, sizeof(time), ctx)) {
         return -EFAULT;
     }
 
-    down( & master->io_sem );
-    ecrt_master_sync_reference_clock_to(master, time);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_master_sync_reference_clock_to(master, time);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sync the slave clocks.
  *
@@ -2067,17 +2265,21 @@ static ATTRIBUTES int ec_ioctl_sync_slaves(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
 
-    down( & master->io_sem );
-    ecrt_master_sync_slave_clocks(master);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_master_sync_slave_clocks(master);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the system time of the reference clock.
  *
@@ -2101,14 +2303,14 @@ static ATTRIBUTES int ec_ioctl_ref_clock_time(
         return ret;
     }
 
-    if (copy_to_user((void __user *) arg, &time, sizeof(time))) {
+    if (ec_copy_to_user((void __user *) arg, &time, sizeof(time), ctx)) {
         return -EFAULT;
     }
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Queue the sync monitoring datagram.
  *
@@ -2120,17 +2322,21 @@ static ATTRIBUTES int ec_ioctl_sync_mon_queue(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
+    int ret;
+
     if (unlikely(!ctx->requested)) {
         return -EPERM;
     }
 
-    down( & master->io_sem );
-    ecrt_master_sync_monitor_queue(master);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_master_sync_monitor_queue(master);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Processes the sync monitoring datagram.
  *
@@ -2149,13 +2355,14 @@ static ATTRIBUTES int ec_ioctl_sync_mon_process(
 
     time_diff = ecrt_master_sync_monitor_process(master);
 
-    if (copy_to_user((void __user *) arg, &time_diff, sizeof(time_diff)))
+    if (ec_copy_to_user((void __user *) arg, &time_diff,
+                        sizeof(time_diff), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Reset configuration.
  *
@@ -2167,13 +2374,16 @@ static ATTRIBUTES int ec_ioctl_reset(
         ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
         )
 {
-    down(&master->master_sem);
-    ecrt_master_reset(master);
-    up(&master->master_sem);
+#ifdef EC_IOCTL_RTDM
+    /* Xenomai/LXRT is like NMI context, so we do a two-stage schedule. */
+    irq_work_queue(&master->sc_reset_work_kicker);
+#else
+    schedule_work(&master->sc_reset_work);
+#endif
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configure a sync manager.
  *
@@ -2226,7 +2436,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configure a slave's watchdogs.
  *
@@ -2262,7 +2472,7 @@ static ATTRIBUTES int ec_ioctl_sc_watchdog(
         goto out_up;
     }
 
-    ecrt_slave_config_watchdog(sc,
+    ret = ecrt_slave_config_watchdog(sc,
             data.watchdog_divider, data.watchdog_intervals);
 
 out_up:
@@ -2271,7 +2481,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add a PDO to the assignment.
  *
@@ -2305,7 +2515,7 @@ static ATTRIBUTES int ec_ioctl_sc_add_pdo(
     return ecrt_slave_config_pdo_assign_add(sc, data.sync_index, data.index);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clears the PDO assignment.
  *
@@ -2336,11 +2546,10 @@ static ATTRIBUTES int ec_ioctl_sc_clear_pdos(
 
     up(&master->master_sem); /** \todo sc could be invalidated */
 
-    ecrt_slave_config_pdo_assign_clear(sc, data.sync_index);
-    return 0;
+    return ecrt_slave_config_pdo_assign_clear(sc, data.sync_index);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add an entry to a PDO's mapping.
  *
@@ -2375,7 +2584,7 @@ static ATTRIBUTES int ec_ioctl_sc_add_entry(
             data.entry_index, data.entry_subindex, data.entry_bit_length);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clears the mapping of a PDO.
  *
@@ -2406,11 +2615,10 @@ static ATTRIBUTES int ec_ioctl_sc_clear_entries(
 
     up(&master->master_sem); /** \todo sc could be invalidated */
 
-    ecrt_slave_config_pdo_mapping_clear(sc, data.index);
-    return 0;
+    return ecrt_slave_config_pdo_mapping_clear(sc, data.index);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Registers a PDO entry.
  *
@@ -2457,7 +2665,7 @@ static ATTRIBUTES int ec_ioctl_sc_reg_pdo_entry(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Registers a PDO entry by its position.
  *
@@ -2507,7 +2715,7 @@ static ATTRIBUTES int ec_ioctl_sc_reg_pdo_pos(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets the DC AssignActivate word and the sync signal times.
  *
@@ -2521,6 +2729,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
 {
     ec_ioctl_config_t data;
     ec_slave_config_t *sc;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -2536,7 +2745,7 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
         return -ENOENT;
     }
 
-    ecrt_slave_config_dc(sc, data.dc_assign_activate,
+    ret = ecrt_slave_config_dc(sc, data.dc_assign_activate,
             data.dc_sync[0].cycle_time,
             data.dc_sync[0].shift_time,
             data.dc_sync[1].cycle_time,
@@ -2544,10 +2753,10 @@ static ATTRIBUTES int ec_ioctl_sc_dc(
 
     up(&master->master_sem);
 
-    return 0;
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configures an SDO.
  *
@@ -2606,7 +2815,7 @@ static ATTRIBUTES int ec_ioctl_sc_sdo(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the emergency ring buffer size.
  *
@@ -2644,7 +2853,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_size(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get an emergency message from the ring.
  *
@@ -2665,7 +2874,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_pop(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -2681,14 +2890,14 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_pop(
         return ret;
     }
 
-    if (copy_to_user((void __user *) io.target, msg, sizeof(msg))) {
+    if (ec_copy_to_user((void __user *) io.target, msg, sizeof(msg), ctx)) {
         return -EFAULT;
     }
 
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the emergency ring.
  *
@@ -2707,7 +2916,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_clear(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -2721,7 +2930,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_clear(
     return ecrt_slave_config_emerg_clear(sc);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the number of emergency overruns.
  *
@@ -2741,7 +2950,7 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_overruns(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -2759,14 +2968,14 @@ static ATTRIBUTES int ec_ioctl_sc_emerg_overruns(
 
     io.overruns = ret;
 
-    if (copy_to_user((void __user *) arg, &io, sizeof(io))) {
+    if (ec_copy_to_user((void __user *) arg, &io, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create an SDO request.
  *
@@ -2817,7 +3026,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_sdo_request(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create an SoE request.
  *
@@ -2870,7 +3079,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_soe_request(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a register request.
  *
@@ -2924,7 +3133,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_reg_request(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Create a VoE handler.
  *
@@ -2974,7 +3183,7 @@ static ATTRIBUTES int ec_ioctl_sc_create_voe_handler(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the slave configuration's state.
  *
@@ -2989,11 +3198,12 @@ static ATTRIBUTES int ec_ioctl_sc_state(
     ec_ioctl_sc_state_t data;
     const ec_slave_config_t *sc;
     ec_slave_config_state_t state;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data))) {
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx)) {
         return -EFAULT;
     }
 
@@ -3004,15 +3214,18 @@ static ATTRIBUTES int ec_ioctl_sc_state(
         return -ENOENT;
     }
 
-    ecrt_slave_config_state(sc, &state);
+    ret = ecrt_slave_config_state(sc, &state);
+    if (ret)
+        return ret;
 
-    if (copy_to_user((void __user *) data.state, &state, sizeof(state)))
+    if (ec_copy_to_user((void __user *) data.state,
+                        &state, sizeof(state), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configures an IDN.
  *
@@ -3066,7 +3279,7 @@ static ATTRIBUTES int ec_ioctl_sc_idn(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Configures a feature flag.
  *
@@ -3123,7 +3336,108 @@ static ATTRIBUTES int ec_ioctl_sc_flag(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
+
+/** Sets an AL state transition timeout.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_sc_state_timeout(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg, /**< ioctl() argument. */
+        ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
+        )
+{
+    ec_ioctl_sc_state_timeout_t ioctl;
+    ec_slave_config_t *sc;
+    int ret;
+
+    if (unlikely(!ctx->requested)) {
+        return -EPERM;
+    }
+
+    if (copy_from_user(&ioctl, (void __user *) arg, sizeof(ioctl))) {
+        return -EFAULT;
+    }
+
+    if (down_interruptible(&master->master_sem)) {
+        return -EINTR;
+    }
+
+    if (!(sc = ec_master_get_config(master, ioctl.config_index))) {
+        up(&master->master_sem);
+        return -ENOENT;
+    }
+
+    up(&master->master_sem); /** \todo sc could be invalidated */
+
+    ret = ecrt_slave_config_state_timeout(sc, ioctl.from_state,
+            ioctl.to_state, ioctl.timeout_ms);
+    return ret;
+}
+
+/****************************************************************************/
+
+#ifdef EC_EOE
+
+/** Configures EoE IP parameters.
+ *
+ * \return Zero on success, otherwise a negative error code.
+ */
+static ATTRIBUTES int ec_ioctl_sc_ip(
+        ec_master_t *master, /**< EtherCAT master. */
+        void *arg, /**< ioctl() argument. */
+        ec_ioctl_context_t *ctx /**< Private data structure of file handle. */
+        )
+{
+    ec_ioctl_eoe_ip_t io;
+    ec_slave_config_t *sc;
+
+    if (unlikely(!ctx->requested)) {
+        return -EPERM;
+    }
+
+    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+        return -EFAULT;
+    }
+
+    if (down_interruptible(&master->master_sem)) {
+        return -EINTR;
+    }
+
+    if (!(sc = ec_master_get_config(master, io.config_index))) {
+        up(&master->master_sem);
+        return -ENOENT;
+    }
+
+    up(&master->master_sem); /** \todo sc could be invalidated */
+
+    /* the kernel versions of the EoE set IP methods never fail. */
+    if (io.mac_address_included) {
+        ecrt_slave_config_eoe_mac_address(sc, io.mac_address);
+    }
+    if (io.ip_address_included) {
+        ecrt_slave_config_eoe_ip_address(sc, io.ip_address);
+    }
+    if (io.subnet_mask_included) {
+        ecrt_slave_config_eoe_subnet_mask(sc, io.subnet_mask);
+    }
+    if (io.gateway_included) {
+        ecrt_slave_config_eoe_default_gateway(sc, io.gateway);
+    }
+    if (io.dns_included) {
+        ecrt_slave_config_eoe_dns_address(sc, io.dns);
+    }
+    if (io.name_included) {
+        ecrt_slave_config_eoe_hostname(sc, io.name);
+    }
+
+    return 0;
+}
+
+#endif
+
+/****************************************************************************/
 
 /** Gets the domain's data size.
  *
@@ -3157,7 +3471,7 @@ static ATTRIBUTES int ec_ioctl_domain_size(
     return -ENOENT;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets the domain's offset in the total process data.
  *
@@ -3191,7 +3505,7 @@ static ATTRIBUTES int ec_ioctl_domain_offset(
     return -ENOENT;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Process the domain.
  *
@@ -3215,11 +3529,10 @@ static ATTRIBUTES int ec_ioctl_domain_process(
         return -ENOENT;
     }
 
-    ecrt_domain_process(domain);
-    return 0;
+    return ecrt_domain_process(domain);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Queue the domain.
  *
@@ -3232,6 +3545,7 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
         )
 {
     ec_domain_t *domain;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
@@ -3243,13 +3557,15 @@ static ATTRIBUTES int ec_ioctl_domain_queue(
         return -ENOENT;
     }
 
-    down( & master->io_sem );
-    ecrt_domain_queue(domain);
-    up( & master->io_sem );
-    return 0;
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
+    ret = ecrt_domain_queue(domain);
+    ec_ioctl_unlock(&master->io_mutex);
+    return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the domain state.
  *
@@ -3264,11 +3580,12 @@ static ATTRIBUTES int ec_ioctl_domain_state(
     ec_ioctl_domain_state_t data;
     const ec_domain_t *domain;
     ec_domain_state_t state;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data))) {
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx)) {
         return -EFAULT;
     }
 
@@ -3279,15 +3596,18 @@ static ATTRIBUTES int ec_ioctl_domain_state(
         return -ENOENT;
     }
 
-    ecrt_domain_state(domain, &state);
+    ret = ecrt_domain_state(domain, &state);
+    if (ret)
+        return ret;
 
-    if (copy_to_user((void __user *) data.state, &state, sizeof(state)))
+    if (ec_copy_to_user((void __user *) data.state, &state, sizeof(state),
+                ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an SDO request's SDO index and subindex.
  *
@@ -3306,7 +3626,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_index(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3320,11 +3640,10 @@ static ATTRIBUTES int ec_ioctl_sdo_request_index(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_index(req, data.sdo_index, data.sdo_subindex);
-    return 0;
+    return ecrt_sdo_request_index(req, data.sdo_index, data.sdo_subindex);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an SDO request's timeout.
  *
@@ -3343,7 +3662,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3357,13 +3676,14 @@ static ATTRIBUTES int ec_ioctl_sdo_request_timeout(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_timeout(req, data.timeout);
-    return 0;
+    return ecrt_sdo_request_timeout(req, data.timeout);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets an SDO request's state.
+ *
+ * Also pre-fetches the size of incoming data.
  *
  * \return Zero on success, otherwise a negative error code.
  */
@@ -3380,7 +3700,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_state(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3400,13 +3720,13 @@ static ATTRIBUTES int ec_ioctl_sdo_request_state(
     else
         data.size = 0;
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SDO read operation.
  *
@@ -3425,7 +3745,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_read(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3439,11 +3759,10 @@ static ATTRIBUTES int ec_ioctl_sdo_request_read(
         return -ENOENT;
     }
 
-    ecrt_sdo_request_read(req);
-    return 0;
+    return ecrt_sdo_request_read(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SDO write operation.
  *
@@ -3458,12 +3777,11 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
     ec_ioctl_sdo_request_t data;
     ec_slave_config_t *sc;
     ec_sdo_request_t *req;
-    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     if (!data.size) {
@@ -3482,19 +3800,18 @@ static ATTRIBUTES int ec_ioctl_sdo_request_write(
         return -ENOENT;
     }
 
-    ret = ec_sdo_request_alloc(req, data.size);
-    if (ret)
-        return ret;
+    if (data.size > req->mem_size)
+        return -ENOBUFS;
 
-    if (copy_from_user(req->data, (void __user *) data.data, data.size))
+    if (ec_copy_from_user(req->data, (void __user *) data.data,
+                          data.size, ctx))
         return -EFAULT;
 
     req->data_size = data.size;
-    ecrt_sdo_request_write(req);
-    return 0;
+    return ecrt_sdo_request_write(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read SDO data.
  *
@@ -3513,7 +3830,7 @@ static ATTRIBUTES int ec_ioctl_sdo_request_data(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3527,14 +3844,14 @@ static ATTRIBUTES int ec_ioctl_sdo_request_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) data.data, ecrt_sdo_request_data(req),
-                ecrt_sdo_request_data_size(req)))
+    if (ec_copy_to_user((void __user *) data.data, ecrt_sdo_request_data(req),
+                ecrt_sdo_request_data_size(req), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an SoE request's drive number and IDN.
  *
@@ -3553,7 +3870,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_index(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3567,11 +3884,10 @@ static ATTRIBUTES int ec_ioctl_soe_request_index(
         return -ENOENT;
     }
 
-    ecrt_soe_request_idn(req, data.drive_no, data.idn);
-    return 0;
+    return ecrt_soe_request_idn(req, data.drive_no, data.idn);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets an CoE request's timeout.
  *
@@ -3590,7 +3906,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_timeout(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3604,11 +3920,10 @@ static ATTRIBUTES int ec_ioctl_soe_request_timeout(
         return -ENOENT;
     }
 
-    ecrt_soe_request_timeout(req, data.timeout);
-    return 0;
+    return ecrt_soe_request_timeout(req, data.timeout);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets an SoE request's state.
  *
@@ -3627,7 +3942,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_state(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3649,13 +3964,13 @@ static ATTRIBUTES int ec_ioctl_soe_request_state(
         data.size = 0;
     }
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SoE IDN read operation.
  *
@@ -3674,7 +3989,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_read(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3688,11 +4003,10 @@ static ATTRIBUTES int ec_ioctl_soe_request_read(
         return -ENOENT;
     }
 
-    ecrt_soe_request_read(req);
-    return 0;
+    return ecrt_soe_request_read(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an SoE IDN write operation.
  *
@@ -3707,12 +4021,11 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
     ec_ioctl_soe_request_t data;
     ec_slave_config_t *sc;
     ec_soe_request_t *req;
-    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     if (!data.size) {
@@ -3731,19 +4044,18 @@ static ATTRIBUTES int ec_ioctl_soe_request_write(
         return -ENOENT;
     }
 
-    ret = ec_soe_request_alloc(req, data.size);
-    if (ret)
-        return ret;
+    if (data.size > req->mem_size)
+        return -ENOBUFS;
 
-    if (copy_from_user(req->data, (void __user *) data.data, data.size))
+    if (ec_copy_from_user(req->data, (void __user *) data.data,
+                          data.size, ctx))
         return -EFAULT;
 
     req->data_size = data.size;
-    ecrt_soe_request_write(req);
-    return 0;
+    return ecrt_soe_request_write(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read SoE IDN data.
  *
@@ -3762,7 +4074,7 @@ static ATTRIBUTES int ec_ioctl_soe_request_data(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor req will not be
@@ -3776,14 +4088,14 @@ static ATTRIBUTES int ec_ioctl_soe_request_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) data.data, ecrt_soe_request_data(req),
-                ecrt_soe_request_data_size(req)))
+    if (ec_copy_to_user((void __user *) data.data, ecrt_soe_request_data(req),
+                ecrt_soe_request_data_size(req), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read register data.
  *
@@ -3803,7 +4115,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_data(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3822,15 +4134,15 @@ static ATTRIBUTES int ec_ioctl_reg_request_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) io.data, ecrt_reg_request_data(reg),
-                min(reg->mem_size, io.mem_size))) {
+    if (ec_copy_to_user((void __user *) io.data, ecrt_reg_request_data(reg),
+                min(reg->mem_size, io.mem_size), ctx)) {
         return -EFAULT;
     }
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets an register request's state.
  *
@@ -3850,7 +4162,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_state(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3868,14 +4180,14 @@ static ATTRIBUTES int ec_ioctl_reg_request_state(
     io.state = ecrt_reg_request_state(reg);
     io.new_data = io.state == EC_REQUEST_SUCCESS && reg->dir == EC_DIR_INPUT;
 
-    if (copy_to_user((void __user *) arg, &io, sizeof(io))) {
+    if (ec_copy_to_user((void __user *) arg, &io, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an register write operation.
  *
@@ -3895,7 +4207,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3911,19 +4223,18 @@ static ATTRIBUTES int ec_ioctl_reg_request_write(
     }
 
     if (io.transfer_size > reg->mem_size) {
-        return -EOVERFLOW;
+        return -ENOBUFS;
     }
 
-    if (copy_from_user(reg->data, (void __user *) io.data,
-                io.transfer_size)) {
+    if (ec_copy_from_user(reg->data, (void __user *) io.data,
+                io.transfer_size, ctx)) {
         return -EFAULT;
     }
 
-    ecrt_reg_request_write(reg, io.address, io.transfer_size);
-    return 0;
+    return ecrt_reg_request_write(reg, io.address, io.transfer_size);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts an register read operation.
  *
@@ -3943,7 +4254,7 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
         return -EPERM;
     }
 
-    if (copy_from_user(&io, (void __user *) arg, sizeof(io))) {
+    if (ec_copy_from_user(&io, (void __user *) arg, sizeof(io), ctx)) {
         return -EFAULT;
     }
 
@@ -3959,14 +4270,13 @@ static ATTRIBUTES int ec_ioctl_reg_request_read(
     }
 
     if (io.transfer_size > reg->mem_size) {
-        return -EOVERFLOW;
+        return -ENOBUFS;
     }
 
-    ecrt_reg_request_read(reg, io.address, io.transfer_size);
-    return 0;
+    return ecrt_reg_request_read(reg, io.address, io.transfer_size);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets the VoE send header.
  *
@@ -3987,13 +4297,14 @@ static ATTRIBUTES int ec_ioctl_voe_send_header(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
-    if (get_user(vendor_id, data.vendor_id))
+    if (ec_copy_from_user(&vendor_id, data.vendor_id, sizeof(vendor_id), ctx))
         return -EFAULT;
 
-    if (get_user(vendor_type, data.vendor_type))
+    if (ec_copy_from_user(&vendor_type, data.vendor_type,
+                          sizeof(vendor_type), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4007,11 +4318,10 @@ static ATTRIBUTES int ec_ioctl_voe_send_header(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_send_header(voe, vendor_id, vendor_type);
-    return 0;
+    return ecrt_voe_handler_send_header(voe, vendor_id, vendor_type);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets the received VoE header.
  *
@@ -4028,11 +4338,12 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
     ec_voe_handler_t *voe;
     uint32_t vendor_id;
     uint16_t vendor_type;
+    int ret;
 
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4046,20 +4357,24 @@ static ATTRIBUTES int ec_ioctl_voe_rec_header(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
+    ret = ecrt_voe_handler_received_header(voe, &vendor_id, &vendor_type);
+    if (ret)
+        return ret;
 
     if (likely(data.vendor_id))
-        if (put_user(vendor_id, data.vendor_id))
+        if (ec_copy_to_user(data.vendor_id, &vendor_id,
+                            sizeof(vendor_id), ctx))
             return -EFAULT;
 
     if (likely(data.vendor_type))
-        if (put_user(vendor_type, data.vendor_type))
+        if (ec_copy_to_user(data.vendor_type, &vendor_type,
+            sizeof(vendor_type), ctx))
             return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts a VoE read operation.
  *
@@ -4078,7 +4393,7 @@ static ATTRIBUTES int ec_ioctl_voe_read(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4092,11 +4407,10 @@ static ATTRIBUTES int ec_ioctl_voe_read(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_read(voe);
-    return 0;
+    return ecrt_voe_handler_read(voe);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts a VoE read operation without sending a sync message first.
  *
@@ -4115,7 +4429,7 @@ static ATTRIBUTES int ec_ioctl_voe_read_nosync(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4129,11 +4443,10 @@ static ATTRIBUTES int ec_ioctl_voe_read_nosync(
         return -ENOENT;
     }
 
-    ecrt_voe_handler_read_nosync(voe);
-    return 0;
+    return ecrt_voe_handler_read_nosync(voe);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts a VoE write operation.
  *
@@ -4152,7 +4465,7 @@ static ATTRIBUTES int ec_ioctl_voe_write(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4168,18 +4481,17 @@ static ATTRIBUTES int ec_ioctl_voe_write(
 
     if (data.size) {
         if (data.size > ec_voe_handler_mem_size(voe))
-            return -EOVERFLOW;
+            return -ENOBUFS;
 
-        if (copy_from_user(ecrt_voe_handler_data(voe),
-                    (void __user *) data.data, data.size))
+        if (ec_copy_from_user(ecrt_voe_handler_data(voe),
+                    (void __user *) data.data, data.size, ctx))
             return -EFAULT;
     }
 
-    ecrt_voe_handler_write(voe, data.size);
-    return 0;
+    return ecrt_voe_handler_write(voe, data.size);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Executes the VoE state machine.
  *
@@ -4198,7 +4510,7 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4212,21 +4524,23 @@ static ATTRIBUTES int ec_ioctl_voe_exec(
         return -ENOENT;
     }
 
-    down( & master->io_sem );
+    if (ec_ioctl_lock_interruptible(&master->io_mutex))
+        return -EINTR;
+
     data.state = ecrt_voe_handler_execute(voe);
-    up( & master->io_sem );
+    ec_ioctl_unlock(&master->io_mutex);
     if (data.state == EC_REQUEST_SUCCESS && voe->dir == EC_DIR_INPUT)
         data.size = ecrt_voe_handler_data_size(voe);
     else
         data.size = 0;
 
-    if (copy_to_user((void __user *) arg, &data, sizeof(data)))
+    if (ec_copy_to_user((void __user *) arg, &data, sizeof(data), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Reads the received VoE data.
  *
@@ -4245,7 +4559,7 @@ static ATTRIBUTES int ec_ioctl_voe_data(
     if (unlikely(!ctx->requested))
         return -EPERM;
 
-    if (copy_from_user(&data, (void __user *) arg, sizeof(data)))
+    if (ec_copy_from_user(&data, (void __user *) arg, sizeof(data), ctx))
         return -EFAULT;
 
     /* no locking of master_sem needed, because neither sc nor voe will not be
@@ -4259,14 +4573,14 @@ static ATTRIBUTES int ec_ioctl_voe_data(
         return -ENOENT;
     }
 
-    if (copy_to_user((void __user *) data.data, ecrt_voe_handler_data(voe),
-                ecrt_voe_handler_data_size(voe)))
+    if (ec_copy_to_user((void __user *) data.data, ecrt_voe_handler_data(voe),
+                ecrt_voe_handler_data_size(voe), ctx))
         return -EFAULT;
 
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read a file from a slave via FoE.
  *
@@ -4343,7 +4657,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_read(
         if (request.data_size > io.buffer_size) {
             EC_SLAVE_ERR(slave, "%s(): Buffer too small.\n", __func__);
             ec_foe_request_clear(&request);
-            return -EOVERFLOW;
+            return -ENOBUFS;
         }
         io.data_size = request.data_size;
         if (copy_to_user((void __user *) io.buffer,
@@ -4362,7 +4676,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_read(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write a file to a slave via FoE
  *
@@ -4450,7 +4764,7 @@ static ATTRIBUTES int ec_ioctl_slave_foe_write(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read an SoE IDN.
  *
@@ -4499,7 +4813,7 @@ static ATTRIBUTES int ec_ioctl_slave_soe_read(
     return retval;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Write an IDN to a slave via SoE.
  *
@@ -4545,21 +4859,115 @@ static ATTRIBUTES int ec_ioctl_slave_soe_write(
     return retval;
 }
 
-/*****************************************************************************/
+/*****************************************************************************
+ * ioctl() file operation functions
+ ****************************************************************************/
 
 /** ioctl() function to use.
+ *
+ * For RTDM, there will be ec_ioctl_rtdm_rt and ec_ioctl_rtdm_nrt.
+ * For "normal" cdev, there will be ec_ioctl_rt only.
  */
-#ifdef EC_IOCTL_RTDM
-#define EC_IOCTL ec_ioctl_rtdm
-#else
-#define EC_IOCTL ec_ioctl
+#ifndef EC_IOCTL_RTDM
+static long ec_ioctl_nrt(
+        ec_master_t *master, /**< EtherCAT master. */
+        ec_ioctl_context_t *ctx, /**< Device context. */
+        unsigned int cmd, /**< ioctl() command identifier. */
+        void *arg /**< ioctl() argument. */);
 #endif
 
+/****************************************************************************/
+
 /** Called when an ioctl() command is issued.
+ * Both RT and nRT context.
  *
  * \return ioctl() return code.
  */
-long EC_IOCTL(
+static long ec_ioctl_both(
+        ec_master_t *master, /**< EtherCAT master. */
+        ec_ioctl_context_t *ctx, /**< Device context. */
+        unsigned int cmd, /**< ioctl() command identifier. */
+        void *arg /**< ioctl() argument. */
+        )
+{
+    int ret;
+
+    switch (cmd) {
+        case EC_IOCTL_MODULE:
+            ret = ec_ioctl_module(arg, ctx);
+            break;
+        case EC_IOCTL_MASTER_RESCAN:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_master_rescan(master, arg);
+            break;
+        case EC_IOCTL_MASTER_STATE:
+            ret = ec_ioctl_master_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_MASTER_LINK_STATE:
+            ret = ec_ioctl_master_link_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_TIMEOUT:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_timeout(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_DATA:
+            ret = ec_ioctl_sdo_request_data(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_TIMEOUT:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_timeout(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_DATA:
+            ret = ec_ioctl_soe_request_data(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_DATA:
+            ret = ec_ioctl_reg_request_data(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_SEND_HEADER:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_send_header(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_DATA:
+            ret = ec_ioctl_voe_data(master, arg, ctx);
+            break;
+        default:
+#ifdef EC_IOCTL_RTDM
+            ret = -ENOTTY;
+#else
+            /* chain non-rt commands for normal cdev */
+            ret = ec_ioctl_nrt(master, ctx, cmd, arg);
+#endif
+            break;
+    }
+
+    return ret;
+}
+
+/****************************************************************************/
+
+/** Called when an ioctl() command is issued.
+ * RTDM: RT only.
+ *
+ * \return ioctl() return code.
+ */
+#ifdef EC_IOCTL_RTDM
+long ec_ioctl_rtdm_rt
+#else
+long ec_ioctl
+#endif
+        (
         ec_master_t *master, /**< EtherCAT master. */
         ec_ioctl_context_t *ctx, /**< Device context. */
         unsigned int cmd, /**< ioctl() command identifier. */
@@ -4570,178 +4978,9 @@ long EC_IOCTL(
     cycles_t a = get_cycles(), b;
     unsigned int t;
 #endif
-    int ret;
+    long ret;
 
     switch (cmd) {
-        case EC_IOCTL_MODULE:
-            ret = ec_ioctl_module(arg);
-            break;
-        case EC_IOCTL_MASTER:
-            ret = ec_ioctl_master(master, arg);
-            break;
-        case EC_IOCTL_SLAVE:
-            ret = ec_ioctl_slave(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SYNC:
-            ret = ec_ioctl_slave_sync(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SYNC_PDO:
-            ret = ec_ioctl_slave_sync_pdo(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SYNC_PDO_ENTRY:
-            ret = ec_ioctl_slave_sync_pdo_entry(master, arg);
-            break;
-        case EC_IOCTL_DOMAIN:
-            ret = ec_ioctl_domain(master, arg);
-            break;
-        case EC_IOCTL_DOMAIN_FMMU:
-            ret = ec_ioctl_domain_fmmu(master, arg);
-            break;
-        case EC_IOCTL_DOMAIN_DATA:
-            ret = ec_ioctl_domain_data(master, arg);
-            break;
-        case EC_IOCTL_MASTER_DEBUG:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_master_debug(master, arg);
-            break;
-        case EC_IOCTL_MASTER_RESCAN:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_master_rescan(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_STATE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_state(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SDO:
-            ret = ec_ioctl_slave_sdo(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SDO_ENTRY:
-            ret = ec_ioctl_slave_sdo_entry(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SDO_UPLOAD:
-            ret = ec_ioctl_slave_sdo_upload(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SDO_DOWNLOAD:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_sdo_download(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SII_READ:
-            ret = ec_ioctl_slave_sii_read(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SII_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_sii_write(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_REG_READ:
-            ret = ec_ioctl_slave_reg_read(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_REG_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_reg_write(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_FOE_READ:
-            ret = ec_ioctl_slave_foe_read(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_FOE_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_foe_write(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SOE_READ:
-            ret = ec_ioctl_slave_soe_read(master, arg);
-            break;
-        case EC_IOCTL_SLAVE_SOE_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_slave_soe_write(master, arg);
-            break;
-        case EC_IOCTL_CONFIG:
-            ret = ec_ioctl_config(master, arg);
-            break;
-        case EC_IOCTL_CONFIG_PDO:
-            ret = ec_ioctl_config_pdo(master, arg);
-            break;
-        case EC_IOCTL_CONFIG_PDO_ENTRY:
-            ret = ec_ioctl_config_pdo_entry(master, arg);
-            break;
-        case EC_IOCTL_CONFIG_SDO:
-            ret = ec_ioctl_config_sdo(master, arg);
-            break;
-        case EC_IOCTL_CONFIG_IDN:
-            ret = ec_ioctl_config_idn(master, arg);
-            break;
-        case EC_IOCTL_CONFIG_FLAG:
-            ret = ec_ioctl_config_flag(master, arg);
-            break;
-#ifdef EC_EOE
-        case EC_IOCTL_EOE_HANDLER:
-            ret = ec_ioctl_eoe_handler(master, arg);
-            break;
-#endif
-        case EC_IOCTL_REQUEST:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_request(master, arg, ctx);
-            break;
-        case EC_IOCTL_CREATE_DOMAIN:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_create_domain(master, arg, ctx);
-            break;
-        case EC_IOCTL_CREATE_SLAVE_CONFIG:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_create_slave_config(master, arg, ctx);
-            break;
-        case EC_IOCTL_SELECT_REF_CLOCK:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_select_ref_clock(master, arg, ctx);
-            break;
-        case EC_IOCTL_ACTIVATE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_activate(master, arg, ctx);
-            break;
-        case EC_IOCTL_DEACTIVATE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_deactivate(master, arg, ctx);
-            break;
         case EC_IOCTL_SEND:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4755,12 +4994,6 @@ long EC_IOCTL(
                 break;
             }
             ret = ec_ioctl_receive(master, arg, ctx);
-            break;
-        case EC_IOCTL_MASTER_STATE:
-            ret = ec_ioctl_master_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_MASTER_LINK_STATE:
-            ret = ec_ioctl_master_link_state(master, arg, ctx);
             break;
         case EC_IOCTL_APP_TIME:
             if (!ctx->writable) {
@@ -4817,6 +5050,372 @@ long EC_IOCTL(
                 break;
             }
             ret = ec_ioctl_reset(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_EMERG_POP:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_emerg_pop(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_EMERG_CLEAR:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_emerg_clear(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_EMERG_OVERRUNS:
+            ret = ec_ioctl_sc_emerg_overruns(master, arg, ctx);
+            break;
+        case EC_IOCTL_SC_STATE:
+            ret = ec_ioctl_sc_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_DOMAIN_PROCESS:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_domain_process(master, arg, ctx);
+            break;
+        case EC_IOCTL_DOMAIN_QUEUE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_domain_queue(master, arg, ctx);
+            break;
+        case EC_IOCTL_DOMAIN_STATE:
+            ret = ec_ioctl_domain_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_INDEX:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_index(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_STATE:
+            ret = ec_ioctl_sdo_request_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_SDO_REQUEST_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sdo_request_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_IDN:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_index(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_STATE:
+            ret = ec_ioctl_soe_request_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_SOE_REQUEST_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_soe_request_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_STATE:
+            ret = ec_ioctl_reg_request_state(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_reg_request_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_REG_REQUEST_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_reg_request_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_REC_HEADER:
+            ret = ec_ioctl_voe_rec_header(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_read(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_READ_NOSYNC:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_read_nosync(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_write(master, arg, ctx);
+            break;
+        case EC_IOCTL_VOE_EXEC:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_voe_exec(master, arg, ctx);
+            break;
+        default:
+            ret = ec_ioctl_both(master, ctx, cmd, arg);
+            break;
+    }
+
+#if DEBUG_LATENCY
+    b = get_cycles();
+    t = (unsigned int) ((b - a) * 1000LL) / cpu_khz;
+    if (t > 50) {
+        EC_MASTER_WARN(master, "ioctl(0x%02x) took %u us.\n",
+                _IOC_NR(cmd), t);
+    }
+#endif
+
+    return ret;
+}
+
+/****************************************************************************/
+
+/** Called when an ioctl() command is issued.
+ * nRT context only.
+ *
+ * \return ioctl() return code.
+ */
+#ifdef EC_IOCTL_RTDM
+long ec_ioctl_rtdm_nrt
+#else
+static long ec_ioctl_nrt
+#endif
+        (
+        ec_master_t *master, /**< EtherCAT master. */
+        ec_ioctl_context_t *ctx, /**< Device context. */
+        unsigned int cmd, /**< ioctl() command identifier. */
+        void *arg /**< ioctl() argument. */
+        )
+{
+#if DEBUG_LATENCY && !defined(EC_IOCTL_RTDM)
+    cycles_t a = get_cycles(), b;
+    unsigned int t;
+#endif
+    int ret;
+
+    switch (cmd) {
+        case EC_IOCTL_MASTER:
+            ret = ec_ioctl_master(master, arg);
+            break;
+        case EC_IOCTL_SLAVE:
+            ret = ec_ioctl_slave(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SYNC:
+            ret = ec_ioctl_slave_sync(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SYNC_PDO:
+            ret = ec_ioctl_slave_sync_pdo(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SYNC_PDO_ENTRY:
+            ret = ec_ioctl_slave_sync_pdo_entry(master, arg);
+            break;
+        case EC_IOCTL_DOMAIN:
+            ret = ec_ioctl_domain(master, arg);
+            break;
+        case EC_IOCTL_DOMAIN_FMMU:
+            ret = ec_ioctl_domain_fmmu(master, arg);
+            break;
+        case EC_IOCTL_DOMAIN_DATA:
+            ret = ec_ioctl_domain_data(master, arg);
+            break;
+        case EC_IOCTL_MASTER_DEBUG:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_master_debug(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_STATE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_state(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SDO:
+            ret = ec_ioctl_slave_sdo(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SDO_ENTRY:
+            ret = ec_ioctl_slave_sdo_entry(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SDO_UPLOAD:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_sdo_upload(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SDO_DOWNLOAD:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_sdo_download(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SII_READ:
+            ret = ec_ioctl_slave_sii_read(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SII_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_sii_write(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_REG_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_reg_read(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_REG_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_reg_write(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_FOE_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_foe_read(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_FOE_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_foe_write(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SOE_READ:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_soe_read(master, arg);
+            break;
+        case EC_IOCTL_SLAVE_SOE_WRITE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_soe_write(master, arg);
+            break;
+#ifdef EC_EOE
+        case EC_IOCTL_SLAVE_EOE_IP_PARAM:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_slave_eoe_ip_param(master, arg);
+            break;
+#endif
+        case EC_IOCTL_CONFIG:
+            ret = ec_ioctl_config(master, arg);
+            break;
+        case EC_IOCTL_CONFIG_PDO:
+            ret = ec_ioctl_config_pdo(master, arg);
+            break;
+        case EC_IOCTL_CONFIG_PDO_ENTRY:
+            ret = ec_ioctl_config_pdo_entry(master, arg);
+            break;
+        case EC_IOCTL_CONFIG_SDO:
+            ret = ec_ioctl_config_sdo(master, arg);
+            break;
+        case EC_IOCTL_CONFIG_IDN:
+            ret = ec_ioctl_config_idn(master, arg);
+            break;
+        case EC_IOCTL_CONFIG_FLAG:
+            ret = ec_ioctl_config_flag(master, arg);
+            break;
+#ifdef EC_EOE
+        case EC_IOCTL_CONFIG_EOE_IP_PARAM:
+            ret = ec_ioctl_config_ip(master, arg);
+            break;
+        case EC_IOCTL_EOE_HANDLER:
+            ret = ec_ioctl_eoe_handler(master, arg);
+            break;
+#endif
+
+        /* Application interface */
+
+        case EC_IOCTL_REQUEST:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_request(master, arg, ctx);
+            break;
+        case EC_IOCTL_CREATE_DOMAIN:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_create_domain(master, arg, ctx);
+            break;
+        case EC_IOCTL_CREATE_SLAVE_CONFIG:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_create_slave_config(master, arg, ctx);
+            break;
+        case EC_IOCTL_SELECT_REF_CLOCK:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_select_ref_clock(master, arg, ctx);
+            break;
+        case EC_IOCTL_ACTIVATE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_activate(master, arg, ctx);
+            break;
+        case EC_IOCTL_DEACTIVATE:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_deactivate(master, arg, ctx);
             break;
         case EC_IOCTL_SC_SYNC:
             if (!ctx->writable) {
@@ -4895,23 +5494,6 @@ long EC_IOCTL(
             }
             ret = ec_ioctl_sc_emerg_size(master, arg, ctx);
             break;
-        case EC_IOCTL_SC_EMERG_POP:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sc_emerg_pop(master, arg, ctx);
-            break;
-        case EC_IOCTL_SC_EMERG_CLEAR:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sc_emerg_clear(master, arg, ctx);
-            break;
-        case EC_IOCTL_SC_EMERG_OVERRUNS:
-            ret = ec_ioctl_sc_emerg_overruns(master, arg, ctx);
-            break;
         case EC_IOCTL_SC_SDO_REQUEST:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4940,9 +5522,6 @@ long EC_IOCTL(
             }
             ret = ec_ioctl_sc_create_voe_handler(master, arg, ctx);
             break;
-        case EC_IOCTL_SC_STATE:
-            ret = ec_ioctl_sc_state(master, arg, ctx);
-            break;
         case EC_IOCTL_SC_IDN:
             if (!ctx->writable) {
                 ret = -EPERM;
@@ -4957,157 +5536,27 @@ long EC_IOCTL(
             }
             ret = ec_ioctl_sc_flag(master, arg, ctx);
             break;
+        case EC_IOCTL_SC_STATE_TIMEOUT:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_state_timeout(master, arg, ctx);
+            break;
+#ifdef EC_EOE
+        case EC_IOCTL_SC_EOE_IP_PARAM:
+            if (!ctx->writable) {
+                ret = -EPERM;
+                break;
+            }
+            ret = ec_ioctl_sc_ip(master, arg, ctx);
+            break;
+#endif
         case EC_IOCTL_DOMAIN_SIZE:
             ret = ec_ioctl_domain_size(master, arg, ctx);
             break;
         case EC_IOCTL_DOMAIN_OFFSET:
             ret = ec_ioctl_domain_offset(master, arg, ctx);
-            break;
-        case EC_IOCTL_DOMAIN_PROCESS:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_domain_process(master, arg, ctx);
-            break;
-        case EC_IOCTL_DOMAIN_QUEUE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_domain_queue(master, arg, ctx);
-            break;
-        case EC_IOCTL_DOMAIN_STATE:
-            ret = ec_ioctl_domain_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_INDEX:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_index(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_TIMEOUT:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_timeout(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_STATE:
-            ret = ec_ioctl_sdo_request_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_sdo_request_write(master, arg, ctx);
-            break;
-        case EC_IOCTL_SDO_REQUEST_DATA:
-            ret = ec_ioctl_sdo_request_data(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_IDN:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_index(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_TIMEOUT:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_timeout(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_STATE:
-            ret = ec_ioctl_soe_request_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_soe_request_write(master, arg, ctx);
-            break;
-        case EC_IOCTL_SOE_REQUEST_DATA:
-            ret = ec_ioctl_soe_request_data(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_DATA:
-            ret = ec_ioctl_reg_request_data(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_STATE:
-            ret = ec_ioctl_reg_request_state(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_reg_request_write(master, arg, ctx);
-            break;
-        case EC_IOCTL_REG_REQUEST_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_reg_request_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_SEND_HEADER:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_send_header(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_REC_HEADER:
-            ret = ec_ioctl_voe_rec_header(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_READ:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_read(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_READ_NOSYNC:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_read_nosync(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_WRITE:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_write(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_EXEC:
-            if (!ctx->writable) {
-                ret = -EPERM;
-                break;
-            }
-            ret = ec_ioctl_voe_exec(master, arg, ctx);
-            break;
-        case EC_IOCTL_VOE_DATA:
-            ret = ec_ioctl_voe_data(master, arg, ctx);
             break;
         case EC_IOCTL_SET_SEND_INTERVAL:
             if (!ctx->writable) {
@@ -5117,11 +5566,15 @@ long EC_IOCTL(
             ret = ec_ioctl_set_send_interval(master, arg, ctx);
             break;
         default:
+#ifdef EC_IOCTL_RTDM
+            ret = ec_ioctl_both(master, ctx, cmd, arg);
+#else
             ret = -ENOTTY;
+#endif
             break;
     }
 
-#if DEBUG_LATENCY
+#if DEBUG_LATENCY && !defined(EC_IOCTL_RTDM)
     b = get_cycles();
     t = (unsigned int) ((b - a) * 1000LL) / cpu_khz;
     if (t > 50) {
@@ -5133,4 +5586,4 @@ long EC_IOCTL(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

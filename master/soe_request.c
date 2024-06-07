@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Sercos-over-EtherCAT request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -37,17 +31,17 @@
 
 #include "soe_request.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Default timeout in ms to wait for SoE responses.
  */
 #define EC_SOE_REQUEST_RESPONSE_TIMEOUT 1000
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_soe_request_clear_data(ec_soe_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SoE request constructor.
  */
@@ -70,7 +64,7 @@ void ec_soe_request_init(
     req->error_code = 0x0000;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SoE request destructor.
  */
@@ -81,7 +75,7 @@ void ec_soe_request_clear(
     ec_soe_request_clear_data(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Copy another SoE request.
  *
@@ -98,7 +92,7 @@ int ec_soe_request_copy(
     return ec_soe_request_copy_data(req, other->data, other->data_size);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set drive number.
  */
@@ -110,7 +104,7 @@ void ec_soe_request_set_drive_no(
     req->drive_no = drive_no;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set IDN.
  */
@@ -122,7 +116,7 @@ void ec_soe_request_set_idn(
     req->idn = idn;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Free allocated memory.
  */
@@ -139,7 +133,7 @@ void ec_soe_request_clear_data(
     req->data_size = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Pre-allocates the data memory.
  *
@@ -167,7 +161,7 @@ int ec_soe_request_alloc(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Copies SoE data from an external source.
  *
@@ -191,7 +185,7 @@ int ec_soe_request_copy_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Copies SoE data from an external source.
  *
@@ -225,11 +219,11 @@ int ec_soe_request_append_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request a read operation.
  */
-void ec_soe_request_read(
+int ec_soe_request_read(
         ec_soe_request_t *req /**< SoE request. */
        )
 {
@@ -237,13 +231,14 @@ void ec_soe_request_read(
     req->state = EC_INT_REQUEST_QUEUED;
     req->error_code = 0x0000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Request a write operation.
  */
-void ec_soe_request_write(
+int ec_soe_request_write(
         ec_soe_request_t *req /**< SoE request. */
         )
 {
@@ -251,9 +246,10 @@ void ec_soe_request_write(
     req->state = EC_INT_REQUEST_QUEUED;
     req->error_code = 0x0000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Checks, if the timeout was exceeded.
  *
@@ -269,56 +265,58 @@ int ec_soe_request_timed_out(const ec_soe_request_t *req /**< SDO request. */)
  * Application interface.
  ****************************************************************************/
 
-void ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
+int ecrt_soe_request_idn(ec_soe_request_t *req, uint8_t drive_no,
         uint16_t idn)
 {
     req->drive_no = drive_no;
     req->idn = idn;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
+int ecrt_soe_request_timeout(ec_soe_request_t *req, uint32_t timeout)
 {
     req->issue_timeout = timeout;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-uint8_t *ecrt_soe_request_data(ec_soe_request_t *req)
+uint8_t *ecrt_soe_request_data(const ec_soe_request_t *req)
 {
     return req->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_soe_request_data_size(const ec_soe_request_t *req)
 {
     return req->data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-ec_request_state_t ecrt_soe_request_state(ec_soe_request_t *req)
+ec_request_state_t ecrt_soe_request_state(const ec_soe_request_t *req)
 {
    return ec_request_state_translation_table[req->state];
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_soe_request_read(ec_soe_request_t *req)
+int ecrt_soe_request_read(ec_soe_request_t *req)
 {
-    ec_soe_request_read(req);
+    return ec_soe_request_read(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_soe_request_write(ec_soe_request_t *req)
+int ecrt_soe_request_write(ec_soe_request_t *req)
 {
-    ec_soe_request_write(req);
+    return ec_soe_request_write(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -332,4 +330,4 @@ EXPORT_SYMBOL(ecrt_soe_request_write);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

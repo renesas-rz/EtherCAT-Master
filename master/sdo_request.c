@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2023  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Canopen over EtherCAT SDO request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -37,17 +31,17 @@
 
 #include "sdo_request.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Default timeout in ms to wait for SDO transfer responses.
  */
 #define EC_SDO_REQUEST_RESPONSE_TIMEOUT 1000
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_sdo_request_clear_data(ec_sdo_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SDO request constructor.
  */
@@ -69,7 +63,7 @@ void ec_sdo_request_init(
     req->abort_code = 0x00000000;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SDO request destructor.
  */
@@ -80,7 +74,7 @@ void ec_sdo_request_clear(
     ec_sdo_request_clear_data(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Copy another SDO request.
  *
@@ -99,7 +93,7 @@ int ec_sdo_request_copy(
     return ec_sdo_request_copy_data(req, other->data, other->data_size);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SDO request destructor.
  */
@@ -116,7 +110,7 @@ void ec_sdo_request_clear_data(
     req->data_size = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Pre-allocates the data memory.
  *
@@ -144,7 +138,7 @@ int ec_sdo_request_alloc(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Copies SDO data from an external source.
  *
@@ -168,7 +162,7 @@ int ec_sdo_request_copy_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Checks, if the timeout was exceeded.
  *
@@ -184,64 +178,68 @@ int ec_sdo_request_timed_out(const ec_sdo_request_t *req /**< SDO request. */)
  * Application interface.
  ****************************************************************************/
 
-void ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
+int ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
         uint8_t subindex)
 {
     req->index = index;
     req->subindex = subindex;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
+int ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
 {
     req->issue_timeout = timeout;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-uint8_t *ecrt_sdo_request_data(ec_sdo_request_t *req)
+uint8_t *ecrt_sdo_request_data(const ec_sdo_request_t *req)
 {
     return req->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_sdo_request_data_size(const ec_sdo_request_t *req)
 {
     return req->data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_request_state_t ecrt_sdo_request_state(const ec_sdo_request_t *req)
 {
    return ec_request_state_translation_table[req->state];
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_sdo_request_read(ec_sdo_request_t *req)
+int ecrt_sdo_request_read(ec_sdo_request_t *req)
 {
     req->dir = EC_DIR_INPUT;
     req->state = EC_INT_REQUEST_QUEUED;
     req->errno = 0;
     req->abort_code = 0x00000000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_sdo_request_write(ec_sdo_request_t *req)
+int ecrt_sdo_request_write(ec_sdo_request_t *req)
 {
     req->dir = EC_DIR_OUTPUT;
     req->state = EC_INT_REQUEST_QUEUED;
     req->errno = 0;
     req->abort_code = 0x00000000;
     req->jiffies_start = jiffies;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -255,4 +253,4 @@ EXPORT_SYMBOL(ecrt_sdo_request_write);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

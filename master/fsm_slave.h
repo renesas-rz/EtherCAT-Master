@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave request state machine.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_SLAVE_H__
 #define __EC_FSM_SLAVE_H__
@@ -41,11 +33,17 @@
 #include "datagram.h"
 #include "sdo_request.h"
 #include "reg_request.h"
+#ifdef EC_EOE
+#include "eoe_request.h"
+#endif
 #include "fsm_coe.h"
 #include "fsm_foe.h"
 #include "fsm_soe.h"
+#ifdef EC_EOE
+#include "fsm_eoe.h"
+#endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_fsm_slave ec_fsm_slave_t; /**< \see ec_fsm_slave */
 
@@ -62,13 +60,19 @@ struct ec_fsm_slave {
     ec_foe_request_t *foe_request; /**< FoE request to process. */
     off_t foe_index; /**< Index to FoE write request data. */
     ec_soe_request_t *soe_request; /**< SoE request to process. */
+#ifdef EC_EOE
+    ec_eoe_request_t *eoe_request; /**< SoE request to process. */
+#endif
 
     ec_fsm_coe_t fsm_coe; /**< CoE state machine. */
     ec_fsm_foe_t fsm_foe; /**< FoE state machine. */
     ec_fsm_soe_t fsm_soe; /**< SoE state machine. */
+#ifdef EC_EOE
+    ec_fsm_eoe_t fsm_eoe; /**< EoE state machine. */
+#endif
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_slave_init(ec_fsm_slave_t *, ec_slave_t *);
 void ec_fsm_slave_clear(ec_fsm_slave_t *);
@@ -77,7 +81,7 @@ int ec_fsm_slave_exec(ec_fsm_slave_t *, ec_datagram_t *);
 void ec_fsm_slave_set_ready(ec_fsm_slave_t *);
 int ec_fsm_slave_is_ready(const ec_fsm_slave_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 
 #endif // __EC_FSM_SLAVE_H__

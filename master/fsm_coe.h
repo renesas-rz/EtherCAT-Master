@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT CoE state machines.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_COE_H__
 #define __EC_FSM_COE_H__
@@ -43,7 +35,7 @@
 #include "sdo.h"
 #include "sdo_request.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_fsm_coe ec_fsm_coe_t; /**< \see ec_fsm_coe */
 
@@ -66,7 +58,7 @@ struct ec_fsm_coe {
     size_t segment_size; /**< Current segment size. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_coe_init(ec_fsm_coe_t *);
 void ec_fsm_coe_clear(ec_fsm_coe_t *);
@@ -77,6 +69,6 @@ void ec_fsm_coe_transfer(ec_fsm_coe_t *, ec_slave_t *, ec_sdo_request_t *);
 int ec_fsm_coe_exec(ec_fsm_coe_t *, ec_datagram_t *);
 int ec_fsm_coe_success(const ec_fsm_coe_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

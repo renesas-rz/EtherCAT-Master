@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
+ *  Copyright (C) 2006-2024  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
  *
@@ -18,12 +16,6 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
  *
  ****************************************************************************/
 
@@ -94,6 +86,25 @@ class MasterDeviceSoeException:
 
 /****************************************************************************/
 
+#ifdef EC_EOE
+class MasterDeviceEoeException:
+    public MasterDeviceException
+{
+    friend class MasterDevice;
+
+    public:
+        uint16_t result;
+
+    protected:
+        /** Constructor with error code parameter. */
+        MasterDeviceEoeException(uint16_t result):
+            MasterDeviceException("EoE set IP parameter failed."),
+            result(result) {};
+};
+#endif
+
+/****************************************************************************/
+
 class MasterDevice
 {
     public:
@@ -141,11 +152,13 @@ class MasterDevice
         void requestState(uint16_t, uint8_t);
         void readFoe(ec_ioctl_slave_foe_t *);
         void writeFoe(ec_ioctl_slave_foe_t *);
-#ifdef EC_EOE
-        void getEoeHandler(ec_ioctl_eoe_handler_t *, uint16_t);
-#endif
         void readSoe(ec_ioctl_slave_soe_read_t *);
         void writeSoe(ec_ioctl_slave_soe_write_t *);
+#ifdef EC_EOE
+        void getEoeHandler(ec_ioctl_eoe_handler_t *, uint16_t);
+        void getIpParam(ec_ioctl_eoe_ip_t *, uint16_t);
+        void setIpParam(ec_ioctl_eoe_ip_t *);
+#endif
 
         unsigned int getMasterCount() const {return masterCount;}
 

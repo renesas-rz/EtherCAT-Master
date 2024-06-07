@@ -1,10 +1,8 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2009-2010  Moehwald GmbH B. Benner
  *                     2011  IgH Andreas Stewering-Bone
- *                     2012  Florian Pose <fp@igh-essen.com>
+ *                     2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master.
  *
@@ -20,10 +18,6 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
  *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 /** \file
@@ -34,11 +28,14 @@
 #include <linux/slab.h>
 #include <linux/mman.h>
 
-#include <rtdm/rtdm_driver.h>
 
 #include "master.h"
 #include "ioctl.h"
 #include "rtdm.h"
+#include "rtdm_details.h"
+
+/* include last because it does some redefinitions */
+#include <rtdm/rtdm_driver.h>
 
 /** Set to 1 to enable device operations debugging.
  */
@@ -46,19 +43,12 @@
 
 /****************************************************************************/
 
-/** Context structure for an open RTDM file handle.
- */
-typedef struct {
-    rtdm_user_info_t *user_info; /**< RTDM user data. */
-    ec_ioctl_context_t ioctl_ctx; /**< Context structure. */
-} ec_rtdm_context_t;
-
-/****************************************************************************/
-
-int ec_rtdm_open(struct rtdm_dev_context *, rtdm_user_info_t *, int);
-int ec_rtdm_close(struct rtdm_dev_context *, rtdm_user_info_t *);
-int ec_rtdm_ioctl(struct rtdm_dev_context *, rtdm_user_info_t *,
-        unsigned int, void __user *);
+static int ec_rtdm_open(struct rtdm_dev_context *, rtdm_user_info_t *, int);
+static int ec_rtdm_close(struct rtdm_dev_context *, rtdm_user_info_t *);
+static int ec_rtdm_ioctl_nrt_handler(struct rtdm_dev_context *,
+        rtdm_user_info_t *, unsigned int, void __user *);
+static int ec_rtdm_ioctl_rt_handler(struct rtdm_dev_context *,
+        rtdm_user_info_t *, unsigned int, void __user *);
 
 /****************************************************************************/
 
@@ -88,8 +78,8 @@ int ec_rtdm_dev_init(
             "EtherCAT%u", master->index);
     rtdm_dev->dev->open_nrt = ec_rtdm_open;
     rtdm_dev->dev->ops.close_nrt = ec_rtdm_close;
-    rtdm_dev->dev->ops.ioctl_rt = ec_rtdm_ioctl;
-    rtdm_dev->dev->ops.ioctl_nrt = ec_rtdm_ioctl;
+    rtdm_dev->dev->ops.ioctl_rt = ec_rtdm_ioctl_rt_handler;
+    rtdm_dev->dev->ops.ioctl_nrt = ec_rtdm_ioctl_nrt_handler;
     rtdm_dev->dev->device_class = RTDM_CLASS_EXPERIMENTAL;
     rtdm_dev->dev->device_sub_class = 222;
     rtdm_dev->dev->driver_name = "EtherCAT";
@@ -138,7 +128,7 @@ void ec_rtdm_dev_clear(
  *
  * \return Always zero (success).
  */
-int ec_rtdm_open(
+static int ec_rtdm_open(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info, /**< User data. */
         int oflags /**< Open flags. */
@@ -149,7 +139,7 @@ int ec_rtdm_open(
     ec_rtdm_dev_t *rtdm_dev = (ec_rtdm_dev_t *) context->device->device_data;
 #endif
 
-    ctx->user_info = user_info;
+    ctx->user_fd = user_info;
     ctx->ioctl_ctx.writable = oflags & O_WRONLY || oflags & O_RDWR;
     ctx->ioctl_ctx.requested = 0;
     ctx->ioctl_ctx.process_data = NULL;
@@ -168,7 +158,7 @@ int ec_rtdm_open(
  *
  * \return Always zero (success).
  */
-int ec_rtdm_close(
+static int ec_rtdm_close(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info /**< User data. */
         )
@@ -193,7 +183,7 @@ int ec_rtdm_close(
  *
  * \return ioctl() return code.
  */
-int ec_rtdm_ioctl(
+static int ec_rtdm_ioctl_nrt_handler(
         struct rtdm_dev_context *context, /**< Context. */
         rtdm_user_info_t *user_info, /**< User data. */
         unsigned int request, /**< Request. */
@@ -208,7 +198,35 @@ int ec_rtdm_ioctl(
             " on RTDM device %s.\n", request, _IOC_NR(request),
             context->device->device_name);
 #endif
-    return ec_ioctl_rtdm(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+    return ec_ioctl_rtdm_nrt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+}
+
+/****************************************************************************/
+
+static int ec_rtdm_ioctl_rt_handler(
+        struct rtdm_dev_context *context, /**< Context. */
+        rtdm_user_info_t *user_info, /**< User data. */
+        unsigned int request, /**< Request. */
+        void __user *arg /**< Argument. */
+        )
+{
+    int result;
+    ec_rtdm_context_t *ctx = (ec_rtdm_context_t *) context->dev_private;
+    ec_rtdm_dev_t *rtdm_dev = (ec_rtdm_dev_t *) context->device->device_data;
+
+#if DEBUG
+    EC_MASTER_INFO(rtdm_dev->master, "ioctl(request = %u, ctl = %02x)"
+            " on RTDM device %s.\n", request, _IOC_NR(request),
+            context->device->device_name);
+#endif
+    result =
+        ec_ioctl_rtdm_rt(rtdm_dev->master, &ctx->ioctl_ctx, request, arg);
+
+    if (result == -ENOTTY) {
+		/* Try again with nrt ioctl handler above in secondary mode. */
+        return -ENOSYS;
+    }
+    return result;
 }
 
 /****************************************************************************/
@@ -226,7 +244,7 @@ int ec_rtdm_mmap(
         container_of(ioctl_ctx, ec_rtdm_context_t, ioctl_ctx);
     int ret;
 
-    ret = rtdm_mmap_to_user(ctx->user_info,
+    ret = rtdm_mmap_to_user(ctx->user_fd,
             ioctl_ctx->process_data, ioctl_ctx->process_data_size,
             PROT_READ | PROT_WRITE,
             user_address,

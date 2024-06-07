@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Register request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -39,7 +31,7 @@
 
 #include "reg_request.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Register request constructor.
  *
@@ -66,7 +58,7 @@ int ec_reg_request_init(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Register request destructor.
  */
@@ -83,41 +75,43 @@ void ec_reg_request_clear(
  * Application interface.
  ****************************************************************************/
 
-uint8_t *ecrt_reg_request_data(ec_reg_request_t *reg)
+uint8_t *ecrt_reg_request_data(const ec_reg_request_t *reg)
 {
     return reg->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_request_state_t ecrt_reg_request_state(const ec_reg_request_t *reg)
 {
    return ec_request_state_translation_table[reg->state];
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     reg->dir = EC_DIR_OUTPUT;
     reg->address = address;
     reg->transfer_size = min(size, reg->mem_size);
     reg->state = EC_INT_REQUEST_QUEUED;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     reg->dir = EC_DIR_INPUT;
     reg->address = address;
     reg->transfer_size = min(size, reg->mem_size);
     reg->state = EC_INT_REQUEST_QUEUED;
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -128,4 +122,4 @@ EXPORT_SYMBOL(ecrt_reg_request_read);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

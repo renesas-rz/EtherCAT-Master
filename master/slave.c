@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT slave methods.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/delay.h>
@@ -44,15 +36,21 @@
 
 #include "slave.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 extern const ec_code_msg_t al_status_messages[];
 
-/*****************************************************************************/
+/****************************************************************************/
 
-char *ec_slave_sii_string(ec_slave_t *, unsigned int);
+// prototypes for private methods
+char *ec_slave_sii_string(const ec_slave_t *, unsigned int);
+void ec_slave_find_names_for_pdo(ec_slave_t *, ec_pdo_t *);
+unsigned int ec_slave_get_previous_port(const ec_slave_t *, unsigned int);
+unsigned int ec_slave_get_next_port(const ec_slave_t *, unsigned int);
+uint32_t ec_slave_calc_rtt_sum(const ec_slave_t *);
+ec_slave_t *ec_slave_find_next_dc_slave(ec_slave_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave constructor.
@@ -155,12 +153,13 @@ void ec_slave_init(
     INIT_LIST_HEAD(&slave->reg_requests);
     INIT_LIST_HEAD(&slave->foe_requests);
     INIT_LIST_HEAD(&slave->soe_requests);
+    INIT_LIST_HEAD(&slave->eoe_requests);
 
     // create state machine object
     ec_fsm_slave_init(&slave->fsm, slave);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Slave destructor.
@@ -211,6 +210,17 @@ void ec_slave_clear(ec_slave_t *slave /**< EtherCAT slave */)
         request->state = EC_INT_REQUEST_FAILURE;
     }
 
+#ifdef EC_EOE
+    while (!list_empty(&slave->eoe_requests)) {
+        ec_eoe_request_t *request =
+            list_entry(slave->eoe_requests.next, ec_eoe_request_t, list);
+        list_del_init(&request->list); // dequeue
+        EC_SLAVE_WARN(slave, "Discarding EoE request,"
+                " slave about to be deleted.\n");
+        request->state = EC_INT_REQUEST_FAILURE;
+    }
+#endif
+
     wake_up_all(&slave->master->request_queue);
 
     if (slave->config) {
@@ -248,7 +258,7 @@ void ec_slave_clear(ec_slave_t *slave /**< EtherCAT slave */)
     ec_fsm_slave_clear(&slave->fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the sync manager array.
  */
@@ -265,7 +275,7 @@ void ec_slave_clear_sync_managers(ec_slave_t *slave /**< EtherCAT slave. */)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * Sets the application state of a slave.
@@ -287,7 +297,7 @@ void ec_slave_set_state(ec_slave_t *slave, /**< EtherCAT slave */
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * Request a slave state and resets the error flag.
@@ -301,7 +311,7 @@ void ec_slave_request_state(ec_slave_t *slave, /**< EtherCAT slave */
     slave->error_flag = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Fetches data from a STRING category.
@@ -358,7 +368,7 @@ out_zero:
     return err;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Fetches data from a GENERAL category.
@@ -408,7 +418,7 @@ int ec_slave_fetch_sii_general(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Fetches data from a SYNC MANAGER category.
  *
@@ -475,7 +485,7 @@ int ec_slave_fetch_sii_syncs(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Fetches data from a [RT]xPDO category.
@@ -558,7 +568,7 @@ int ec_slave_fetch_sii_pdos(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Searches the string list for an index.
@@ -566,7 +576,7 @@ int ec_slave_fetch_sii_pdos(
 */
 
 char *ec_slave_sii_string(
-        ec_slave_t *slave, /**< EtherCAT slave */
+        const ec_slave_t *slave, /**< EtherCAT slave */
         unsigned int index /**< string index */
         )
 {
@@ -581,7 +591,7 @@ char *ec_slave_sii_string(
     return slave->sii.strings[index];
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the sync manager given an index.
  *
@@ -599,7 +609,7 @@ ec_sync_t *ec_slave_get_sync(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Counts the total number of SDOs and entries in the dictionary.
@@ -626,7 +636,7 @@ void ec_slave_sdo_dict_info(const ec_slave_t *slave, /**< EtherCAT slave */
     *entry_count = entries;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * Get an SDO from the dictionary.
@@ -649,7 +659,7 @@ ec_sdo_t *ec_slave_get_sdo(
     return NULL;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
  * Get an SDO from the dictionary.
@@ -675,7 +685,7 @@ const ec_sdo_t *ec_slave_get_sdo_const(
     return NULL;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get an SDO from the dictionary, given its position in the list.
  * \returns The desired SDO, or NULL.
@@ -697,7 +707,7 @@ const ec_sdo_t *ec_slave_get_sdo_by_pos_const(
     return NULL;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the number of SDOs in the dictionary.
  * \returns SDO count.
@@ -717,7 +727,7 @@ uint16_t ec_slave_sdo_count(
     return count;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Finds a mapped PDO.
  * \returns The desired PDO object, or NULL.
@@ -743,7 +753,7 @@ const ec_pdo_t *ec_slave_find_pdo(
     return NULL;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Find name for a PDO and its entries.
  */
@@ -774,7 +784,7 @@ void ec_slave_find_names_for_pdo(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Attach PDO names.
  */
@@ -794,14 +804,14 @@ void ec_slave_attach_pdo_names(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Returns the previous connected port of a given port.
  *
  * \return Port index.
  */
 unsigned int ec_slave_get_previous_port(
-        ec_slave_t *slave, /**< EtherCAT slave. */
+        const ec_slave_t *slave, /**< EtherCAT slave. */
         unsigned int port_index /**< Port index. */
         )
 {
@@ -824,14 +834,14 @@ unsigned int ec_slave_get_previous_port(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Returns the next connected port of a given port.
  *
  * \return Port index.
  */
 unsigned int ec_slave_get_next_port(
-        ec_slave_t *slave, /**< EtherCAT slave. */
+        const ec_slave_t *slave, /**< EtherCAT slave. */
         unsigned int port_index /**< Port index. */
         )
 {
@@ -854,14 +864,14 @@ unsigned int ec_slave_get_next_port(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Calculates the sum of round-trip-times of connected ports 1-3.
  *
  * \return Round-trip-time in ns.
  */
 uint32_t ec_slave_calc_rtt_sum(
-        ec_slave_t *slave /**< EtherCAT slave. */
+        const ec_slave_t *slave /**< EtherCAT slave. */
         )
 {
     uint32_t rtt_sum = 0, rtt;
@@ -880,7 +890,7 @@ uint32_t ec_slave_calc_rtt_sum(
     return rtt_sum;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Finds the next slave supporting DC delay measurement.
  *
@@ -915,7 +925,7 @@ ec_slave_t *ec_slave_find_next_dc_slave(
     return dc_slave;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Calculates the port transmission delays.
  */
@@ -961,7 +971,7 @@ void ec_slave_calc_port_delays(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Recursively calculates transmission delays.
  */
@@ -997,4 +1007,4 @@ void ec_slave_calc_transmission_delays_rec(
     *delay = *delay + slave->ports[0].delay_to_next_dc;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

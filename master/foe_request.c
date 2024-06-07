@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2008  Olav Zarges, imc Messsysteme GmbH
  *  Copyright (C) 2020  Florian Pose, IgH
@@ -18,19 +18,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * File-over-EtherCAT request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/jiffies.h>
@@ -40,17 +34,18 @@
 #include "foe_request.h"
 #include "foe.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Default timeout in ms to wait for FoE transfer responses.
  */
 #define EC_FOE_REQUEST_RESPONSE_TIMEOUT 3000
 
-/*****************************************************************************/
+/****************************************************************************/
 
+// prototypes for private methods
 void ec_foe_request_clear_data(ec_foe_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** FoE request constructor.
  */
@@ -71,7 +66,7 @@ void ec_foe_request_init(
     req->error_code = 0x00000000;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** FoE request destructor.
  */
@@ -82,7 +77,7 @@ void ec_foe_request_clear(
     ec_foe_request_clear_data(req);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** FoE request destructor.
  */
@@ -99,7 +94,7 @@ void ec_foe_request_clear_data(
     req->data_size = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Pre-allocates the data memory.
  *
@@ -129,7 +124,7 @@ int ec_foe_request_alloc(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Copies FoE data from an external source.
  *
@@ -155,7 +150,7 @@ int ec_foe_request_copy_data(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Checks, if the timeout was exceeded.
  *
@@ -169,45 +164,7 @@ int ec_foe_request_timed_out(
         && jiffies - req->jiffies_start > HZ * req->issue_timeout / 1000;
 }
 
-/*****************************************************************************/
-
-/** Set the request timeout.
- */
-void ec_foe_request_timeout(
-        ec_foe_request_t *req, /**< FoE request. */
-        uint32_t timeout /**< Timeout in ms. */
-        )
-{
-    req->issue_timeout = timeout;
-}
-
-/*****************************************************************************/
-
-/** Returns a pointer to the request's data.
- *
- * \return Data pointer.
- */
-uint8_t *ec_foe_request_data(
-        ec_foe_request_t *req /**< FoE request. */
-        )
-{
-    return req->buffer;
-}
-
-/*****************************************************************************/
-
-/** Returns the data size.
- *
- * \return Data size.
- */
-size_t ec_foe_request_data_size(
-        const ec_foe_request_t *req /**< FoE request. */
-        )
-{
-    return req->data_size;
-}
-
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepares a read request (slave to master).
  */
@@ -221,7 +178,7 @@ void ec_foe_request_read(
     req->jiffies_start = jiffies;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepares a write request (master to slave).
  */
@@ -235,4 +192,4 @@ void ec_foe_request_write(
     req->jiffies_start = jiffies;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

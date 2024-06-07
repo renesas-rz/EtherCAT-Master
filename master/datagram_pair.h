@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT datagram pair structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_DATAGRAM_PAIR_H__
 #define __EC_DATAGRAM_PAIR_H__
@@ -42,7 +34,7 @@
 #include "globals.h"
 #include "datagram.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Domain datagram pair.
  */
@@ -56,7 +48,7 @@ typedef struct {
     unsigned int expected_working_counter; /**< Expectord working conter. */
 } ec_datagram_pair_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_datagram_pair_init(ec_datagram_pair_t *, ec_domain_t *, uint32_t,
         uint8_t *, size_t, const unsigned int []);
@@ -64,6 +56,6 @@ void ec_datagram_pair_clear(ec_datagram_pair_t *);
 
 uint16_t ec_datagram_pair_process(ec_datagram_pair_t *, uint16_t[]);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

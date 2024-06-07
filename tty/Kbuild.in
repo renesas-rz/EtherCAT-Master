@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -21,15 +19,12 @@
 #
 #  ---
 #
-#  The license mentioned above concerns the source code only. Using the EtherCAT
-#  technology and brand is only permitted in compliance with the industrial
-#  property and similar rights of Beckhoff Automation GmbH.
-#
-#  ---
-#
 #  vi: syntax=make
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+src := @abs_srcdir@
+ccflags-y := -I@abs_top_builddir@
 
 obj-m := ec_tty.o
 
@@ -44,4 +39,4 @@ REV := $(shell if test -s $(src)/../revision; then \
 
 CFLAGS_module.o := -DREV=$(REV)
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

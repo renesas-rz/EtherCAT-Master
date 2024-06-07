@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Ethernet interface for debugging purposes.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/version.h>
 #include <linux/netdevice.h>
@@ -42,7 +34,7 @@
 #include "master.h"
 #include "debug.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // net_device functions
 int ec_dbgdev_open(struct net_device *);
@@ -50,7 +42,6 @@ int ec_dbgdev_stop(struct net_device *);
 int ec_dbgdev_tx(struct sk_buff *, struct net_device *);
 struct net_device_stats *ec_dbgdev_stats(struct net_device *);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
 /** Device operations for debug interfaces.
  */
 static const struct net_device_ops ec_dbg_netdev_ops =
@@ -60,9 +51,8 @@ static const struct net_device_ops ec_dbg_netdev_ops =
     .ndo_start_xmit = ec_dbgdev_tx,
     .ndo_get_stats = ec_dbgdev_stats,
 };
-#endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Debug interface constructor.
  *
@@ -88,7 +78,7 @@ int ec_debug_init(
 #else
     dbg->dev = alloc_netdev(sizeof(ec_debug_t *), name, ether_setup);
 #endif
-    if (!(dbg->dev)) 
+    if (!(dbg->dev))
     {
         EC_MASTER_ERR(device->master, "Unable to allocate net_device"
                 " for debug object!\n");
@@ -96,14 +86,7 @@ int ec_debug_init(
     }
 
     // initialize net_device
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
     dbg->dev->netdev_ops = &ec_dbg_netdev_ops;
-#else
-    dbg->dev->open = ec_dbgdev_open;
-    dbg->dev->stop = ec_dbgdev_stop;
-    dbg->dev->hard_start_xmit = ec_dbgdev_tx;
-    dbg->dev->get_stats = ec_dbgdev_stats;
-#endif
 
     // initialize private data
     *((ec_debug_t **) netdev_priv(dbg->dev)) = dbg;
@@ -111,7 +94,7 @@ int ec_debug_init(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Debug interface destructor.
  *
@@ -125,7 +108,7 @@ void ec_debug_clear(
     free_netdev(dbg->dev);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Register debug interface.
  */
@@ -154,7 +137,7 @@ void ec_debug_register(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Unregister debug interface.
  */
@@ -169,7 +152,7 @@ void ec_debug_unregister(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sends frame data to the interface.
  */
@@ -204,9 +187,9 @@ void ec_debug_send(
     netif_rx(skb);
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  NET_DEVICE functions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Opens the virtual network device.
  *
@@ -223,7 +206,7 @@ int ec_dbgdev_open(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Stops the virtual network device.
  *
@@ -240,7 +223,7 @@ int ec_dbgdev_stop(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Transmits data via the virtual network device.
  *
@@ -258,7 +241,7 @@ int ec_dbgdev_tx(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Gets statistics about the virtual network device.
  *
@@ -272,4 +255,4 @@ struct net_device_stats *ec_dbgdev_stats(
     return &dbg->stats;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

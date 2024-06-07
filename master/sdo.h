@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT CANopen SDO structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_SDO_H__
 #define __EC_SDO_H__
@@ -42,7 +34,7 @@
 #include "globals.h"
 #include "sdo_entry.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** CANopen SDO.
  */
@@ -56,7 +48,7 @@ struct ec_sdo {
     struct list_head entries; /**< List of entries. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_sdo_init(ec_sdo_t *, ec_slave_t *, uint16_t);
 void ec_sdo_clear(ec_sdo_t *);
@@ -64,6 +56,6 @@ void ec_sdo_clear(ec_sdo_t *);
 ec_sdo_entry_t *ec_sdo_get_entry(ec_sdo_t *, uint8_t);
 const ec_sdo_entry_t *ec_sdo_get_entry_const(const ec_sdo_t *, uint8_t);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

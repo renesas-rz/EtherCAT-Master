@@ -5,6 +5,7 @@
 #define _IGC_H_
 #include "../ecdev.h"
 
+#include <linux/irq_work.h>
 #include <linux/kobject.h>
 #include <linux/pci.h>
 #include <linux/netdevice.h>
@@ -16,6 +17,7 @@
 #include <linux/net_tstamp.h>
 #include <linux/bitfield.h>
 #include <linux/hrtimer.h>
+#include <net/xdp.h>
 
 #include "igc_hw-6.4-ethercat.h"
 
@@ -266,9 +268,19 @@ struct igc_adapter {
 	} perout[IGC_N_PEROUT];
 
 	/* EtherCAT device variables */
-	ec_device_t *ecdev;
+	ec_device_t *ecdev_;
 	unsigned long ec_watchdog_jiffies;
+	struct irq_work ec_watchdog_kicker;
+	bool ecdev_initialized;
 };
+
+static inline ec_device_t *get_ecdev(struct igc_adapter *adapter)
+{
+#ifdef EC_ENABLE_DRIVER_RESOURCE_VERIFYING
+	WARN_ON(!adapter->ecdev_initialized);
+#endif
+	return adapter->ecdev_;
+}
 
 void igc_up(struct igc_adapter *adapter);
 void igc_down(struct igc_adapter *adapter);

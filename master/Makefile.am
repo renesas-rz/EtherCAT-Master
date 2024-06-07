@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2012  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -19,13 +17,8 @@
 #  with the IgH EtherCAT Master; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+
 include $(top_srcdir)/Makefile.kbuild
 
 # using HEADERS to enable tags target
@@ -38,12 +31,15 @@ noinst_HEADERS = \
 	device.c device.h \
 	domain.c domain.h \
 	doxygen.c \
+	eoe_request.c eoe_request.h \
 	ethernet.c ethernet.h \
+	flag.c flag.h \
 	fmmu_config.c fmmu_config.h \
 	foe.h \
 	foe_request.c foe_request.h \
 	fsm_change.c fsm_change.h \
 	fsm_coe.c fsm_coe.h \
+	fsm_eoe.c fsm_eoe.h \
 	fsm_foe.c fsm_foe.h \
 	fsm_master.c fsm_master.h \
 	fsm_pdo.c fsm_pdo.h \
@@ -64,6 +60,8 @@ noinst_HEADERS = \
 	reg_request.c reg_request.h \
 	rtdm-ioctl.c \
 	rtdm.c rtdm.h \
+	rtdm_details.h \
+	rtdm_xenomai_v3.c \
 	sdo.c sdo.h \
 	sdo_entry.c sdo_entry.h \
 	sdo_request.c sdo_request.h \
@@ -75,4 +73,4 @@ noinst_HEADERS = \
 	sync_config.c sync_config.h \
 	voe_handler.c voe_handler.h
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

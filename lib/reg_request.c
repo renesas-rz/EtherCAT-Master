@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2012-2019  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -18,19 +18,13 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT register request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -40,7 +34,7 @@
 #include "slave_config.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_reg_request_clear(ec_reg_request_t *reg)
 {
@@ -54,14 +48,14 @@ void ec_reg_request_clear(ec_reg_request_t *reg)
  * Application interface.
  ****************************************************************************/
 
-uint8_t *ecrt_reg_request_data(ec_reg_request_t *reg)
+uint8_t *ecrt_reg_request_data(const ec_reg_request_t *reg)
 {
     return reg->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-ec_request_state_t ecrt_reg_request_state(ec_reg_request_t *reg)
+ec_request_state_t ecrt_reg_request_state(const ec_reg_request_t *reg)
 {
     ec_ioctl_reg_request_t io;
     int ret;
@@ -93,9 +87,9 @@ ec_request_state_t ecrt_reg_request_state(ec_reg_request_t *reg)
     return io.state;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     ec_ioctl_reg_request_t io;
@@ -109,14 +103,14 @@ void ecrt_reg_request_write(ec_reg_request_t *reg, uint16_t address,
 
     ret = ioctl(reg->config->master->fd, EC_IOCTL_REG_REQUEST_WRITE, &io);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an register write operation: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
+int ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
         size_t size)
 {
     ec_ioctl_reg_request_t io;
@@ -129,9 +123,9 @@ void ecrt_reg_request_read(ec_reg_request_t *reg, uint16_t address,
 
     ret = ioctl(reg->config->master->fd, EC_IOCTL_REG_REQUEST_READ, &io);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an register read operation: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

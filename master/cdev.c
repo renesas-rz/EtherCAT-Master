@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2020  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -17,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT master character device.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/vmalloc.h>
@@ -47,7 +41,7 @@
  */
 #define DEBUG 0
 
-/*****************************************************************************/
+/****************************************************************************/
 
 static int eccdev_open(struct inode *, struct file *);
 static int eccdev_release(struct inode *, struct file *);
@@ -57,7 +51,6 @@ static int eccdev_mmap(struct file *, struct vm_area_struct *);
 /** This is the kernel version from which the .fault member of the
  * vm_operations_struct is usable.
  */
-#define PAGE_FAULT_VERSION KERNEL_VERSION(2, 6, 23)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 17, 0)
 # define FAULT_RETURN_TYPE int
@@ -65,18 +58,13 @@ static int eccdev_mmap(struct file *, struct vm_area_struct *);
 # define FAULT_RETURN_TYPE vm_fault_t
 #endif
 
-#if LINUX_VERSION_CODE >= PAGE_FAULT_VERSION
 static FAULT_RETURN_TYPE eccdev_vma_fault(
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 11, 0)
         struct vm_area_struct *,
 #endif
         struct vm_fault *);
-#else
-static struct page *eccdev_vma_nopage(
-        struct vm_area_struct *, unsigned long, int *);
-#endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** File operation callbacks for the EtherCAT character device.
  */
@@ -91,14 +79,10 @@ static struct file_operations eccdev_fops = {
 /** Callbacks for a virtual memory area retrieved with ecdevc_mmap().
  */
 struct vm_operations_struct eccdev_vm_ops = {
-#if LINUX_VERSION_CODE >= PAGE_FAULT_VERSION
     .fault = eccdev_vma_fault
-#else
-    .nopage = eccdev_vma_nopage
-#endif
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Private data structure for file handles.
  */
@@ -107,7 +91,7 @@ typedef struct {
     ec_ioctl_context_t ctx; /**< Context. */
 } ec_cdev_priv_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  *
@@ -135,7 +119,7 @@ int ec_cdev_init(
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -144,9 +128,9 @@ void ec_cdev_clear(ec_cdev_t *cdev /**< EtherCAT XML device */)
     cdev_del(&cdev->cdev);
 }
 
-/******************************************************************************
+/*****************************************************************************
  * File operations
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Called when the cdev is opened.
  */
@@ -176,7 +160,7 @@ int eccdev_open(struct inode *inode, struct file *filp)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Called when the cdev is closed.
  */
@@ -201,7 +185,7 @@ int eccdev_release(struct inode *inode, struct file *filp)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Called when an ioctl() command is issued.
  */
@@ -218,7 +202,7 @@ long eccdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
     return ec_ioctl(priv->cdev->master, &priv->ctx, cmd, (void __user *) arg);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef VM_DONTDUMP
 /** VM_RESERVED disappeared in 3.7.
@@ -253,9 +237,7 @@ int eccdev_mmap(
     return 0;
 }
 
-/*****************************************************************************/
-
-#if LINUX_VERSION_CODE >= PAGE_FAULT_VERSION
+/****************************************************************************/
 
 /** Page fault callback for a virtual memory area.
  *
@@ -296,42 +278,4 @@ static FAULT_RETURN_TYPE eccdev_vma_fault(
     return 0;
 }
 
-#else
-
-/** Nopage callback for a virtual memory area.
- *
- * Called at the first access on a virtual-memory area retrieved with
- * ecdev_mmap().
- */
-struct page *eccdev_vma_nopage(
-        struct vm_area_struct *vma, /**< Virtual memory area initialized by
-                                      the kernel. */
-        unsigned long address, /**< Requested virtual address. */
-        int *type /**< Type output parameter. */
-        )
-{
-    unsigned long offset;
-    struct page *page = NOPAGE_SIGBUS;
-    ec_cdev_priv_t *priv = (ec_cdev_priv_t *) vma->vm_private_data;
-    ec_master_t *master = priv->cdev->master;
-
-    offset = (address - vma->vm_start) + (vma->vm_pgoff << PAGE_SHIFT);
-
-    if (offset >= priv->ctx.process_data_size)
-        return NOPAGE_SIGBUS;
-
-    page = vmalloc_to_page(priv->ctx.process_data + offset);
-
-    EC_MASTER_DBG(master, 1, "Nopage fault vma, address = %#lx,"
-            " offset = %#lx, page = %p\n", address, offset, page);
-
-    get_page(page);
-    if (type)
-        *type = VM_FAULT_MINOR;
-
-    return page;
-}
-
-#endif
-
-/*****************************************************************************/
+/****************************************************************************/

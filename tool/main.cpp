@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -18,12 +16,6 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
  *
  ****************************************************************************/
 
@@ -49,6 +41,9 @@ using namespace std;
 #include "CommandFoeRead.h"
 #include "CommandFoeWrite.h"
 #include "CommandGraph.h"
+#ifdef EC_EOE
+# include "CommandIp.h"
+#endif
 #include "CommandMaster.h"
 #include "CommandPdos.h"
 #include "CommandRegRead.h"
@@ -67,7 +62,7 @@ using namespace std;
 
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef list<Command *> CommandList;
 CommandList commandList;
@@ -89,7 +84,7 @@ bool helpRequested = false;
 string outputFile;
 string skin;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string usage()
 {
@@ -135,7 +130,7 @@ string usage()
     return str.str();
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void getOptions(int argc, char **argv)
 {
@@ -290,6 +285,9 @@ int main(int argc, char **argv)
     commandList.push_back(new CommandFoeRead());
     commandList.push_back(new CommandFoeWrite());
     commandList.push_back(new CommandGraph());
+#ifdef EC_EOE
+    commandList.push_back(new CommandIp());
+#endif
     commandList.push_back(new CommandMaster());
     commandList.push_back(new CommandPdos());
     commandList.push_back(new CommandRegRead());

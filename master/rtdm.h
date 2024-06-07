@@ -1,8 +1,6 @@
 /*****************************************************************************
  *
- *  $Id$
- *
- *  Copyright (C)      2012  Florian Pose <fp@igh-essen.com>
+ *  Copyright (C)      2012  Florian Pose <fp@igh.de>
  *
  *  This file is part of the IgH EtherCAT master.
  *
@@ -18,10 +16,6 @@
  *  You should have received a copy of the GNU General Public License along
  *  with the IgH EtherCAT master. If not, see <http://www.gnu.org/licenses/>.
  *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 /** \file
@@ -33,11 +27,11 @@
 
 #include "../include/ecrt.h" /* ec_master_t */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 struct rtdm_device;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** EtherCAT RTDM device.
  */
@@ -46,7 +40,7 @@ typedef struct ec_rtdm_dev {
     struct rtdm_device *dev; /**< RTDM device. */
 } ec_rtdm_dev_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 int ec_rtdm_dev_init(ec_rtdm_dev_t *, ec_master_t *);
 void ec_rtdm_dev_clear(ec_rtdm_dev_t *);

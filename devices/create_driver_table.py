@@ -19,12 +19,6 @@
 #  with the IgH EtherCAT Master; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
-#  ---
-#
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
 ############################################################################
 
 from os import walk
@@ -34,6 +28,7 @@ from re import compile
 DRIVER_MAP=(
     # (subdir, driver name, file prefix)
     (".", "8139too", "8139too"),
+    ("stmmac", "dwmac-intel", "dwmac-intel"),
     (".", "e100", "e100"),
     ("e1000", "e1000", "e1000_main"),
     ("e1000e", "e1000e", "netdev"),
@@ -42,6 +37,7 @@ DRIVER_MAP=(
     ("igc", "igc", "igc_main"),
     (".", "r8169", "r8169"),
     ("r8169", "r8169", "r8169_main"),
+    ("stmmac", "stmmac-pci", "stmmac_pci"),
 )
 
 

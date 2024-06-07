@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT SoE request structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_SOE_REQUEST_H__
 #define __EC_SOE_REQUEST_H__
@@ -41,7 +33,7 @@
 
 #include "globals.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sercos-over-EtherCAT request.
  */
@@ -64,7 +56,7 @@ struct ec_soe_request {
     uint16_t error_code; /**< SoE error code. */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_soe_request_init(ec_soe_request_t *);
 void ec_soe_request_clear(ec_soe_request_t *);
@@ -75,10 +67,10 @@ void ec_soe_request_set_idn(ec_soe_request_t *, uint16_t);
 int ec_soe_request_alloc(ec_soe_request_t *, size_t);
 int ec_soe_request_copy_data(ec_soe_request_t *, const uint8_t *, size_t);
 int ec_soe_request_append_data(ec_soe_request_t *, const uint8_t *, size_t);
-void ec_soe_request_read(ec_soe_request_t *);
-void ec_soe_request_write(ec_soe_request_t *);
+int ec_soe_request_read(ec_soe_request_t *);
+int ec_soe_request_write(ec_soe_request_t *);
 int ec_soe_request_timed_out(const ec_soe_request_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

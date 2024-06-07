@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT CoE state machines.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include "globals.h"
 #include "master.h"
@@ -39,7 +31,7 @@
 #include "fsm_coe.h"
 #include "slave_config.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Maximum time in ms to wait for responses when reading out the dictionary.
  */
@@ -65,7 +57,20 @@
  */
 #define DEBUG_LONG 0
 
-/*****************************************************************************/
+/****************************************************************************/
+
+// prototypes for private methods
+void ec_canopen_abort_msg(const ec_slave_t *, uint32_t);
+int ec_fsm_coe_check_emergency(const ec_fsm_coe_t *, const uint8_t *, size_t);
+int ec_fsm_coe_prepare_dict(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_dict_prepare_desc(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_dict_prepare_entry(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_prepare_down_start(ec_fsm_coe_t *, ec_datagram_t *);
+void ec_fsm_coe_down_prepare_segment_request(ec_fsm_coe_t *, ec_datagram_t *);
+int ec_fsm_coe_prepare_up(ec_fsm_coe_t *, ec_datagram_t *);
+void ec_fsm_coe_up_prepare_segment_request(ec_fsm_coe_t *, ec_datagram_t *);
+
+/****************************************************************************/
 
 void ec_fsm_coe_dict_start(ec_fsm_coe_t *, ec_datagram_t *);
 void ec_fsm_coe_dict_request(ec_fsm_coe_t *, ec_datagram_t *);
@@ -96,7 +101,7 @@ void ec_fsm_coe_up_seg_response(ec_fsm_coe_t *, ec_datagram_t *);
 void ec_fsm_coe_end(ec_fsm_coe_t *, ec_datagram_t *);
 void ec_fsm_coe_error(ec_fsm_coe_t *, ec_datagram_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** SDO abort messages.
  *
@@ -141,7 +146,7 @@ const ec_code_msg_t sdo_abort_messages[] = {
     {}
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Outputs an SDO abort message.
  */
@@ -163,7 +168,7 @@ void ec_canopen_abort_msg(
     EC_SLAVE_ERR(slave, "Unknown SDO abort code 0x%08X.\n", abort_code);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  */
@@ -175,7 +180,7 @@ void ec_fsm_coe_init(
     fsm->datagram = NULL;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -185,7 +190,7 @@ void ec_fsm_coe_clear(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts reading a slaves' SDO dictionary.
  */
@@ -198,7 +203,7 @@ void ec_fsm_coe_dictionary(
     fsm->state = ec_fsm_coe_dict_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts to transfer an SDO to/from a slave.
  */
@@ -219,7 +224,7 @@ void ec_fsm_coe_transfer(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Executes the current state of the state machine.
  *
@@ -254,7 +259,7 @@ int ec_fsm_coe_exec(
     return datagram_used;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Returns, if the state machine terminated with success.
  * \return non-zero if successful.
@@ -266,7 +271,7 @@ int ec_fsm_coe_success(
     return fsm->state == ec_fsm_coe_end;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check if the received data are a CoE emergency request.
  *
@@ -275,7 +280,7 @@ int ec_fsm_coe_success(
  * \return The data were an emergency request.
  */
 int ec_fsm_coe_check_emergency(
-        ec_fsm_coe_t *fsm, /**< Finite state machine */
+        const ec_fsm_coe_t *fsm, /**< Finite state machine */
         const uint8_t *data, /**< CoE mailbox data. */
         size_t size /**< CoE mailbox data size. */
         )
@@ -304,9 +309,9 @@ int ec_fsm_coe_check_emergency(
     return 1;
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  CoE dictionary state machine
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Prepare a dictionary request.
  *
@@ -334,7 +339,7 @@ int ec_fsm_coe_prepare_dict(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** CoE state: DICT START.
  */
@@ -365,7 +370,7 @@ void ec_fsm_coe_dict_start(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** CoE state: DICT REQUEST.
  * \todo Timeout behavior
@@ -406,7 +411,7 @@ void ec_fsm_coe_dict_request(
     fsm->state = ec_fsm_coe_dict_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** CoE state: DICT CHECK.
  */
@@ -459,7 +464,7 @@ void ec_fsm_coe_dict_check(
     fsm->state = ec_fsm_coe_dict_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepare an object description request.
  *
@@ -487,7 +492,7 @@ int ec_fsm_coe_dict_prepare_desc(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT RESPONSE.
@@ -642,7 +647,7 @@ void ec_fsm_coe_dict_response(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT DESC REQUEST.
@@ -686,7 +691,7 @@ void ec_fsm_coe_dict_desc_request(
     fsm->state = ec_fsm_coe_dict_desc_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT DESC CHECK.
@@ -742,7 +747,7 @@ void ec_fsm_coe_dict_desc_check(
     fsm->state = ec_fsm_coe_dict_desc_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepare an entry description request.
  *
@@ -772,7 +777,7 @@ int ec_fsm_coe_dict_prepare_entry(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT DESC RESPONSE.
@@ -907,7 +912,7 @@ void ec_fsm_coe_dict_desc_response(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT ENTRY REQUEST.
@@ -950,7 +955,7 @@ void ec_fsm_coe_dict_entry_request(
     fsm->state = ec_fsm_coe_dict_entry_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT ENTRY CHECK.
@@ -1006,7 +1011,7 @@ void ec_fsm_coe_dict_entry_check(
     fsm->state = ec_fsm_coe_dict_entry_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DICT ENTRY RESPONSE.
@@ -1184,9 +1189,9 @@ void ec_fsm_coe_dict_entry_response(
     fsm->state = ec_fsm_coe_end;
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  CoE state machine
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Prepare a donwnload request.
  *
@@ -1317,7 +1322,7 @@ void ec_fsm_coe_down_start(
     if (slave->configured_rx_mailbox_size <
             EC_MBOX_HEADER_SIZE + EC_COE_DOWN_REQ_HEADER_SIZE) {
         EC_SLAVE_ERR(slave, "Mailbox too small!\n");
-        request->errno = EOVERFLOW;
+        request->errno = ENOBUFS;
         fsm->state = ec_fsm_coe_error;
         return;
     }
@@ -1331,7 +1336,7 @@ void ec_fsm_coe_down_start(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DOWN REQUEST.
@@ -1402,7 +1407,7 @@ void ec_fsm_coe_down_request(
     fsm->state = ec_fsm_coe_down_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** CoE state: DOWN CHECK.
  */
@@ -1460,7 +1465,7 @@ void ec_fsm_coe_down_check(
     fsm->state = ec_fsm_coe_down_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepare a download segment request.
  */
@@ -1523,7 +1528,7 @@ void ec_fsm_coe_down_prepare_segment_request(
     fsm->state = ec_fsm_coe_down_seg_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DOWN RESPONSE.
@@ -1645,7 +1650,7 @@ void ec_fsm_coe_down_response(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DOWN SEG CHECK.
@@ -1701,7 +1706,7 @@ void ec_fsm_coe_down_seg_check(
     fsm->state = ec_fsm_coe_down_seg_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: DOWN SEG RESPONSE.
@@ -1833,7 +1838,7 @@ void ec_fsm_coe_down_seg_response(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepare an upload request.
  *
@@ -1870,7 +1875,7 @@ int ec_fsm_coe_prepare_up(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: UP START.
@@ -1902,7 +1907,7 @@ void ec_fsm_coe_up_start(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 /**
    CoE state: UP REQUEST.
    \todo Timeout behavior
@@ -1971,7 +1976,7 @@ void ec_fsm_coe_up_request(
     fsm->state = ec_fsm_coe_up_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: UP CHECK.
@@ -2030,7 +2035,7 @@ void ec_fsm_coe_up_check(
     fsm->state = ec_fsm_coe_up_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Prepare an SDO upload segment request.
  */
@@ -2059,7 +2064,7 @@ void ec_fsm_coe_up_prepare_segment_request(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: UP RESPONSE.
@@ -2254,7 +2259,7 @@ void ec_fsm_coe_up_response(
     fsm->state = ec_fsm_coe_end; // success
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: UP REQUEST.
@@ -2298,7 +2303,7 @@ void ec_fsm_coe_up_seg_request(
     fsm->state = ec_fsm_coe_up_seg_check;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: UP CHECK.
@@ -2357,7 +2362,7 @@ void ec_fsm_coe_up_seg_check(
     fsm->state = ec_fsm_coe_up_seg_response;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    CoE state: UP RESPONSE.
@@ -2471,7 +2476,7 @@ void ec_fsm_coe_up_seg_response(
         EC_SLAVE_ERR(slave, "SDO upload 0x%04X:%02X failed: Fragment"
                 " exceeding complete size!\n",
                 request->index, request->subindex);
-        request->errno = EOVERFLOW;
+        request->errno = ENOBUFS;
         fsm->state = ec_fsm_coe_error;
         return;
     }
@@ -2503,7 +2508,7 @@ void ec_fsm_coe_up_seg_response(
     fsm->state = ec_fsm_coe_end; // success
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    State: ERROR.
@@ -2516,7 +2521,7 @@ void ec_fsm_coe_error(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    State: END.
@@ -2529,4 +2534,4 @@ void ec_fsm_coe_end(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/

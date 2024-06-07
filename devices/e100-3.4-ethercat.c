@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2007-2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -21,15 +19,9 @@
  *
  *  ---
  *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *  ---
- *
  *  vim: noexpandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
@@ -38,7 +30,7 @@
 
 /* Former documentation: */
 
-/*******************************************************************************
+/*****************************************************************************
 
   Intel PRO/100 Linux driver
   Copyright(c) 1999 - 2006 Intel Corporation.
@@ -64,7 +56,7 @@
   e1000-devel Mailing List <e1000-devel@lists.sourceforge.net>
   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
 
-*******************************************************************************/
+*****************************************************************************/
 
 /*
  *	e100.c: Intel(R) PRO/100 ethernet driver
@@ -239,7 +231,7 @@ MODULE_FIRMWARE(FIRMWARE_D101S);
 MODULE_FIRMWARE(FIRMWARE_D102E);
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
-MODULE_AUTHOR("Florian Pose <fp@igh-essen.com>");
+MODULE_AUTHOR("Florian Pose <fp@igh.de>");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION ", master " EC_MASTER_VERSION);
 
@@ -1214,7 +1206,7 @@ static void e100_configure(struct nic *nic, struct cb *cb, struct sk_buff *skb)
 		config->multicast_all = 0x1;		/* 1=accept, 0=no */
 
 	/* disable WoL when up */
-	if (nic->ecdev || 
+	if (nic->ecdev ||
 			(netif_running(nic->netdev) || !(nic->flags & wol_magic)))
 		config->magic_packet_disable = 0x1;	/* 1=off, 0=on */
 

@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    Mailbox functionality.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/slab.h>
 #include <linux/delay.h>
@@ -41,7 +33,7 @@
 #include "datagram.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Prepares a mailbox-send datagram.
@@ -68,7 +60,7 @@ uint8_t *ec_slave_mbox_prepare_send(const ec_slave_t *slave, /**< slave */
     if (unlikely(total_size > slave->configured_rx_mailbox_size)) {
         EC_SLAVE_ERR(slave, "Data size (%zu) does not fit in mailbox (%u)!\n",
                 total_size, slave->configured_rx_mailbox_size);
-        return ERR_PTR(-EOVERFLOW);
+        return ERR_PTR(-ENOBUFS);
     }
 
     ret = ec_datagram_fpwr(datagram, slave->station_address,
@@ -85,7 +77,7 @@ uint8_t *ec_slave_mbox_prepare_send(const ec_slave_t *slave, /**< slave */
     return datagram->data + EC_MBOX_HEADER_SIZE;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Prepares a datagram for checking the mailbox state.
@@ -105,7 +97,7 @@ int ec_slave_mbox_prepare_check(const ec_slave_t *slave, /**< slave */
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Processes a mailbox state checking datagram.
@@ -117,7 +109,7 @@ int ec_slave_mbox_check(const ec_datagram_t *datagram /**< datagram */)
     return EC_READ_U8(datagram->data + 5) & 8 ? 1 : 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Prepares a datagram to fetch mailbox data.
@@ -138,7 +130,7 @@ int ec_slave_mbox_prepare_fetch(const ec_slave_t *slave, /**< slave */
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Mailbox error codes.
@@ -156,7 +148,7 @@ const ec_code_msg_t mbox_error_messages[] = {
     {}
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Processes received mailbox data.
  *
@@ -208,4 +200,4 @@ uint8_t *ec_slave_mbox_fetch(const ec_slave_t *slave, /**< slave */
     return datagram->data + EC_MBOX_HEADER_SIZE;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

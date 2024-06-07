@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT PDO mapping state machine.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include "globals.h"
 #include "master.h"
@@ -40,7 +32,15 @@
 
 #include "fsm_pdo_entry.h"
 
-/*****************************************************************************/
+/****************************************************************************/
+
+// prototypes for private methods
+void ec_fsm_pdo_entry_print(const ec_fsm_pdo_entry_t *);
+int ec_fsm_pdo_entry_running(const ec_fsm_pdo_entry_t *);
+ec_pdo_entry_t *ec_fsm_pdo_entry_conf_next_entry(const ec_fsm_pdo_entry_t *,
+        const struct list_head *);
+
+/****************************************************************************/
 
 void ec_fsm_pdo_entry_read_state_start(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 void ec_fsm_pdo_entry_read_state_count(ec_fsm_pdo_entry_t *, ec_datagram_t *);
@@ -61,7 +61,7 @@ void ec_fsm_pdo_entry_conf_action_map(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 void ec_fsm_pdo_entry_state_end(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 void ec_fsm_pdo_entry_state_error(ec_fsm_pdo_entry_t *, ec_datagram_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  */
@@ -74,7 +74,7 @@ void ec_fsm_pdo_entry_init(
     ec_sdo_request_init(&fsm->request);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -85,12 +85,12 @@ void ec_fsm_pdo_entry_clear(
     ec_sdo_request_clear(&fsm->request);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Print the current and desired PDO mapping.
  */
 void ec_fsm_pdo_entry_print(
-        ec_fsm_pdo_entry_t *fsm /**< PDO mapping state machine. */
+        const ec_fsm_pdo_entry_t *fsm /**< PDO mapping state machine. */
         )
 {
     printk(KERN_CONT "Currently mapped PDO entries: ");
@@ -100,7 +100,7 @@ void ec_fsm_pdo_entry_print(
     printk(KERN_CONT "\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start reading a PDO's entries.
  */
@@ -118,7 +118,7 @@ void ec_fsm_pdo_entry_start_reading(
     fsm->state = ec_fsm_pdo_entry_read_state_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start PDO mapping state machine.
  */
@@ -142,7 +142,7 @@ void ec_fsm_pdo_entry_start_configuration(
     fsm->state = ec_fsm_pdo_entry_conf_state_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get running state.
  *
@@ -156,7 +156,7 @@ int ec_fsm_pdo_entry_running(
         && fsm->state != ec_fsm_pdo_entry_state_error;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Executes the current state.
  *
@@ -172,7 +172,7 @@ int ec_fsm_pdo_entry_exec(
     return ec_fsm_pdo_entry_running(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get execution result.
  *
@@ -185,9 +185,9 @@ int ec_fsm_pdo_entry_success(
     return fsm->state == ec_fsm_pdo_entry_state_end;
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Reading state functions.
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Request reading the number of mapped PDO entries.
  */
@@ -204,7 +204,7 @@ void ec_fsm_pdo_entry_read_state_start(
     ec_fsm_coe_exec(fsm->fsm_coe, datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read number of mapped PDO entries.
  */
@@ -242,7 +242,7 @@ void ec_fsm_pdo_entry_read_state_count(
     ec_fsm_pdo_entry_read_action_next(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read next PDO entry.
  */
@@ -265,7 +265,7 @@ void ec_fsm_pdo_entry_read_action_next(
     fsm->state = ec_fsm_pdo_entry_state_end;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read PDO entry information.
  */
@@ -331,9 +331,9 @@ void ec_fsm_pdo_entry_read_state_entry(
     }
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Configuration state functions.
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Start PDO mapping.
  */
@@ -360,7 +360,7 @@ void ec_fsm_pdo_entry_conf_state_start(
     ec_fsm_coe_exec(fsm->fsm_coe, datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Process next PDO entry.
  *
@@ -377,7 +377,7 @@ ec_pdo_entry_t *ec_fsm_pdo_entry_conf_next_entry(
     return list_entry(list, ec_pdo_entry_t, list);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the number of mapped entries to zero.
  */
@@ -412,7 +412,7 @@ void ec_fsm_pdo_entry_conf_state_zero_entry_count(
     ec_fsm_pdo_entry_conf_action_map(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Starts to add a PDO entry.
  */
@@ -441,7 +441,7 @@ void ec_fsm_pdo_entry_conf_action_map(
     ec_fsm_coe_exec(fsm->fsm_coe, datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add a PDO entry.
  */
@@ -488,7 +488,7 @@ void ec_fsm_pdo_entry_conf_state_map_entry(
     ec_fsm_pdo_entry_conf_action_map(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the number of entries.
  */
@@ -514,9 +514,9 @@ void ec_fsm_pdo_entry_conf_state_set_entry_count(
     fsm->state = ec_fsm_pdo_entry_state_end; // finished
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Common state functions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** State: ERROR.
  */
@@ -527,7 +527,7 @@ void ec_fsm_pdo_entry_state_error(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: END.
  */
@@ -538,4 +538,4 @@ void ec_fsm_pdo_entry_state_end(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/

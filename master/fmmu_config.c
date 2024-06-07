@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT FMMU configuration methods.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include "globals.h"
 #include "slave_config.h"
@@ -39,7 +31,7 @@
 
 #include "fmmu_config.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** FMMU configuration constructor.
  *
@@ -67,7 +59,7 @@ void ec_fmmu_config_init(
     ec_domain_add_fmmu_config(domain, fmmu);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Initializes an FMMU configuration page.
  *
@@ -96,4 +88,4 @@ void ec_fmmu_config_page(
     EC_WRITE_U16(data + 14, 0x0000); // reserved
 }
 
-/*****************************************************************************/
+/****************************************************************************/

@@ -1,6 +1,4 @@
-#------------------------------------------------------------------------------
-#
-#  $Id$
+#-----------------------------------------------------------------------------
 #
 #  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
 #
@@ -21,15 +19,9 @@
 #
 #  ---
 #
-#  The license mentioned above concerns the source code only. Using the
-#  EtherCAT technology and brand is only permitted in compliance with the
-#  industrial property and similar rights of Beckhoff Automation GmbH.
-#
-#  ---
-#
 #  vim: syntax=automake
 #
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
 EXTRA_DIST =
 
@@ -74,9 +66,9 @@ ethercat_SOURCES = \
 	sii_crc.cpp
 
 if ENABLE_EOE
-ethercat_SOURCES += CommandEoe.cpp
+ethercat_SOURCES += CommandEoe.cpp CommandIp.cpp
 else
-EXTRA_DIST += CommandEoe.cpp
+EXTRA_DIST += CommandEoe.cpp CommandIp.cpp
 endif
 
 noinst_HEADERS = \
@@ -116,9 +108,9 @@ noinst_HEADERS = \
 	sii_crc.h
 
 if ENABLE_EOE
-noinst_HEADERS += CommandEoe.h
+noinst_HEADERS += CommandEoe.h CommandIp.h
 else
-EXTRA_DIST += CommandEoe.h
+EXTRA_DIST += CommandEoe.h CommandIp.h
 endif
 
 REV = `if test -s $(top_srcdir)/revision; then \
@@ -133,4 +125,4 @@ ethercat_CXXFLAGS = \
 	-Wall -DREV=$(REV) \
 	-fno-strict-aliasing
 
-#------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------

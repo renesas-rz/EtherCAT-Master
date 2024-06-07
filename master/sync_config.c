@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,24 +17,18 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT sync manager configuration methods.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include "globals.h"
 #include "sync_config.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  */
@@ -49,7 +41,7 @@ void ec_sync_config_init(
     ec_pdo_list_init(&sync_config->pdos);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -60,4 +52,4 @@ void ec_sync_config_clear(
     ec_pdo_list_clear(&sync_config->pdos);
 }
 
-/*****************************************************************************/
+/****************************************************************************/

@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *  vim: expandtab
  *
  ****************************************************************************/
@@ -36,12 +28,12 @@ using namespace std;
 #include "MasterDevice.h"
 #include "NumberListParser.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef map<uint16_t, ec_ioctl_config_t> AliasMap;
 typedef map<uint16_t, AliasMap> ConfigMap;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 class MasterIndexParser:
     public NumberListParser
@@ -55,7 +47,7 @@ class MasterIndexParser:
         };
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 class SlaveAliasParser:
     public NumberListParser
@@ -84,7 +76,7 @@ class SlaveAliasParser:
         MasterDevice &dev;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 class ConfigAliasParser:
     public NumberListParser
@@ -100,7 +92,7 @@ class ConfigAliasParser:
         unsigned int maxAlias;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 class PositionParser:
     public NumberListParser
@@ -118,7 +110,7 @@ class PositionParser:
         const unsigned int count;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 class AliasPositionParser:
     public NumberListParser
@@ -145,7 +137,7 @@ class AliasPositionParser:
         const AliasMap &aliasMap;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 Command::Command(const string &name, const string &briefDesc):
     name(name),
@@ -156,76 +148,76 @@ Command::Command(const string &name, const string &briefDesc):
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 Command::~Command()
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setMasters(const string &m)
 {
     masters = m;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setVerbosity(Verbosity v)
 {
     verbosity = v;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setAliases(const string &a)
 {
     aliases = a;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setPositions(const string &p)
 {
     positions = p;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setDomains(const string &d)
 {
     domains = d;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setDataType(const string &t)
 {
     dataType = t;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setEmergency(bool e)
 {
     emergency = e;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setForce(bool f)
 {
     force = f;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setOutputFile(const string &f)
 {
     outputFile = f;
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::setSkin(const string &s)
 {
@@ -255,7 +247,7 @@ bool Command::matchesAbbrev(const string &abb) const
     return true;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string Command::numericInfo()
 {
@@ -268,28 +260,28 @@ string Command::numericInfo()
     return str.str();
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::throwInvalidUsageException(const stringstream &s) const
 {
     throw InvalidUsageException(s);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::throwCommandException(const string &msg) const
 {
     throw CommandException(msg);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::throwCommandException(const stringstream &s) const
 {
     throw CommandException(s);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void Command::throwSingleSlaveRequired(unsigned int size) const
 {
@@ -301,7 +293,7 @@ void Command::throwSingleSlaveRequired(unsigned int size) const
     throwInvalidUsageException(err);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 Command::MasterIndexList Command::getMasterIndices() const
 {
@@ -323,7 +315,7 @@ Command::MasterIndexList Command::getMasterIndices() const
     return indices;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 unsigned int Command::getSingleMasterIndex() const
 {
@@ -338,7 +330,7 @@ unsigned int Command::getSingleMasterIndex() const
     return masterIndices.front();
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 Command::SlaveList Command::selectedSlaves(MasterDevice &m)
 {
@@ -401,7 +393,7 @@ Command::SlaveList Command::selectedSlaves(MasterDevice &m)
     return list;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 bool operator<(
         const ec_ioctl_config_t &a,
@@ -412,7 +404,7 @@ bool operator<(
         || (a.alias == b.alias && a.position < b.position);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 Command::ConfigList Command::selectedConfigs(MasterDevice &m)
 {

@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT device methods.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/module.h>
 #include <linux/skbuff.h>
@@ -54,7 +46,7 @@
     } while (0)
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 enum {
     /* genet driver needs extra headroom in skb for status block */
@@ -160,7 +152,7 @@ out_return:
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -180,7 +172,7 @@ void ec_device_clear(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Associate with net_device.
  */
@@ -211,7 +203,7 @@ void ec_device_attach(
 #endif
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Disconnect from net_device.
  */
@@ -238,7 +230,7 @@ void ec_device_detach(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Opens the EtherCAT device.
  *
@@ -264,18 +256,14 @@ int ec_device_open(
 
     ec_device_clear_stats(device);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     ret = device->dev->netdev_ops->ndo_open(device->dev);
-#else
-    ret = device->dev->open(device->dev);
-#endif
     if (!ret)
         device->open = 1;
 
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Stops the EtherCAT device.
  *
@@ -297,18 +285,14 @@ int ec_device_close(
         return 0;
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     ret = device->dev->netdev_ops->ndo_stop(device->dev);
-#else
-    ret = device->dev->stop(device->dev);
-#endif
     if (!ret)
         device->open = 0;
 
     return ret;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Returns a pointer to the device's transmit memory.
  *
@@ -326,7 +310,7 @@ uint8_t *ec_device_tx_data(
     return device->tx_skb[device->tx_ring_index]->data + ETH_HLEN;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sends the content of the transmit socket buffer.
  *
@@ -349,12 +333,8 @@ void ec_device_send(
     }
 
     // start sending
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
     if (device->dev->netdev_ops->ndo_start_xmit(skb, device->dev) ==
             NETDEV_TX_OK)
-#else
-    if (device->dev->hard_start_xmit(skb, device->dev) == NETDEV_TX_OK)
-#endif
     {
         device->tx_count++;
         device->master->device_stats.tx_count++;
@@ -372,7 +352,7 @@ void ec_device_send(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clears the frame statistics.
  */
@@ -401,7 +381,7 @@ void ec_device_clear_stats(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifdef EC_DEBUG_RING
 /** Appends frame data to the debug ring.
@@ -431,7 +411,7 @@ void ec_device_debug_ring_append(
         device->debug_frame_count++;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Outputs the debug ring.
  */
@@ -472,7 +452,7 @@ void ec_device_debug_ring_print(
 }
 #endif
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Calls the poll function of the assigned net_device.
  *
@@ -494,7 +474,7 @@ void ec_device_poll(
     device->poll(device->dev);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Update device statistics.
  */
@@ -531,9 +511,9 @@ void ec_device_update_stats(
     device->last_rx_bytes = device->rx_bytes;
 }
 
-/******************************************************************************
+/*****************************************************************************
  *  Device interface
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Withdraws an EtherCAT device from the master.
  *
@@ -569,7 +549,7 @@ void ecdev_withdraw(ec_device_t *device /**< EtherCAT device */)
     up(&master->device_sem);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Opens the network device and makes the master enter IDLE phase.
  *
@@ -584,7 +564,7 @@ int ecdev_open(ec_device_t *device /**< EtherCAT device */)
 
     ret = ec_device_open(device);
     if (ret) {
-        EC_MASTER_ERR(master, "Failed to open device!\n");
+        EC_MASTER_ERR(master, "Failed to open device: error %d!\n", ret);
         return ret;
     }
 
@@ -607,7 +587,7 @@ int ecdev_open(ec_device_t *device /**< EtherCAT device */)
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Makes the master leave IDLE phase and closes the network device.
  *
@@ -627,7 +607,7 @@ void ecdev_close(ec_device_t *device /**< EtherCAT device */)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Accepts a received frame.
  *
@@ -673,7 +653,7 @@ void ecdev_receive(
     ec_master_receive_datagrams(device->master, device, ec_data, ec_size);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Sets a new link state.
  *
@@ -700,7 +680,7 @@ void ecdev_set_link(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Reads the link state.
  *
@@ -720,7 +700,7 @@ uint8_t ecdev_get_link(
     return device->link_state;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** \cond */
 
@@ -733,4 +713,4 @@ EXPORT_SYMBOL(ecdev_set_link);
 
 /** \endcond */
 
-/*****************************************************************************/
+/****************************************************************************/

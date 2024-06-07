@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,19 +17,13 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT PDO configuration state machine.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include "globals.h"
 #include "master.h"
@@ -40,7 +32,15 @@
 
 #include "fsm_pdo.h"
 
-/*****************************************************************************/
+/****************************************************************************/
+
+// prototypes for private methods
+void ec_fsm_pdo_print(const ec_fsm_pdo_t *);
+int ec_fsm_pdo_running(const ec_fsm_pdo_t *);
+ec_pdo_t *ec_fsm_pdo_conf_action_next_pdo(const ec_fsm_pdo_t *,
+        const struct list_head *);
+
+/****************************************************************************/
 
 void ec_fsm_pdo_read_state_start(ec_fsm_pdo_t *, ec_datagram_t *);
 void ec_fsm_pdo_read_state_pdo_count(ec_fsm_pdo_t *, ec_datagram_t *);
@@ -67,7 +67,7 @@ void ec_fsm_pdo_conf_action_assign_pdo(ec_fsm_pdo_t *, ec_datagram_t *);
 void ec_fsm_pdo_state_end(ec_fsm_pdo_t *, ec_datagram_t *);
 void ec_fsm_pdo_state_error(ec_fsm_pdo_t *, ec_datagram_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Constructor.
  */
@@ -83,7 +83,7 @@ void ec_fsm_pdo_init(
     ec_pdo_init(&fsm->slave_pdo);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Destructor.
  */
@@ -97,12 +97,12 @@ void ec_fsm_pdo_clear(
     ec_pdo_clear(&fsm->slave_pdo);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Print the current and desired PDO assignment.
  */
 void ec_fsm_pdo_print(
-        ec_fsm_pdo_t *fsm /**< PDO configuration state machine. */
+        const ec_fsm_pdo_t *fsm /**< PDO configuration state machine. */
         )
 {
     printk(KERN_CONT "Currently assigned PDOs: ");
@@ -112,7 +112,7 @@ void ec_fsm_pdo_print(
     printk(KERN_CONT "\n");
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start reading the PDO configuration.
  */
@@ -125,7 +125,7 @@ void ec_fsm_pdo_start_reading(
     fsm->state = ec_fsm_pdo_read_state_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Start writing the PDO configuration.
  */
@@ -138,7 +138,7 @@ void ec_fsm_pdo_start_configuration(
     fsm->state = ec_fsm_pdo_conf_state_start;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get running state.
  *
@@ -152,7 +152,7 @@ int ec_fsm_pdo_running(
         && fsm->state != ec_fsm_pdo_state_error;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Executes the current state of the state machine.
  *
@@ -171,7 +171,7 @@ int ec_fsm_pdo_exec(
     return ec_fsm_pdo_running(fsm);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get execution result.
  *
@@ -184,9 +184,9 @@ int ec_fsm_pdo_success(
     return fsm->state == ec_fsm_pdo_state_end;
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Reading state funtions.
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Start reading PDO assignment.
  */
@@ -200,7 +200,7 @@ void ec_fsm_pdo_read_state_start(
     ec_fsm_pdo_read_action_next_sync(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read PDO assignment of next sync manager.
  */
@@ -236,7 +236,7 @@ void ec_fsm_pdo_read_action_next_sync(
     fsm->state = ec_fsm_pdo_state_end;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Count assigned PDOs.
  */
@@ -272,7 +272,7 @@ void ec_fsm_pdo_read_state_pdo_count(
     ec_fsm_pdo_read_action_next_pdo(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read next PDO.
  */
@@ -300,7 +300,7 @@ void ec_fsm_pdo_read_action_next_pdo(
     ec_fsm_pdo_read_action_next_sync(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Fetch PDO information.
  */
@@ -349,7 +349,7 @@ void ec_fsm_pdo_read_state_pdo(
     fsm->state(fsm, datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Fetch PDO information.
  */
@@ -374,9 +374,9 @@ void ec_fsm_pdo_read_state_pdo_entries(
     ec_fsm_pdo_read_action_next_pdo(fsm, datagram);
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Writing state functions.
- *****************************************************************************/
+ ****************************************************************************/
 
 /** Start PDO configuration.
  */
@@ -394,7 +394,7 @@ void ec_fsm_pdo_conf_state_start(
     ec_fsm_pdo_conf_action_next_sync(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Assign next PDO.
  *
@@ -411,7 +411,7 @@ ec_pdo_t *ec_fsm_pdo_conf_action_next_pdo(
     return list_entry(list, ec_pdo_t, list);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Get the next sync manager for a pdo configuration.
  */
@@ -460,7 +460,7 @@ void ec_fsm_pdo_conf_action_next_sync(
     fsm->state = ec_fsm_pdo_state_end;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check if the mapping has to be read, otherwise start to configure it.
  */
@@ -495,7 +495,7 @@ void ec_fsm_pdo_conf_action_pdo_mapping(
     ec_fsm_pdo_conf_action_check_mapping(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Execute the PDO entry state machine to read the current PDO's mapping.
  */
@@ -517,7 +517,7 @@ void ec_fsm_pdo_conf_state_read_mapping(
     ec_fsm_pdo_conf_action_check_mapping(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check if the mapping has to be re-configured.
  *
@@ -554,7 +554,7 @@ void ec_fsm_pdo_conf_action_check_mapping(
     ec_fsm_pdo_conf_action_next_pdo_mapping(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Let the PDO entry state machine configure the current PDO's mapping.
  */
@@ -575,7 +575,7 @@ void ec_fsm_pdo_conf_state_mapping(
     ec_fsm_pdo_conf_action_next_pdo_mapping(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check mapping of next PDO, otherwise configure assignment.
  */
@@ -594,7 +594,7 @@ void ec_fsm_pdo_conf_action_next_pdo_mapping(
     ec_fsm_pdo_conf_action_pdo_mapping(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Check if the PDO assignment of the current SM has to be re-configured.
  */
@@ -641,7 +641,7 @@ void ec_fsm_pdo_conf_action_check_assignment(
     ec_fsm_pdo_conf_action_next_sync(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the number of assigned PDOs to zero.
  */
@@ -680,7 +680,7 @@ void ec_fsm_pdo_conf_state_zero_pdo_count(
     ec_fsm_pdo_conf_action_assign_pdo(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Assign a PDO.
  */
@@ -703,7 +703,7 @@ void ec_fsm_pdo_conf_action_assign_pdo(
     ec_fsm_coe_exec(fsm->fsm_coe, datagram); // execute immediately
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add a PDO to the sync managers PDO assignment.
  */
@@ -748,7 +748,7 @@ void ec_fsm_pdo_conf_state_assign_pdo(
     ec_fsm_pdo_conf_action_assign_pdo(fsm, datagram);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the number of assigned PDOs.
  */
@@ -779,9 +779,9 @@ void ec_fsm_pdo_conf_state_set_pdo_count(
     ec_fsm_pdo_conf_action_next_sync(fsm, datagram);
 }
 
-/******************************************************************************
+/*****************************************************************************
  * Common state functions
- *****************************************************************************/
+ ****************************************************************************/
 
 /** State: ERROR.
  */
@@ -792,7 +792,7 @@ void ec_fsm_pdo_state_error(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** State: END.
  */
@@ -803,4 +803,4 @@ void ec_fsm_pdo_state_end(
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/

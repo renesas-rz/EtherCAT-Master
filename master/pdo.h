@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT Process data object structure.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_PDO_H__
 #define __EC_PDO_H__
@@ -42,7 +34,7 @@
 #include "globals.h"
 #include "pdo_entry.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** PDO description.
  */
@@ -54,7 +46,7 @@ typedef struct {
     struct list_head entries; /**< List of PDO entries. */
 } ec_pdo_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_pdo_init(ec_pdo_t *);
 int ec_pdo_init_copy(ec_pdo_t *, const ec_pdo_t *);
@@ -70,6 +62,6 @@ const ec_pdo_entry_t *ec_pdo_find_entry_by_pos_const(
 
 void ec_pdo_print_entries(const ec_pdo_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

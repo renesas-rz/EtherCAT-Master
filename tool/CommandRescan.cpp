@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *  vim: expandtab
  *
  ****************************************************************************/
@@ -36,14 +28,14 @@ using namespace std;
 #include "CommandRescan.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandRescan::CommandRescan():
     Command("rescan", "Rescan the bus.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandRescan::helpString(const string &binaryBaseName) const
 {
@@ -82,4 +74,4 @@ void CommandRescan::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/

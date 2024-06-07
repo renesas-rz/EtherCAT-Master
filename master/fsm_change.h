@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2008  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,20 +17,14 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /**
    \file
    EtherCAT state change FSM.
 */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #ifndef __EC_FSM_CHANGE_H__
 #define __EC_FSM_CHANGE_H__
@@ -41,7 +33,7 @@
 #include "datagram.h"
 #include "slave.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /**
    Mode of the change state machine.
@@ -53,7 +45,7 @@ typedef enum {
 }
 ec_fsm_change_mode_t;
 
-/*****************************************************************************/
+/****************************************************************************/
 
 typedef struct ec_fsm_change ec_fsm_change_t; /**< \see ec_fsm_change */
 
@@ -76,7 +68,7 @@ struct ec_fsm_change
     uint8_t spontaneous_change; /**< spontaneous state change detected */
 };
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_fsm_change_init(ec_fsm_change_t *, ec_datagram_t *);
 void ec_fsm_change_clear(ec_fsm_change_t *);
@@ -87,6 +79,6 @@ void ec_fsm_change_ack(ec_fsm_change_t *, ec_slave_t *);
 int ec_fsm_change_exec(ec_fsm_change_t *);
 int ec_fsm_change_success(ec_fsm_change_t *);
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #endif

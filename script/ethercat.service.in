@@ -5,19 +5,28 @@
 [Unit]
 Description=EtherCAT Master Kernel Modules
 
+# Fine tuning of the startup dependencies below are recommended
+# to provide a reliable startup routine.
+# The dependencies below can be either uncommented after copying
+# this file to /etc/systemd/system or by creating overrides:
+# Copy the needed dependencies into
+# /etc/systemd/system/ethercat.service.d/50-dependencies.conf
+# in a [Unit] section.
+
 #
 # Uncomment this, if the generic Ethernet driver is used. It assures, that the
 # network interfaces are configured, before the master starts.
 #
-#Requires=network.service # Stop master, if network is stopped
-#After=network.service # Start master, after network is ready
+#Requires=network.target # Stop master, if network is stopped
+#After=network.target # Start master, after network is ready
 
 #
 # Uncomment this, if a native Ethernet driver is used. It assures, that the
 # network interfaces are configured, after the Ethernet drivers have been
 # replaced. Otherwise, the networking configuration tools could be confused.
 #
-#Before=network.service
+#Before=network-pre.target
+#Wants=network-pre.target
 
 [Service]
 Type=oneshot

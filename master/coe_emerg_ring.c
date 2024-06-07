@@ -1,6 +1,4 @@
-/******************************************************************************
- *
- *  $Id$
+/*****************************************************************************
  *
  *  Copyright (C) 2012  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -19,27 +17,21 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  *  vim: expandtab
  *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * EtherCAT CoE emergency ring buffer methods.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <linux/slab.h>
 
 #include "coe_emerg_ring.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Emergency ring buffer constructor.
  */
@@ -56,7 +48,7 @@ void ec_coe_emerg_ring_init(
     ring->overruns = 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Emergency ring buffer destructor.
  */
@@ -69,7 +61,7 @@ void ec_coe_emerg_ring_clear(
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Set the ring size.
  *
@@ -106,7 +98,7 @@ int ec_coe_emerg_ring_size(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Add a new emergency message.
  */
@@ -126,7 +118,7 @@ void ec_coe_emerg_ring_push(
     ring->write_index = (ring->write_index + 1) % (ring->size + 1);
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Remove an emergency message from the ring.
  *
@@ -146,7 +138,7 @@ int ec_coe_emerg_ring_pop(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Clear the ring.
  *
@@ -161,17 +153,17 @@ int ec_coe_emerg_ring_clear_ring(
     return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Read the number of overruns.
  *
  * \return Number of overruns.
  */
 int ec_coe_emerg_ring_overruns(
-        ec_coe_emerg_ring_t *ring /**< Emergency ring. */
+        const ec_coe_emerg_ring_t *ring /**< Emergency ring. */
         )
 {
     return ring->overruns;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

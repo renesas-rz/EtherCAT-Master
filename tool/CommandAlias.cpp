@@ -1,7 +1,5 @@
 /*****************************************************************************
  *
- *  $Id$
- *
  *  Copyright (C) 2006-2009  Florian Pose, Ingenieurgemeinschaft IgH
  *
  *  This file is part of the IgH EtherCAT Master.
@@ -19,12 +17,6 @@
  *  with the IgH EtherCAT Master; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
  ****************************************************************************/
 
 #include <iostream>
@@ -36,14 +28,14 @@ using namespace std;
 #include "sii_crc.h"
 #include "MasterDevice.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 CommandAlias::CommandAlias():
     Command("alias", "Write alias addresses.")
 {
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 string CommandAlias::helpString(const string &binaryBaseName) const
 {
@@ -72,7 +64,7 @@ string CommandAlias::helpString(const string &binaryBaseName) const
     return str.str();
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Writes the Secondary slave address (alias) to the slave's SII.
  */
@@ -119,7 +111,7 @@ void CommandAlias::execute(const StringVector &args)
     }
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /** Writes the Secondary slave address (alias) to the slave's SII.
  */
@@ -174,4 +166,4 @@ void CommandAlias::writeSlaveAlias(
     delete [] data.words;
 }
 
-/*****************************************************************************/
+/****************************************************************************/

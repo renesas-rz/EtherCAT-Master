@@ -1,4 +1,4 @@
-/******************************************************************************
+/*****************************************************************************
  *
  *  Copyright (C) 2006-2019  Florian Pose, Ingenieurgemeinschaft IgH
  *
@@ -18,19 +18,13 @@
  *  along with the IgH EtherCAT master userspace library. If not, see
  *  <http://www.gnu.org/licenses/>.
  *
- *  ---
- *
- *  The license mentioned above concerns the source code only. Using the
- *  EtherCAT technology and brand is only permitted in compliance with the
- *  industrial property and similar rights of Beckhoff Automation GmbH.
- *
- *****************************************************************************/
+ ****************************************************************************/
 
 /** \file
  * Canopen over EtherCAT SDO request functions.
  */
 
-/*****************************************************************************/
+/****************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -40,7 +34,7 @@
 #include "slave_config.h"
 #include "master.h"
 
-/*****************************************************************************/
+/****************************************************************************/
 
 void ec_sdo_request_clear(ec_sdo_request_t *req)
 {
@@ -54,7 +48,7 @@ void ec_sdo_request_clear(ec_sdo_request_t *req)
  * Application interface.
  ****************************************************************************/
 
-void ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
+int ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
         uint8_t subindex)
 {
     ec_ioctl_sdo_request_t data;
@@ -67,14 +61,14 @@ void ecrt_sdo_request_index(ec_sdo_request_t *req, uint16_t index,
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SDO_REQUEST_INDEX, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set SDO request index/subindex: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
+int ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
 {
     ec_ioctl_sdo_request_t data;
     int ret;
@@ -85,26 +79,26 @@ void ecrt_sdo_request_timeout(ec_sdo_request_t *req, uint32_t timeout)
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SDO_REQUEST_TIMEOUT, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to set SDO request timeout: %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-uint8_t *ecrt_sdo_request_data(ec_sdo_request_t *req)
+uint8_t *ecrt_sdo_request_data(const ec_sdo_request_t *req)
 {
     return req->data;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 size_t ecrt_sdo_request_data_size(const ec_sdo_request_t *req)
 {
     return req->data_size;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
 ec_request_state_t ecrt_sdo_request_state(ec_sdo_request_t *req)
 {
@@ -143,9 +137,9 @@ ec_request_state_t ecrt_sdo_request_state(ec_sdo_request_t *req)
     return data.state;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_sdo_request_read(ec_sdo_request_t *req)
+int ecrt_sdo_request_read(ec_sdo_request_t *req)
 {
     ec_ioctl_sdo_request_t data;
     int ret;
@@ -155,14 +149,14 @@ void ecrt_sdo_request_read(ec_sdo_request_t *req)
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SDO_REQUEST_READ, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an SDO read operation : %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
 
-void ecrt_sdo_request_write(ec_sdo_request_t *req)
+int ecrt_sdo_request_write(ec_sdo_request_t *req)
 {
     ec_ioctl_sdo_request_t data;
     int ret;
@@ -174,9 +168,9 @@ void ecrt_sdo_request_write(ec_sdo_request_t *req)
 
     ret = ioctl(req->config->master->fd, EC_IOCTL_SDO_REQUEST_WRITE, &data);
     if (EC_IOCTL_IS_ERROR(ret)) {
-        fprintf(stderr, "Failed to command an SDO write operation : %s\n",
-                strerror(EC_IOCTL_ERRNO(ret)));
+        return -EC_IOCTL_ERRNO(ret);
     }
+    return 0;
 }
 
-/*****************************************************************************/
+/****************************************************************************/
