@@ -584,7 +584,7 @@ int ecdev_open(ec_device_t *device /**< EtherCAT device */)
 
     ret = ec_device_open(device);
     if (ret) {
-        EC_MASTER_ERR(master, "Failed to open device!\n");
+        EC_MASTER_ERR(master, "Failed to open device: error %d!\n", ret);
         return ret;
     }
 
