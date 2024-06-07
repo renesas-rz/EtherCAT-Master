@@ -931,6 +931,32 @@ int ecrt_master_read_idn(
                                can be stored. */
         );
 
+/** Returns the size of a slave's SII data in words.
+ *
+ * \retval 0  Success.
+ * \retval <0 Error code.
+ */
+int ecrt_master_get_sii_size_words(
+        ec_master_t *master, /**< EtherCAT master. */
+        uint16_t slave_position, /**< Slave position. */
+        uint32_t *nwords /**< Pointer to variable where SII size can be
+                            stored. */
+        );
+
+/** Executes an SII read request.
+ *
+ * \retval 0  Success.
+ * \retval <0 Error code.
+ */
+int ecrt_master_read_sii(
+        ec_master_t *master, /**< EtherCAT master. */
+        uint16_t slave_position, /**< Slave position. */
+        uint16_t offset, /**< Offset within the SII area. */
+        uint32_t nwords, /**< Number of words to read. */
+        uint16_t *words /**< Pointer to buffer where SII words can be
+                            stored. */
+        );
+
 /** Finishes the configuration phase and prepares for cyclic operation.
  *
  * This function tells the master that the configuration phase is finished and
