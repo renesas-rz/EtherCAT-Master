@@ -1036,9 +1036,7 @@ static void igb_reset_q_vector(struct igb_adapter *adapter, int v_idx)
 	if (q_vector->rx.ring)
 		adapter->rx_ring[q_vector->rx.ring->queue_index] = NULL;
 
-	if (!adapter->ecdev)
-		netif_napi_del(&q_vector->napi);
-
+	netif_napi_del(&q_vector->napi);
 }
 
 static void igb_reset_interrupt_capability(struct igb_adapter *adapter)
@@ -1218,10 +1216,8 @@ static int igb_alloc_q_vector(struct igb_adapter *adapter,
 		return -ENOMEM;
 
 	/* initialize NAPI */
-	if (!adapter->ecdev) {
-		netif_napi_add(adapter->netdev, &q_vector->napi,
-				igb_poll, 64);
-	}
+	netif_napi_add(adapter->netdev, &q_vector->napi,
+			igb_poll, 64);
 
 	/* tie q_vector and adapter together */
 	adapter->q_vector[v_idx] = q_vector;
@@ -6477,7 +6473,7 @@ netdev_tx_t igb_xmit_frame_ring(struct sk_buff *skb,
 	first->bytecount = skb->len;
 	first->gso_segs = 1;
 
-	if (unlikely(!adapter->ecdev && 
+	if (unlikely(!adapter->ecdev &&
 				skb_shinfo(skb)->tx_flags & SKBTX_HW_TSTAMP)) {
 
 		if (adapter->tstamp_config.tx_type == HWTSTAMP_TX_ON &&
@@ -8119,6 +8115,10 @@ static int igb_poll(struct napi_struct *napi, int budget)
 	bool clean_complete = true;
 	int work_done = 0;
 
+	if (q_vector->adapter->ecdev) {
+		return -EBUSY;
+	}
+
 #ifdef CONFIG_IGB_DCA
 	if (q_vector->adapter->flags & IGB_FLAG_DCA_ENABLED)
 		igb_update_dca(q_vector);
@@ -8260,7 +8260,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
 	q_vector->tx.total_bytes += total_bytes;
 	q_vector->tx.total_packets += total_packets;
 
-	if (!adapter->ecdev && 
+	if (!adapter->ecdev &&
 			test_bit(IGB_RING_FLAG_TX_DETECT_HANG, &tx_ring->flags)) {
 		struct e1000_hw *hw = &adapter->hw;
 
@@ -8912,7 +8912,7 @@ static int igb_clean_rx_irq(struct igb_q_vector *q_vector, const int budget)
 			total_packets++;
 			continue;
 		}
-		
+
 		/* verify the packet layout is correct */
 		if (igb_cleanup_headers(rx_ring, rx_desc, skb)) {
 			skb = NULL;
