@@ -40,6 +40,7 @@ noinst_HEADERS = \
 	doxygen.c \
 	ethernet.c ethernet.h \
 	fmmu_config.c fmmu_config.h \
+	flag.c flag.h \
 	foe.h \
 	foe_request.c foe_request.h \
 	fsm_change.c fsm_change.h \
