@@ -23,6 +23,13 @@
 #include "fakeethercat.h"
 
 #include <cstring>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <iterator>
+
+
+static std::vector<size_t> getPermutationVector(size_t count);
 
 size_t pdo::sizeInBytes() const
 {
@@ -149,10 +156,11 @@ int ecrt_domain_state(
 
 int ec_master::activate()
 {
+    const auto permutate = getPermutationVector(domains.size());
     int i = 0;
     for (auto &domain : domains)
     {
-        if (domain.activate(i))
+        if (domain.activate(permutate[i]))
             return -1;
         ++i;
     }
@@ -163,7 +171,12 @@ int ecrt_master_activate(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
-    return master->activate();
+    try {
+        return master->activate();
+    } catch (const std::exception& e) {
+        std::cerr << "Could not activate: " << e.what() << '\n';
+        return -1;
+    }
 }
 
 int ecrt_master_application_time(
@@ -274,10 +287,35 @@ ec_master_t *ecrt_request_master(
 
 static const char *getName()
 {
-    if (const auto ans = getenv("FAKE_EC_NAME")) {
+    if (const auto ans = getenv("FAKE_EC_NAME"))
+    {
         return ans;
     }
     return "FakeTaxi";
+}
+
+static std::vector<size_t> getPermutationVector(size_t count)
+{
+    std::vector<size_t> ans;
+    for (size_t i = 0; i < count; ++i)
+    {
+        ans.push_back(i);
+    }
+    const auto spec = getenv("FAKE_DOMAIN_PERMUTATION");
+    if (!spec)
+        return ans;
+    std::istringstream is(spec);
+    std::istream_iterator<int> begin(is), end;
+    std::vector<int> values(begin, end);
+    if (values.size() % 2)
+    {
+        throw std::invalid_argument("Specify an even number of indices to permutate.\n");
+    }
+    for (size_t i = 0; i < values.size() / 2; ++i)
+    {
+        std::swap(ans.at(values[2 * i]), ans.at(values[2 * i + 1]));
+    }
+    return ans;
 }
 
 ec_master::ec_master() : rt_ipc(rtipc_create(getName(), "/tmp/FakeTaxi"))
