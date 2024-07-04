@@ -33,6 +33,7 @@ ethercat.spec
 examples/dc_user/ec_dc_user_example
 examples/user/ec_user_example
 examples/user/build/
+fake_lib/libfakeethercat.la
 lib/*.cmake
 lib/libethercat.la
 lib/libethercat.pc

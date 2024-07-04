@@ -1169,6 +1169,37 @@ fi
 AM_CONDITIONAL(ENABLE_USERLIB, test "x$userlib" = "x1")
 
 #-----------------------------------------------------------------------------
+# Fake Userspace library generation
+#-----------------------------------------------------------------------------
+
+AC_MSG_CHECKING([whether to build the fake userspace library])
+
+AC_ARG_ENABLE([fakeuserlib],
+    AS_HELP_STRING([--enable-fakeuserlib],
+                   [Generation of the userspace library (default: no)]),
+    [
+        case "${enableval}" in
+            yes) fakeuserlib=1
+                ;;
+            no) fakeuserlib=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-fakeuserlib])
+                ;;
+        esac
+    ],
+    [fakeuserlib=0]
+)
+
+if test "x${fakeuserlib}" = "x1"; then
+    AC_MSG_RESULT([yes])
+    PKG_CHECK_MODULES([RTIPC], [librtipc])
+else
+    AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(ENABLE_FAKEUSERLIB, test "x$fakeuserlib" = "x1")
+
+#-----------------------------------------------------------------------------
 # TTY driver
 #-----------------------------------------------------------------------------
 
@@ -1389,6 +1420,7 @@ AC_CONFIG_FILES([
         examples/user/Makefile
         examples/xenomai/Makefile
         examples/xenomai_posix/Makefile
+        fake_lib/Makefile
         include/Makefile
         lib/Makefile
         lib/libethercat.pc
