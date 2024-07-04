@@ -272,7 +272,15 @@ ec_master_t *ecrt_request_master(
     return new ec_master();
 }
 
-ec_master::ec_master() : rt_ipc(rtipc_create("FakeTaxi", "/tmp/FakeTaxi"))
+static const char *getName()
+{
+    if (const auto ans = getenv("FAKE_EC_NAME")) {
+        return ans;
+    }
+    return "FakeTaxi";
+}
+
+ec_master::ec_master() : rt_ipc(rtipc_create(getName(), "/tmp/FakeTaxi"))
 {
 }
 
