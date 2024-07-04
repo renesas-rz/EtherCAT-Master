@@ -77,9 +77,11 @@ int ec_domain::activate(int domain_id)
         {
         case EC_DIR_OUTPUT:
             rt_pdo = rtipc_txpdo(rt_group, buf, rtipc_uint8_T, data.data() + pdo.offset, pdo.size_bytes);
+            std::cerr << "Registering " << buf << " as Output\n";
             break;
         case EC_DIR_INPUT:
             rt_pdo = rtipc_rxpdo(rt_group, buf, rtipc_uint8_T, data.data() + pdo.offset, pdo.size_bytes, connected.data() + idx);
+            std::cerr << "Registering " << buf << " as Input\n";
             break;
         default:
             std::cerr << "Unknown direction " << pdo.dir << '\n';
