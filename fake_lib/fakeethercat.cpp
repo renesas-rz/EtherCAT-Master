@@ -48,13 +48,64 @@ Offset pdo::findEntry(uint16_t idx, uint8_t subindex) const
     return NotFound;
 }
 
-void ec_domain::activate()
+ec_domain::ec_domain(rtipc *rtipc, const char *prefix) : rt_group(rtipc_create_group(rtipc, 1.0)), prefix(prefix)
 {
+}
+
+int ec_domain::activate(int domain_id)
+{
+    connected.resize(mapped_pdos.size());
+    size_t idx = 0;
+    for (const auto &pdo : mapped_pdos)
+    {
+        void *rt_pdo = nullptr;
+        char buf[512];
+        const auto fmt = snprintf(buf, sizeof(buf), "%s/%d/%08X/%04X", prefix, domain_id, pdo.slave_address.getCombined(), pdo.pdo_index);
+        if (fmt < 0 || fmt >= (int)sizeof(buf))
+        {
+            return -ENOBUFS;
+        }
+
+        switch (pdo.dir)
+        {
+        case EC_DIR_OUTPUT:
+            rt_pdo = rtipc_txpdo(rt_group, buf, rtipc_uint8_T, data.data() + pdo.offset, pdo.size_bytes);
+            break;
+        case EC_DIR_INPUT:
+            rt_pdo = rtipc_rxpdo(rt_group, buf, rtipc_uint8_T, data.data() + pdo.offset, pdo.size_bytes, connected.data() + idx);
+            break;
+        default:
+            std::cerr << "Unknown direction " << pdo.dir << '\n';
+            return -1;
+        }
+        if (!rt_pdo)
+        {
+            std::cerr << "Failed to register RtIPC PDO\n";
+            return -1;
+        }
+        ++idx;
+    }
+    activated_ = true;
+    return 0;
+}
+
+int ec_domain::process()
+{
+    rtipc_rx(rt_group);
+    return 0;
+}
+
+int ec_domain::queue()
+{
+    rtipc_tx(rt_group);
+    return 0;
 }
 
 ssize_t ec_domain::map(ec_slave_config const &config, unsigned int syncManager,
                        uint16_t pdo_index)
 {
+    if (activated_)
+        return -1;
     for (const auto &pdo : mapped_pdos)
     {
         if (pdo.slave_address == config.address && syncManager == pdo.syncManager && pdo_index == pdo.pdo_index)
@@ -64,31 +115,27 @@ ssize_t ec_domain::map(ec_slave_config const &config, unsigned int syncManager,
         }
     }
     const auto ans = data.size();
-    mapped_pdos.emplace_back(ans, config.address, syncManager, pdo_index);
-    data.resize(ans + config.sync_managers.at(syncManager).pdos.at(pdo_index).sizeInBytes());
+    const auto size = config.sync_managers.at(syncManager).pdos.at(pdo_index).sizeInBytes();
+    mapped_pdos.emplace_back(ans, size, config.address, syncManager, pdo_index, config.sync_managers.at(syncManager).dir);
+    data.resize(ans + size);
     return ans;
 }
 
 uint8_t *ecrt_domain_data(
     const ec_domain_t *domain)
 {
-    return const_cast<uint8_t *>(domain->data.data());
+    return domain->getData();
 }
 
 int ecrt_domain_process(
     ec_domain_t *domain)
 {
-    if (domain->data.empty())
-        return 0;
-    std::cout << ' ';
-    for (const auto i : domain->data)
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)i;
-    return 0;
+    return domain->process();
 }
 int ecrt_domain_queue(
     ec_domain_t *domain)
 {
-    return 0;
+    return domain->queue();
 }
 
 int ecrt_domain_state(
@@ -100,13 +147,23 @@ int ecrt_domain_state(
     return 0;
 }
 
+int ec_master::activate()
+{
+    int i = 0;
+    for (auto &domain : domains)
+    {
+        if (domain.activate(i))
+            return -1;
+        ++i;
+    }
+    return rtipc_prepare(rt_ipc.get());
+}
+
 int ecrt_master_activate(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
-    for (auto &domain : master->domains)
-        domain.activate();
-    return 0;
+    return master->activate();
 }
 
 int ecrt_master_application_time(
@@ -121,8 +178,13 @@ ec_domain_t *ecrt_master_create_domain(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
-    master->domains.emplace_back();
-    return &master->domains.back();
+    return master->createDomain();
+}
+
+ec_domain *ec_master::createDomain()
+{
+    domains.emplace_back(rt_ipc.get(), "/FakeTaxi");
+    return &domains.back();
 }
 
 int ecrt_master_receive(
@@ -149,9 +211,19 @@ ec_slave_config_t *ecrt_master_slave_config(
     uint32_t product_code /**< Expected product code. */
 )
 {
+    return master->slave_config(alias, position, vendor_id, product_code);
+}
+
+ec_slave_config_t *ec_master::slave_config(
+    uint16_t alias,       /**< Slave alias. */
+    uint16_t position,    /**< Slave position. */
+    uint32_t vendor_id,   /**< Expected vendor ID. */
+    uint32_t product_code /**< Expected product code. */
+)
+{
     const ec_address address{alias, position};
-    const auto it = master->slaves.find(address);
-    if (it != master->slaves.end())
+    const auto it = slaves.find(address);
+    if (it != slaves.end())
     {
         if (it->second.vendor_id == vendor_id && it->second.product_code == product_code)
             return &it->second;
@@ -163,7 +235,7 @@ ec_slave_config_t *ecrt_master_slave_config(
     }
     else
     {
-        return &master->slaves.insert(std::make_pair<ec_address, ec_slave_config>(ec_address{address}, ec_slave_config{address, vendor_id, product_code})).first->second;
+        return &slaves.insert(std::make_pair<ec_address, ec_slave_config>(ec_address{address}, ec_slave_config{address, vendor_id, product_code})).first->second;
     }
 }
 int ecrt_master_state(
@@ -171,7 +243,7 @@ int ecrt_master_state(
     ec_master_state_t *state   /**< Structure to store the information. */
 )
 {
-    state->slaves_responding = master->slaves.size();
+    state->slaves_responding = master->getNoSlaves();
     state->link_up = 1;
     state->al_states = 8;
     return 0;
@@ -188,11 +260,20 @@ int ecrt_master_sync_slave_clocks(
 {
     return 0;
 }
+void ecrt_release_master(ec_master_t *master)
+{
+    delete master;
+}
+
 ec_master_t *ecrt_request_master(
     unsigned int master_index /**< Index of the master to request. */
 )
 {
     return new ec_master();
+}
+
+ec_master::ec_master() : rt_ipc(rtipc_create("FakeTaxi", "/tmp/FakeTaxi"))
+{
 }
 
 int ecrt_slave_config_complete_sdo(
@@ -202,6 +283,7 @@ int ecrt_slave_config_complete_sdo(
     size_t size            /**< Size of the \a data. */
 )
 {
+    return -1;
 }
 ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
     ec_slave_config_t *sc, /**< Slave configuration. */
@@ -210,6 +292,7 @@ ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
     size_t size            /**< Data size to reserve. */
 )
 {
+    return nullptr;
 }
 int ecrt_slave_config_dc(
     ec_slave_config_t *sc,    /**< Slave configuration. */
@@ -289,6 +372,11 @@ int ecrt_slave_config_reg_pdo_entry(
                 {
                     if (bit_position)
                         *bit_position = offset.bits;
+                    else if (!offset.bits)
+                    {
+                        std::cerr << "Pdo Entry is not byte aligned but bit offset is ignored!\n";
+                        return -1;
+                    }
                     return domain_offset + offset.bytes;
                 }
                 else
@@ -309,6 +397,7 @@ int ecrt_slave_config_sdo(
     size_t size            /**< Size of the \a data. */
 )
 {
+    return -1;
 }
 
 void ecrt_write_lreal(void *data, double const value)

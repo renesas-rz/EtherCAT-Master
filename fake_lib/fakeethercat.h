@@ -23,11 +23,13 @@
 #pragma once
 
 #include <ecrt.h>
+#include <rtipc.h>
 
 #include <iostream>
 #include <iomanip>
 #include <list>
 #include <map>
+#include <memory>
 #include <vector>
 
 struct Offset
@@ -74,6 +76,7 @@ public:
 
     uint16_t getAlias() const { return value >> 16; }
     uint16_t getPosition() const { return value & 0xFFFF; }
+    uint32_t getCombined() const { return value; }
 
     bool operator<(const ec_address &other) const noexcept
     {
@@ -105,27 +108,48 @@ struct ec_slave_config
 struct ec_domain
 {
 
+private:
     struct PdoMap
     {
         size_t offset;
+        size_t size_bytes;
         ec_address slave_address;
         unsigned int syncManager;
         uint16_t pdo_index;
+        ec_direction_t dir;
 
         PdoMap(
             size_t offset,
+            size_t size_bytes,
             ec_address slave_address,
             unsigned int syncManager,
-            uint16_t pdo_index)
-            : offset(offset), slave_address(slave_address), syncManager(syncManager), pdo_index(pdo_index)
+            uint16_t pdo_index,
+            ec_direction_t dir)
+            : offset(offset), size_bytes(size_bytes), slave_address(slave_address), syncManager(syncManager), pdo_index(pdo_index), dir(dir)
         {
         }
     };
 
     std::vector<uint8_t> data;
+    std::vector<unsigned char> connected;
     std::vector<PdoMap> mapped_pdos;
+    rtipc_group *rt_group;
+    const char *prefix;
+    bool activated_ = false;
 
-    void activate();
+public:
+    explicit ec_domain(struct rtipc *rtipc, const char *prefix);
+
+    uint8_t *getData() const
+    {
+        if (!activated_)
+            return nullptr;
+        return const_cast<uint8_t *>(data.data());
+    }
+
+    int activate(int domain_id);
+    int process();
+    int queue();
 
     ssize_t map(ec_slave_config const &config, unsigned int syncManager,
                 uint16_t pdo_index);
@@ -133,6 +157,31 @@ struct ec_domain
 
 struct ec_master
 {
+private:
+    struct RtIpcDeleter
+    {
+        void operator()(struct rtipc *r) const
+        {
+            rtipc_exit(r);
+        }
+    };
+
     std::list<ec_domain> domains;
     std::map<ec_address, ec_slave_config> slaves;
+    std::unique_ptr<struct rtipc, RtIpcDeleter> rt_ipc;
+
+public:
+    ec_master();
+
+    int activate();
+    ec_domain *createDomain();
+
+    int getNoSlaves() const { return slaves.size(); }
+
+ec_slave_config_t *slave_config(
+    uint16_t alias,       /**< Slave alias. */
+    uint16_t position,    /**< Slave position. */
+    uint32_t vendor_id,   /**< Expected vendor ID. */
+    uint32_t product_code /**< Expected product code. */
+);
 };
