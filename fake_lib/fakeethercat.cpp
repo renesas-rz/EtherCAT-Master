@@ -26,8 +26,8 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <unordered_set>
 #include <iterator>
-
 
 static std::vector<size_t> getPermutationVector(size_t count);
 
@@ -61,10 +61,13 @@ ec_domain::ec_domain(rtipc *rtipc, const char *prefix) : rt_group(rtipc_create_g
 
 int ec_domain::activate(int domain_id)
 {
+    std::unordered_set<uint32_t> slaves;
+
     connected.resize(mapped_pdos.size());
     size_t idx = 0;
     for (const auto &pdo : mapped_pdos)
     {
+        slaves.insert(pdo.slave_address.getCombined());
         void *rt_pdo = nullptr;
         char buf[512];
         const auto fmt = snprintf(buf, sizeof(buf), "%s/%d/%08X/%04X", prefix, domain_id, pdo.slave_address.getCombined(), pdo.pdo_index);
@@ -95,6 +98,7 @@ int ec_domain::activate(int domain_id)
         ++idx;
     }
     activated_ = true;
+    numSlaves = slaves.size();
     return 0;
 }
 
@@ -153,6 +157,9 @@ int ecrt_domain_state(
                                  information. */
 )
 {
+    state->working_counter = domain->getNumSlaves();
+    state->redundancy_active = 0;
+    state->wc_state = EC_WC_COMPLETE;
     return 0;
 }
 

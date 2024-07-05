@@ -165,6 +165,7 @@ private:
     rtipc_group *rt_group;
     const char *prefix;
     bool activated_ = false;
+    size_t numSlaves = 0;
 
 public:
     explicit ec_domain(struct rtipc *rtipc, const char *prefix);
@@ -179,6 +180,8 @@ public:
     int activate(int domain_id);
     int process();
     int queue();
+
+    size_t getNumSlaves() const { return numSlaves; }
 
     ssize_t map(ec_slave_config const &config, unsigned int syncManager,
                 uint16_t pdo_index);
