@@ -180,9 +180,12 @@ int ecrt_master_activate(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
-    try {
+    try
+    {
         return master->activate();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         std::cerr << "Could not activate: " << e.what() << '\n';
         return -1;
     }
@@ -270,12 +273,35 @@ int ecrt_master_state(
     state->al_states = 8;
     return 0;
 }
+
+int ecrt_master_sync_monitor_queue(
+    ec_master_t *master /**< EtherCAT master. */
+)
+{
+    return 0;
+}
+
+uint32_t ecrt_master_sync_monitor_process(
+    const ec_master_t *master /**< EtherCAT master. */
+)
+{
+    return 32;
+}
 int ecrt_master_sync_reference_clock(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
     return 0;
 }
+
+int ecrt_master_sync_reference_clock_to(
+    ec_master_t *master, /**< EtherCAT master. */
+    uint64_t sync_time   /**< Sync reference clock to this time. */
+)
+{
+    return 0;
+}
+
 int ecrt_master_sync_slave_clocks(
     ec_master_t *master /**< EtherCAT master. */
 )
@@ -380,6 +406,8 @@ int ecrt_slave_config_pdos(
                                    configurations. */
 )
 {
+    if (!syncs)
+        return 0;
     for (unsigned int sync_idx = 0; sync_idx < n_syncs; ++sync_idx)
     {
         if (syncs[sync_idx].index == 0xff)
@@ -497,4 +525,17 @@ void ecrt_write_lreal(void *data, double const value)
 void ecrt_write_real(void *data, float const value)
 {
     memcpy(data, &value, sizeof(value));
+}
+float ecrt_read_real(const void *data)
+{
+    float ans;
+    memcpy(&ans, data, sizeof(ans));
+    return ans;
+}
+
+double ecrt_read_lreal(const void *data)
+{
+    double ans;
+    memcpy(&ans, data, sizeof(ans));
+    return ans;
 }
