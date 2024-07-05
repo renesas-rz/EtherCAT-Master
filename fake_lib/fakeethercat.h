@@ -30,6 +30,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 struct Offset
@@ -89,12 +90,40 @@ public:
     }
 };
 
+
+class sdo_address
+{
+    uint32_t value;
+
+public:
+    sdo_address(uint16_t index, /**< Slave alias. */
+               uint8_t subindex /**< Slave position. */)
+        : value(static_cast<uint32_t>(index) << 8 | subindex)
+    {
+    }
+
+    uint16_t getIndex() const { return value >> 8; }
+    uint8_t getSubIndex() const { return value & 0xFF; }
+    uint32_t getCombined() const { return value; }
+
+    bool operator<(const sdo_address &other) const noexcept
+    {
+        return value < other.value;
+    }
+
+    bool operator==(const sdo_address &other) const noexcept
+    {
+        return value == other.value;
+    }
+};
+
 struct ec_slave_config
 {
     ec_address address;
     uint32_t vendor_id;    /**< Expected vendor ID. */
     uint32_t product_code; /**< Expected product code. */
     std::map<unsigned int, syncManager> sync_managers;
+    std::map<sdo_address, std::basic_string<uint8_t>> sdos;
 
     ec_slave_config(
         ec_address address,

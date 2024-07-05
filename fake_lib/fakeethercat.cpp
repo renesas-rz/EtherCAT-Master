@@ -331,7 +331,7 @@ int ecrt_slave_config_complete_sdo(
     size_t size            /**< Size of the \a data. */
 )
 {
-    return -1;
+    return ecrt_slave_config_sdo(sc, index, 0, data, size);
 }
 ec_sdo_request_t *ecrt_slave_config_create_sdo_request(
     ec_slave_config_t *sc, /**< Slave configuration. */
@@ -437,6 +437,40 @@ int ecrt_slave_config_reg_pdo_entry(
     return -1; // offset
 }
 
+int ecrt_slave_config_sdo8(
+    ec_slave_config_t *sc, /**< Slave configuration */
+    uint16_t sdo_index,    /**< Index of the SDO to configure. */
+    uint8_t sdo_subindex,  /**< Subindex of the SDO to configure. */
+    uint8_t value          /**< Value to set. */
+)
+{
+    return ecrt_slave_config_sdo(sc, sdo_index, sdo_subindex, &value, 1);
+}
+
+int ecrt_slave_config_sdo16(
+    ec_slave_config_t *sc, /**< Slave configuration */
+    uint16_t sdo_index,    /**< Index of the SDO to configure. */
+    uint8_t sdo_subindex,  /**< Subindex of the SDO to configure. */
+    uint16_t const value   /**< Value to set. */
+)
+{
+    uint8_t buf[sizeof(value)];
+    memcpy(&buf, &value, sizeof(value));
+    return ecrt_slave_config_sdo(sc, sdo_index, sdo_subindex, buf, sizeof(buf));
+}
+
+int ecrt_slave_config_sdo32(
+    ec_slave_config_t *sc, /**< Slave configuration */
+    uint16_t sdo_index,    /**< Index of the SDO to configure. */
+    uint8_t sdo_subindex,  /**< Subindex of the SDO to configure. */
+    uint32_t const value   /**< Value to set. */
+)
+{
+    uint8_t buf[sizeof(value)];
+    memcpy(&buf, &value, sizeof(value));
+    return ecrt_slave_config_sdo(sc, sdo_index, sdo_subindex, buf, sizeof(buf));
+}
+
 int ecrt_slave_config_sdo(
     ec_slave_config_t *sc, /**< Slave configuration. */
     uint16_t index,        /**< Index of the SDO to configure. */
@@ -445,7 +479,8 @@ int ecrt_slave_config_sdo(
     size_t size            /**< Size of the \a data. */
 )
 {
-    return -1;
+    sc->sdos[sdo_address{index, subindex}] = std::basic_string<uint8_t>(data, data + size);
+    return 0;
 }
 
 void ecrt_write_lreal(void *data, double const value)
