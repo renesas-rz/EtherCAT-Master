@@ -132,6 +132,8 @@ struct ec_slave_config
         : address(address), vendor_id(vendor_id), product_code(product_code)
     {
     }
+
+    void dumpJson(std::ostream &out, int indent) const;
 };
 
 struct ec_domain
@@ -198,6 +200,8 @@ private:
         }
     };
 
+    std::string rt_ipc_dir;
+    std::string rt_ipc_name;
     std::list<ec_domain> domains;
     std::map<ec_address, ec_slave_config> slaves;
     std::unique_ptr<struct rtipc, RtIpcDeleter> rt_ipc;

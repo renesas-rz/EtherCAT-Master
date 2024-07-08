@@ -23,13 +23,61 @@
 #include "fakeethercat.h"
 
 #include <cstring>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <unordered_set>
 #include <iterator>
+#include <ios>
 
 static std::vector<size_t> getPermutationVector(size_t count);
+
+static std::ostream &operator<<(std::ostream &os, const sdo_address &a)
+{
+    os << std::setfill('0') << std::hex << std::setw(6) << a.getCombined();
+    return os;
+}
+static std::ostream &operator<<(std::ostream &os, const ec_address &a)
+{
+    os << std::setfill('0') << std::hex << std::setw(8) << a.getCombined();
+    return os;
+}
+
+static void add_spaces(std::ostream &out, int const num)
+{
+    for (int i = 0; i < num; ++i)
+    {
+        out << ' ';
+    }
+}
+
+template <typename Map, typename Func>
+static void map2Json(std::ostream &out, const Map &map, Func &&print_func, int indent = 0)
+{
+    indent += 4;
+    out << "{";
+    bool is_first = true;
+    for (const auto &kv : map)
+    {
+        if (is_first)
+        {
+            out << '\n';
+            is_first = false;
+        }
+        else
+        {
+            out << ",\n";
+        }
+        add_spaces(out, indent);
+        out << "\"0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(typename Map::key_type));
+        out << kv.first << "\": ";
+        print_func(out, kv.second);
+    }
+    out << '\n';
+    add_spaces(out, indent - 4);
+    out << "}";
+}
 
 size_t pdo::sizeInBytes() const
 {
@@ -172,6 +220,18 @@ int ec_master::activate()
         if (domain.activate(permutate[i]))
             return -1;
         ++i;
+    }
+    {
+        std::ofstream out(rt_ipc_dir + "/" + rt_ipc_name + "_slaves.json");
+        if (!out.is_open()) {
+            std::cerr << "could not dump json.\n";
+            return -1;
+        }
+        out << "{\n    \"slaves\": ";
+        map2Json(out, slaves, [](std::ostream& out, const ec_slave_config& slave) {
+            slave.dumpJson(out, 8);
+        }, 4);
+        out << "\n}\n";
     }
     return rtipc_prepare(rt_ipc.get());
 }
@@ -353,7 +413,7 @@ static std::vector<size_t> getPermutationVector(size_t count)
     return ans;
 }
 
-ec_master::ec_master() : rt_ipc(rtipc_create(getName(), "/tmp/FakeTaxi"))
+ec_master::ec_master() : rt_ipc_dir("/tmp/FakeTaxi"), rt_ipc_name(getName()), rt_ipc(rtipc_create(rt_ipc_name.c_str(), rt_ipc_dir.c_str()))
 {
 }
 
@@ -538,4 +598,26 @@ double ecrt_read_lreal(const void *data)
     double ans;
     memcpy(&ans, data, sizeof(ans));
     return ans;
+}
+
+void ec_slave_config::dumpJson(std::ostream &out, int indent) const
+{
+    out << "{\n";
+    indent += 4;
+    add_spaces(out, indent);
+    out << "\"vendor_id\": " << std::dec << vendor_id << ",\n";
+    add_spaces(out, indent);
+    out << "\"product_id\": " << product_code << ",\n";
+    add_spaces(out, indent);
+    out << "\"sdos\": ";
+    map2Json(out, sdos, [](std::ostream &out, const std::basic_string<uint8_t> &value)
+             {
+        out << "\"0x";
+        for (const auto s : value) {
+            out << std::hex << std::setfill('0') << std::setw(2) << (unsigned)s;
+        }
+        out << '"'; }, indent);
+    out << '\n';
+    add_spaces(out, indent - 4);
+    out << "}";
 }
