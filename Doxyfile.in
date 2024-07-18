@@ -658,6 +658,7 @@ WARN_LOGFILE           =
 
 INPUT                  = @top_srcdir@/master \
                          @top_srcdir@/include \
+                         @top_srcdir@/fake_lib/README.md \
                          @top_srcdir@/devices/ecdev.h \
                          @top_builddir@/device_drivers.md
 

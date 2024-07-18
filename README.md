@@ -72,6 +72,13 @@ http://etherlab.org/en/ethercat/hardware.php.
 
 See the [install file](INSTALL.md).
 
+# Dry-run and Field Simulation
+
+A limited set of the userspace API is available in `libfakeethercat`,
+a library which can be used to run an userspace application
+without an EtherCAT maser or with emulated EtherCAT slaves.
+Please find some details [here](fake_lib/README.md).
+
 # Realtime and Tuning
 
 Realtime patches for the Linux kernel are supported, but not required. The

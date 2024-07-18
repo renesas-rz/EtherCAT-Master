@@ -82,6 +82,9 @@ LIBETHERCAT_1.5.2 {
 		ecrt_voe_handler_received_header;
 		ecrt_voe_handler_send_header;
 		ecrt_voe_handler_write;
+	local:
+		# Hide all C++ symbols in libfakeethercat
+		_Z*;
 };
 
 LIBETHERCAT_1.5.3 {

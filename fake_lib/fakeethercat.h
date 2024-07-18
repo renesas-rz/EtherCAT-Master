@@ -166,11 +166,12 @@ private:
     std::vector<PdoMap> mapped_pdos;
     rtipc_group *rt_group;
     const char *prefix;
+    ec_master_t *master;
     bool activated_ = false;
     size_t numSlaves = 0;
 
 public:
-    explicit ec_domain(struct rtipc *rtipc, const char *prefix);
+    explicit ec_domain(struct rtipc *rtipc, const char *prefix, ec_master_t *master);
 
     uint8_t *getData() const
     {
@@ -187,6 +188,8 @@ public:
 
     ssize_t map(ec_slave_config const &config, unsigned int syncManager,
                 uint16_t pdo_index);
+
+    ec_master_t *getMaster() const { return master; }
 };
 
 struct ec_master

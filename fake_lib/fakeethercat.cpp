@@ -103,7 +103,7 @@ Offset pdo::findEntry(uint16_t idx, uint8_t subindex) const
     return NotFound;
 }
 
-ec_domain::ec_domain(rtipc *rtipc, const char *prefix) : rt_group(rtipc_create_group(rtipc, 1.0)), prefix(prefix)
+ec_domain::ec_domain(rtipc *rtipc, const char *prefix, ec_master_t *master) : rt_group(rtipc_create_group(rtipc, 1.0)), prefix(prefix), master(master)
 {
 }
 
@@ -223,14 +223,14 @@ int ec_master::activate()
     }
     {
         std::ofstream out(rt_ipc_dir + "/" + rt_ipc_name + "_slaves.json");
-        if (!out.is_open()) {
+        if (!out.is_open())
+        {
             std::cerr << "could not dump json.\n";
             return -1;
         }
         out << "{\n    \"slaves\": ";
-        map2Json(out, slaves, [](std::ostream& out, const ec_slave_config& slave) {
-            slave.dumpJson(out, 8);
-        }, 4);
+        map2Json(out, slaves, [](std::ostream &out, const ec_slave_config &slave)
+                 { slave.dumpJson(out, 8); }, 4);
         out << "\n}\n";
     }
     return rtipc_prepare(rt_ipc.get());
@@ -266,9 +266,16 @@ ec_domain_t *ecrt_master_create_domain(
     return master->createDomain();
 }
 
+static const char *getPrefix()
+{
+    if (const auto ans = getenv("FAKE_EC_PREFIX"))
+        return ans;
+    return "/FakeEtherCAT";
+}
+
 ec_domain *ec_master::createDomain()
 {
-    domains.emplace_back(rt_ipc.get(), "/FakeTaxi");
+    domains.emplace_back(rt_ipc.get(), getPrefix(), this);
     return &domains.back();
 }
 
@@ -386,7 +393,16 @@ static const char *getName()
     {
         return ans;
     }
-    return "FakeTaxi";
+    return "FakeEtherCAT";
+}
+
+static const char *getRtIpcDir()
+{
+    if (const auto ans = getenv("FAKE_EC_HOMEDIR"))
+    {
+        return ans;
+    }
+    return "/tmp/FakeEtherCAT";
 }
 
 static std::vector<size_t> getPermutationVector(size_t count)
@@ -396,7 +412,7 @@ static std::vector<size_t> getPermutationVector(size_t count)
     {
         ans.push_back(i);
     }
-    const auto spec = getenv("FAKE_DOMAIN_PERMUTATION");
+    const auto spec = getenv("FAKE_EC_DOMAIN_PERMUTATION");
     if (!spec)
         return ans;
     std::istringstream is(spec);
@@ -413,7 +429,7 @@ static std::vector<size_t> getPermutationVector(size_t count)
     return ans;
 }
 
-ec_master::ec_master() : rt_ipc_dir("/tmp/FakeTaxi"), rt_ipc_name(getName()), rt_ipc(rtipc_create(rt_ipc_name.c_str(), rt_ipc_dir.c_str()))
+ec_master::ec_master() : rt_ipc_dir(getRtIpcDir()), rt_ipc_name(getName()), rt_ipc(rtipc_create(rt_ipc_name.c_str(), rt_ipc_dir.c_str()))
 {
 }
 
@@ -494,6 +510,32 @@ int ecrt_slave_config_pdos(
 
     return 0;
 }
+int ecrt_domain_reg_pdo_entry_list(
+    ec_domain_t *domain,                     /**< Domain. */
+    const ec_pdo_entry_reg_t *pdo_entry_regs /**< Array of PDO
+                                               registrations. */
+)
+{
+    const ec_pdo_entry_reg_t *reg;
+    ec_slave_config_t *sc;
+    int ret;
+
+    for (reg = pdo_entry_regs; reg->index; reg++)
+    {
+        if (!(sc = ecrt_master_slave_config(domain->getMaster(), reg->alias,
+                                            reg->position, reg->vendor_id, reg->product_code)))
+            return -ENOENT;
+
+        if ((ret = ecrt_slave_config_reg_pdo_entry(sc, reg->index,
+                                                   reg->subindex, domain, reg->bit_position)) < 0)
+            return ret;
+
+        *reg->offset = ret;
+    }
+
+    return 0;
+}
+
 int ecrt_slave_config_reg_pdo_entry(
     ec_slave_config_t *sc,     /**< Slave configuration. */
     uint16_t entry_index,      /**< Index of the PDO entry to register. */
