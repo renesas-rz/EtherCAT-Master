@@ -115,6 +115,9 @@ doxygen:
 # It must be named 'pdf' and must produce a 'pdf' directory as an artifact.
 # All PDF files in this directory will be collected.
 pdf:
+    needs:
+        - job: commands
+          artifacts: true
     stage: doc
     image: registry.gitlab.com/etherlab.org/build-container-factory/leap-15.4:texlive
     script:
