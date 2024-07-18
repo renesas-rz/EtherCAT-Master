@@ -1,5 +1,5 @@
 image:
-    registry.gitlab.com/etherlab.org/build-container-factory/leap-15.3:linux-syms
+    registry.gitlab.com/etherlab.org/build-container-factory/leap-15.4:linux-syms
 
 stages:
     - build
@@ -116,7 +116,7 @@ doxygen:
 # All PDF files in this directory will be collected.
 pdf:
     stage: doc
-    image: registry.gitlab.com/etherlab.org/build-container-factory/leap-15.3:texlive
+    image: registry.gitlab.com/etherlab.org/build-container-factory/leap-15.4:texlive
     script:
         - cd documentation
         - git show -s --format="\def\revision{%h}\def\gitversion{%(describe)}\def\gittag{%(describe:abbrev=0)}\def\gitauthor{%an}\def\isodate#1-#2-#3x{\day=#3 \month=#2 \year=#1}\isodate %csx" HEAD > git.tex
