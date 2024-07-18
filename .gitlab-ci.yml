@@ -51,14 +51,14 @@ build:
 
     script:
         - ./bootstrap
-        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat
+        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat --enable-fakeuserlib
         - make -j8 all modules
         - make -C lib symbol-version-check
         - make DISTCHECK_CONFIGURE_FLAGS="--with-linux-dir=/usr/src/linux-obj/$(uname -i)/default" distcheck
         - make dist
         - mkdir test_dist && cd test_dist && tar xzf ../ethercat-*.tar.gz && cd ethercat-*/
         - mkdir build && cd build
-        - ../configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
+        - ../configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat --enable-fakeuserlib
         - make -j8 all modules
 
     artifacts:
