@@ -208,14 +208,16 @@ private:
     std::list<ec_domain> domains;
     std::map<ec_address, ec_slave_config> slaves;
     std::unique_ptr<struct rtipc, RtIpcDeleter> rt_ipc;
+    int id_;
 
 public:
-    ec_master();
+    explicit ec_master(int id);
 
     int activate();
     ec_domain *createDomain();
 
     int getNoSlaves() const { return slaves.size(); }
+    int getId() const { return id_; }
 
 ec_slave_config_t *slave_config(
     uint16_t alias,       /**< Slave alias. */

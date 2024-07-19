@@ -118,7 +118,7 @@ int ec_domain::activate(int domain_id)
         slaves.insert(pdo.slave_address.getCombined());
         void *rt_pdo = nullptr;
         char buf[512];
-        const auto fmt = snprintf(buf, sizeof(buf), "%s/%d/%08X/%04X", prefix, domain_id, pdo.slave_address.getCombined(), pdo.pdo_index);
+        const auto fmt = snprintf(buf, sizeof(buf), "%s/%d/%d/%08X/%04X", prefix, master->getId(), domain_id, pdo.slave_address.getCombined(), pdo.pdo_index);
         if (fmt < 0 || fmt >= (int)sizeof(buf))
         {
             return -ENOBUFS;
@@ -384,7 +384,7 @@ ec_master_t *ecrt_request_master(
     unsigned int master_index /**< Index of the master to request. */
 )
 {
-    return new ec_master();
+    return new ec_master(master_index);
 }
 
 static const char *getName()
@@ -429,7 +429,7 @@ static std::vector<size_t> getPermutationVector(size_t count)
     return ans;
 }
 
-ec_master::ec_master() : rt_ipc_dir(getRtIpcDir()), rt_ipc_name(getName()), rt_ipc(rtipc_create(rt_ipc_name.c_str(), rt_ipc_dir.c_str()))
+ec_master::ec_master(int id) : rt_ipc_dir(getRtIpcDir()), rt_ipc_name(getName()), rt_ipc(rtipc_create(rt_ipc_name.c_str(), rt_ipc_dir.c_str())), id_(id)
 {
 }
 
