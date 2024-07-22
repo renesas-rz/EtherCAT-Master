@@ -710,6 +710,26 @@ AC_ARG_ENABLE([dwmac-intel],
 AM_CONDITIONAL(ENABLE_DWMACINTEL, test "x$enabledwmacintel" = "x1")
 AC_SUBST(ENABLE_DWMACINTEL,[$enabledwmacintel])
 
+AC_ARG_ENABLE([dwmac-dwc-qos-eth],
+    AS_HELP_STRING([--enable-dwmac-dwc-qos-eth],
+                   [Enable stmmac driver]),
+    [
+        case "${enableval}" in
+            yes) enabledwmacdwcqoseth=1
+                 enablestmmac=1
+                ;;
+            no) enabledwmacdwcqoseth=0
+                ;;
+            *) AC_MSG_ERROR([Invalid value for --enable-stmmac])
+                ;;
+        esac
+    ],
+    [enabledwmacdwcqoseth=0] # disabled by default
+)
+
+AM_CONDITIONAL(ENABLE_DWMACDWCQOSETH, test "x$enabledwmacdwcqoseth" = "x1")
+AC_SUBST(ENABLE_DWMACDWCQOSETH,[$enabledwmacdwcqoseth])
+
 AM_CONDITIONAL(ENABLE_STMMAC, test "x$enablestmmac" = "x1")
 AC_SUBST(ENABLE_STMMAC, [$enablestmmac])
 

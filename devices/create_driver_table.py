@@ -29,6 +29,7 @@ DRIVER_MAP=(
     # (subdir, driver name, file prefix)
     (".", "8139too", "8139too"),
     ("stmmac", "dwmac-intel", "dwmac-intel"),
+    ("stmmac", "dwmac-dwc-qos-eth", "dwmac-dwc-qos-eth"),
     (".", "e100", "e100"),
     ("e1000", "e1000", "e1000_main"),
     ("e1000e", "e1000e", "netdev"),

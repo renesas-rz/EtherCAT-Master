@@ -66,6 +66,8 @@ EXTRA_DIST = \
 	dwmac-intel-6.1-ethercat.h \
 	dwmac-intel-6.1-orig.c \
 	dwmac-intel-6.1-orig.h \
+	dwmac-dwc-qos-eth-6.1-ethercat.c \
+	dwmac-dwc-qos-eth-6.1-orig.c \
 	dwmac_lib-6.1-ethercat.c \
 	dwmac_lib-6.1-orig.c \
 	dwxgmac2-6.1-ethercat.h \
@@ -100,6 +102,8 @@ EXTRA_DIST = \
 	stmmac_hwtstamp-6.1-orig.c \
 	stmmac_main-6.1-ethercat.c \
 	stmmac_main-6.1-orig.c \
+	stmmac_platform-6.1-ethercat.c \
+	stmmac_platform-6.1-orig.c \
 	stmmac_mdio-6.1-ethercat.c \
 	stmmac_mdio-6.1-orig.c \
 	stmmac_pci-6.1-ethercat.c \

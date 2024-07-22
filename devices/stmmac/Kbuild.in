@@ -70,6 +70,7 @@ EC_STMMAC_OBJS := \
 		stmmac_ethtool-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_hwtstamp-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_main-@KERNEL_STMMAC@-ethercat.o \
+		stmmac_platform-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_mdio-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_ptp-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_tc-@KERNEL_STMMAC@-ethercat.o \
@@ -91,6 +92,13 @@ ifeq (@ENABLE_STMMACPCI@,1)
 	ec_stmmac-pci-objs := \
 		$(EC_STMMAC_OBJS) \
 		stmmac_pci-@KERNEL_STMMAC@-ethercat.o
+endif
+
+ifeq (@ENABLE_DWMACDWCQOSETH@,1)
+	obj-m += ec_dwmac-dwc-qos-eth.o
+	ec_dwmac-dwc-qos-eth-objs := \
+		$(EC_STMMAC_OBJS) \
+		dwmac-dwc-qos-eth-@KERNEL_STMMAC@-ethercat.o
 endif
 endif
 
