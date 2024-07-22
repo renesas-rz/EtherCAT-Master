@@ -41,7 +41,7 @@
    <a href="devicedrivers.html">here</a>.
 
    A <a href="libfakeethercat.html">second userspace library</a> can be used for a dry-run mode
-   or simulating EtherCAT slaves.
+   or simulating Process Data.
 
    For information how to build and install, see the INSTALL file in the source
    root.
