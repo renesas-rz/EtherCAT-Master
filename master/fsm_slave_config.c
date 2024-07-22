@@ -965,7 +965,7 @@ void ec_fsm_slave_config_enter_eoe_ip_param(
         ec_fsm_slave_config_t *fsm /**< slave state machine */
         )
 {
-#if EC_EOE
+#ifdef EC_EOE
     ec_slave_t *slave = fsm->slave;
     ec_eoe_request_t *request = &slave->config->eoe_ip_param_request;
 
@@ -991,6 +991,7 @@ void ec_fsm_slave_config_state_eoe_ip_param(
         ec_fsm_slave_config_t *fsm /**< slave state machine */
         )
 {
+#ifdef EC_EOE
     ec_slave_t *slave = fsm->slave;
 
     if (ec_fsm_eoe_exec(fsm->fsm_eoe, fsm->datagram)) {
@@ -1003,7 +1004,7 @@ void ec_fsm_slave_config_state_eoe_ip_param(
     else {
         EC_SLAVE_ERR(slave, "Failed to set EoE IP parameters.\n");
     }
-
+#endif
     ec_fsm_slave_config_enter_pdo_conf(fsm);
 }
 

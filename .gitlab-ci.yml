@@ -46,6 +46,15 @@ xenomai3:
         - ./configure --enable-8139too --enable-igb --enable-e100 --with-linux-dir=/usr/src/linux-obj/x86_64/0510xenomai3 --enable-rtdm --with-xenomai-dir=/usr
         - make -j8 all modules
 
+xenomai3 no eoe:
+    stage: build
+    image: registry.gitlab.com/etherlab.org/build-container-factory/ethercat-kernels:xenomai3
+
+    script:
+        - ./bootstrap
+        - ./configure --enable-8139too --enable-igb --enable-e100 --with-linux-dir=/usr/src/linux-obj/x86_64/0510xenomai3 --enable-rtdm --with-xenomai-dir=/usr --disable-eoe
+        - make -j8 all modules
+
 build:
     stage: build
 
