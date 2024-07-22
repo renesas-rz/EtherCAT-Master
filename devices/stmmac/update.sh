@@ -38,6 +38,11 @@ stmmac_ptp.h \
 stmmac_xdp.h \
 dwmac-intel.c \
 dwmac-intel.h \
+dwmac-dwc-qos-eth.c \
+stmmac_platform.h \
+stmmac_platform.c \
+stmmac_est.c \
+stmmac_est.h \
 stmmac_pci.c"
 
 set -x
