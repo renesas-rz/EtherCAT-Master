@@ -98,8 +98,12 @@ Now, remember to read process data instead of writing it, and vice versa.
 So, your EL2004 digital out will be read by your simulating application
 and has PDO object 0x1600 ff. configured with Sync Manager 2 as EC_DIR_INPUT.
 
-[EtherLab](https://gitlab.com/etherlab.org/etherlab) will be adapted soon
-to provide a convenient way to build an entire simulator using SIMULINK.
+[EtherLab](https://gitlab.com/etherlab.org/etherlab) provides
+a convenient way to build an entire simulator using SIMULINK since
+Version 2.4.0.
+Run `web(etherlab_help_path('swap_io.html'), '-helpbrowser')`
+in your MATLAB shell to read more about how to set up a
+Process Data simulator.
 
 ### Start your application
 
