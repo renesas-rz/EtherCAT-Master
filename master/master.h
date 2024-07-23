@@ -112,6 +112,10 @@
  */
 #define EC_EXT_RING_SIZE 32
 
+/** Maximum number of masters.
+ */
+#define EC_MAX_MASTERS 32
+
 /****************************************************************************/
 
 /** EtherCAT master phase.

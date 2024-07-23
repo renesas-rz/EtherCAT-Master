@@ -35,8 +35,6 @@
 
 /****************************************************************************/
 
-#define MAX_MASTERS 32 /**< Maximum number of masters. */
-
 /****************************************************************************/
 
 int __init ec_init_module(void);
@@ -50,9 +48,9 @@ int ec_mac_is_broadcast(const uint8_t *);
 
 /****************************************************************************/
 
-static char *main_devices[MAX_MASTERS]; /**< Main devices parameter. */
+static char *main_devices[EC_MAX_MASTERS]; /**< Main devices parameter. */
 static unsigned int master_count; /**< Number of masters. */
-static char *backup_devices[MAX_MASTERS]; /**< Backup devices parameter. */
+static char *backup_devices[EC_MAX_MASTERS]; /**< Backup devices parameter. */
 static unsigned int backup_count; /**< Number of backup devices. */
 static unsigned int debug_level;  /**< Debug level parameter. */
 static unsigned int run_on_cpu = 0xffffffff; /**< Bind created kernel threads
@@ -65,7 +63,7 @@ static struct semaphore master_sem; /**< Master semaphore. */
 dev_t device_number; /**< Device number for master cdevs. */
 struct class *class; /**< Device class. */
 
-static uint8_t macs[MAX_MASTERS][2][ETH_ALEN]; /**< MAC addresses. */
+static uint8_t macs[EC_MAX_MASTERS][2][ETH_ALEN]; /**< MAC addresses. */
 
 char *ec_master_version_str = EC_MASTER_VERSION; /**< Version string. */
 
@@ -125,7 +123,7 @@ int __init ec_init_module(void)
     }
 
     // zero MAC addresses
-    memset(macs, 0x00, sizeof(uint8_t) * MAX_MASTERS * 2 * ETH_ALEN);
+    memset(macs, 0x00, sizeof(uint8_t) * EC_MAX_MASTERS * 2 * ETH_ALEN);
 
     // process MAC parameters
     for (i = 0; i < master_count; i++) {

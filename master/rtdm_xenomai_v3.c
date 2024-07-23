@@ -131,7 +131,7 @@ static struct rtdm_driver ec_rtdm_driver = {
 						    222,
 						    0),
 	.device_flags		= RTDM_NAMED_DEVICE,
-	.device_count		= 1,
+	.device_count		= EC_MAX_MASTERS,
 	.context_size		= sizeof(struct ec_rtdm_context),
 	.ops = {
 		.open		= ec_rtdm_open,
@@ -163,6 +163,7 @@ int ec_rtdm_dev_init(ec_rtdm_dev_t *rtdm_dev, ec_master_t *master)
 	dev->driver = &ec_rtdm_driver;
 	dev->device_data = rtdm_dev;
 	dev->label = "EtherCAT%u";
+	dev->minor = master->index;
 
 	ret = rtdm_dev_register(dev);
 	if (ret) {
