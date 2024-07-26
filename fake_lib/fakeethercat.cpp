@@ -287,6 +287,16 @@ int ecrt_master_receive(
     return 0;
 }
 
+int ecrt_master_scan_progress(
+    ec_master_t *master,                /**< EtherCAT master */
+    ec_master_scan_progress_t *progress /**< Structure that will output
+                                          the progress information. */
+)
+{
+    progress->scan_index = progress->slave_count = master->getNoSlaves();
+    return 0;
+}
+
 int ecrt_master_send(
     ec_master_t *master /**< EtherCAT master. */
 )
