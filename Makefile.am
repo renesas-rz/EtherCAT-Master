@@ -47,6 +47,11 @@ SUBDIRS += \
 	examples
 endif
 
+if ENABLE_FAKEUSERLIB
+SUBDIRS += \
+	fake_lib
+endif
+
 if ENABLE_TTY
 SUBDIRS += tty
 endif

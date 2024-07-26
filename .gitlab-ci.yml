@@ -1,5 +1,5 @@
 image:
-    registry.gitlab.com/etherlab.org/build-container-factory/leap-15.3:linux-syms
+    registry.gitlab.com/etherlab.org/build-container-factory/leap-15.4:linux-syms
 
 stages:
     - build
@@ -60,14 +60,14 @@ build:
 
     script:
         - ./bootstrap
-        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat
+        - ./configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --enable-tty --with-devices=2 --enable-ccat --enable-fakeuserlib
         - make -j8 all modules
         - make -C lib symbol-version-check
         - make DISTCHECK_CONFIGURE_FLAGS="--with-linux-dir=/usr/src/linux-obj/$(uname -i)/default" distcheck
         - make dist
         - mkdir test_dist && cd test_dist && tar xzf ../ethercat-*.tar.gz && cd ethercat-*/
         - mkdir build && cd build
-        - ../configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat
+        - ../configure --with-linux-dir=/usr/src/linux-obj/$(uname -i)/default --disable-8139too --enable-tty --with-devices=2 --enable-ccat --enable-fakeuserlib
         - make -j8 all modules
 
     artifacts:
@@ -124,8 +124,11 @@ doxygen:
 # It must be named 'pdf' and must produce a 'pdf' directory as an artifact.
 # All PDF files in this directory will be collected.
 pdf:
+    needs:
+        - job: commands
+          artifacts: true
     stage: doc
-    image: registry.gitlab.com/etherlab.org/build-container-factory/leap-15.3:texlive
+    image: registry.gitlab.com/etherlab.org/build-container-factory/leap-15.4:texlive
     script:
         - cd documentation
         - git show -s --format="\def\revision{%h}\def\gitversion{%(describe)}\def\gittag{%(describe:abbrev=0)}\def\gitauthor{%an}\def\isodate#1-#2-#3x{\day=#3 \month=#2 \year=#1}\isodate %csx" HEAD > git.tex

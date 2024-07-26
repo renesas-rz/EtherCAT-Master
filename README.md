@@ -15,7 +15,7 @@ Contents:
 This is an open-source EtherCAT master implementation for Linux 2.6 or newer.
 
 See the [features file](FEATURES.md) for a list of features. For more
-information, see http://etherlab.org/en/ethercat.
+information, see https://etherlab.org/ethercat.
 
 or contact
 
@@ -54,7 +54,7 @@ make doc
 ```
 
 An up-to-date Doxygen output can be found on
-[docs.etherlab.org](https://docs.etherlab.org/ethercat/1.5/doxygen/index.html).
+[docs.etherlab.org](https://docs.etherlab.org/ethercat/1.6/doxygen/index.html).
 
 # Requirements
 
@@ -65,12 +65,19 @@ the EtherCAT master.
 
 ## Hardware requirements
 
-A table of supported hardware can be found at
-http://etherlab.org/en/ethercat/hardware.php.
+A table of supported hardware can be found at:
+https://docs.etherlab.org/ethercat/1.6/doxygen/devicedrivers.html
 
 # Building and installing
 
 See the [install file](INSTALL.md).
+
+# Dry-run and Field Simulation
+
+A limited set of the userspace API is available in `libfakeethercat`,
+a library which can be used to run an userspace application
+without an EtherCAT master or with emulated EtherCAT slaves.
+Please find some details [here](fake_lib/README.md).
 
 # Realtime and Tuning
 
