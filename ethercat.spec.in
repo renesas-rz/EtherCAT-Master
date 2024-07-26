@@ -26,7 +26,7 @@ Version: @VERSION@
 Release: 1
 
 License: GPL
-URL: http://etherlab.org/en/ethercat
+URL: https://etherlab.org/ethercat
 
 Provides: @PACKAGE@
 Source: %{name}-%{version}.tar.bz2
@@ -44,7 +44,7 @@ Group: EtherLab
 %description
 This is an open-source EtherCAT master implementation for Linux 2.6. See the
 FEATURES file for a list of features. For more information, see
-http://etherlab.org/en/ethercat.
+https://etherlab.org/ethercat.
 
 %kernel_module_package
 
@@ -60,7 +60,7 @@ Group: EtherLab
 %description devel
 This is an open-source EtherCAT master implementation for Linux 2.6. See the
 FEATURES file for a list of features. For more information, see
-http://etherlab.org/en/ethercat.
+https://etherlab.org/ethercat.
 
 #-----------------------------------------------------------------------------
 
