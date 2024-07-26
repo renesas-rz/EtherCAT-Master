@@ -351,7 +351,7 @@ Public License (GPL \cite{gpl})\index{GPL}, version 2. Other developers, that
 want to use EtherCAT with Linux systems, are invited to use the master code or
 even participate on development.
 
-To allow static linking of userspace application against the master's
+To allow dynamic linking of userspace application against the master's
 application interface (see \autoref{chap:api}), the userspace library (see
 \autoref{sec:userlib}) is licensed under the terms and conditions of the GNU
 Lesser General Public License (LGPL \cite{lgpl})\index{LGPL}, version 2.1.
@@ -962,8 +962,8 @@ be found.
 The application interface of the EtherCAT master is defined in the header file
 \textit{include/ecrt.h} (acronym for ``EtherCAT Real-Time'') which is listed
 in this section. The calling conventions of all methods are documented in the
-comments of this header. There is also a Doxygen-generated online version at
-\url{https://docs.etherlab.org}.
+comments of this header. There is also a Doxygen-generated \cite{doxygen}
+online version at \url{https://docs.etherlab.org}.
 
 \lstinputlisting[
     basicstyle=\ttfamily\scriptsize,
@@ -2709,6 +2709,10 @@ installation prefix as \textit{libethercat.a} (for static linking),
 \textit{libethercat.la} (for the use with \textit{libtool}) and
 \textit{libethercat.so} (for dynamic linking).
 
+For running an application without actual EtherCAT hardware or for simulation
+purposes, there is a special library called \textit{libfakeethercat} (see
+\autoref{sec:fakelib}).
+
 \subsection{Using the Library}
 
 The application interface header \textit{ecrt.h} (see \autoref{sec:ecrt}) can
@@ -2749,6 +2753,9 @@ The library can also be linked statically to the program:
 gcc -static ectest.c -o ectest -I/opt/etherlab/include \
     /opt/etherlab/lib/libethercat.a
 \end{lstlisting}
+
+Please keep in mind, that your application has to be licensed under GPLv2
+then, because the LGPL does only allow dynamic linking.
 
 \subsection{Implementation}
 \label{sec:userimp}
@@ -2835,6 +2842,33 @@ kernel.
 The test results show, that for this configuration, the userspace API causes
 about \unit{1}{\micro\second} additional delay for each function, compared to
 the kernel API.
+
+\subsection{Simulation / Fake Library}
+\label{sec:fakelib}
+
+Sometimes is is handy to run your EtherCAT realtime application without an
+actual EtherCAT network connected, for example for test purposes.
+Though it is possible to spin up an EtherCAT master and to connect it to a
+loopback device, this step is not always wanted.
+
+The EtherCAT master (since version 1.6.1) comes with a library
+\textit{libfakeethercat} that comes with a reasonable subset of the EtherCAT
+application interface (see \autoref{chap:api}).
+
+The \texttt{ecrt} method implementation in the fake library will just accept
+your input and behave as if everything would be fine. Without further steps,
+the process data will be all-zero then.
+
+As a special feature, the \textit{libfakeethercat} will create RtIPC
+\cite{rtipc} endpoints for registered PDO entries to enable a simulation
+interface. Another application that either uses RtIPC directly or another
+(inverted) instance of \textit{libfakeethercat} will then connect to these
+endpoints and thus create the possibility to provide simulated values to your
+pristine application.
+
+The fake library functions an usage is documented in Doxygen~\cite{doxygen}
+and the most recent version can be found online:
+\url{https://docs.etherlab.org/ethercat/1.6/doxygen/libfakeethercat.html}
 
 %------------------------------------------------------------------------------
 
@@ -3546,6 +3580,9 @@ Electrotechnical Commission (IEC), 2007.
 Applications.
 \url{http://svn.gna.org/svn/xenomai/tags/v2.4.0/doc/nodist/pdf/RTDM-and-Applications.pdf},
 2013.
+
+\bibitem{rtipc} Real-Time Inter-Process-Communication library. Part of the
+    EtherLab toolkit. \url{https://gitlab.com/etherlab.org/rtipc}, 2024.
 
 \end{thebibliography}
 
