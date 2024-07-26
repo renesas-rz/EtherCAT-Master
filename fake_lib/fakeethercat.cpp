@@ -278,12 +278,31 @@ ec_domain *ec_master::createDomain()
     domains.emplace_back(rt_ipc.get(), getPrefix(), this);
     return &domains.back();
 }
+int ecrt_master_link_state(
+    const ec_master_t *master,    /**< EtherCAT master. */
+    unsigned int dev_idx,         /**< Index of the device (0 = main device, 1 =
+                                    first backup device, ...). */
+    ec_master_link_state_t *state /**< Structure to store the information.
+                                   */
+)
+{
+    state->slaves_responding = master->getNoSlaves();
+    state->al_states = 4;
+    state->link_up = 1;
+    return 0;
+}
 
 int ecrt_master_receive(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
-    std::cout << '\r';
+    return 0;
+}
+
+int ecrt_master_reset(
+    ec_master_t *master /**< EtherCAT master. */
+)
+{
     return 0;
 }
 
@@ -301,7 +320,6 @@ int ecrt_master_send(
     ec_master_t *master /**< EtherCAT master. */
 )
 {
-    std::cout << std::flush;
     return 0;
 }
 
