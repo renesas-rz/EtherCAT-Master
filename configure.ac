@@ -31,7 +31,7 @@ AC_PREREQ(2.59)
 # - Update version number below
 # - make dist-bzip2
 #
-AC_INIT([ethercat],[1.6.0],[fp@igh.de])
+AC_INIT([ethercat],[1.6.1],[fp@igh.de])
 AC_CONFIG_AUX_DIR([autoconf])
 AM_INIT_AUTOMAKE([-Wall -Wno-override -Werror dist-bzip2 subdir-objects foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

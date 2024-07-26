@@ -4,6 +4,10 @@ vim: spelllang=en spell tw=78
 
 -------------------------------------------------------------------------------
 
+Changes in 1.6.1:
+
+* Added libfakeethercat to simulate Process Data of EtherCAT Slaves.
+
 Changes in 1.6.0:
 
 * Added all native Ethernet drivers for kernels 5.14 and 6.1.
