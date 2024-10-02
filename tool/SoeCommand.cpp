@@ -23,8 +23,7 @@
 using namespace std;
 
 #include "SoeCommand.h"
-
-extern const ec_code_msg_t soe_error_codes[];
+#include "../master/soe_errors.c"
 
 /****************************************************************************/
 
