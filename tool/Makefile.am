@@ -28,7 +28,6 @@ EXTRA_DIST =
 bin_PROGRAMS = ethercat
 
 ethercat_SOURCES = \
-	../master/soe_errors.c \
 	Command.cpp \
 	CommandAlias.cpp \
 	CommandCrc.cpp \
