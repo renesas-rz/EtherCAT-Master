@@ -74,7 +74,6 @@ EC_STMMAC_OBJS := \
 		stmmac_mdio-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_ptp-@KERNEL_STMMAC@-ethercat.o \
 		stmmac_tc-@KERNEL_STMMAC@-ethercat.o \
-		stmmac_xdp-@KERNEL_STMMAC@-ethercat.o \
 		$(ec_stmmac-y)
 
 ec_stmmac-$(CONFIG_STMMAC_SELFTESTS) = \

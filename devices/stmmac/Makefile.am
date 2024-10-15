@@ -115,10 +115,6 @@ EXTRA_DIST = \
 	stmmac_ptp-6.1-orig.c \
 	stmmac_ptp-6.1-orig.h \
 	stmmac_tc-6.1-ethercat.c \
-	stmmac_tc-6.1-orig.c \
-	stmmac_xdp-6.1-ethercat.c \
-	stmmac_xdp-6.1-ethercat.h \
-	stmmac_xdp-6.1-orig.c \
-	stmmac_xdp-6.1-orig.h
+	stmmac_tc-6.1-orig.c
 
 #-----------------------------------------------------------------------------
