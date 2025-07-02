@@ -126,7 +126,7 @@ static int ec_master_eoe_thread(void *);
 void ec_master_find_dc_ref_clock(ec_master_t *);
 void ec_master_clear_device_stats(ec_master_t *);
 void ec_master_update_device_stats(ec_master_t *);
-void ec_master_nanosleep(const unsigned long);
+void ec_master_nanosleep(const unsigned long nsecs);
 static void sc_reset_task_kicker(struct irq_work *work);
 static void sc_reset_task(struct work_struct *work);
 
